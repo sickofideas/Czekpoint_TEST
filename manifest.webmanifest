@@ -1,0 +1,13 @@
+{
+  "id": "./",
+  "name": "Czekpoint — místní výlety",
+  "short_name": "Czekpoint",
+  "lang": "cs",
+  "description": "Výlety, informace o přístupu a osobní pas.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f7f1",
+  "theme_color": "#193e32",
+  "icons": [{ "src": "./assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

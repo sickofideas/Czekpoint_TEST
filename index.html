@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#193e32">
+  <meta name="description" content="Vyber si výlet podle skutečné podoby cesty. Czekpoint spojuje místní výlety, datovaná hlášení a tvůj osobní výletový pas.">
+  <title>Czekpoint — Začni cestu s přehledem</title>
+  <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./assets/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Přeskočit na obsah</a>
+  <header class="site-header">
+    <a class="brand" href="#/" aria-label="Czekpoint, úvod"><img src="./assets/icon.svg" width="34" height="34" alt=""><span>czekpoint<span class="brand-dot">.</span></span></a>
+    <nav class="main-nav" aria-label="Hlavní navigace">
+      <a href="#/" data-nav="explore">Objevovat</a>
+      <a href="#/pas" data-nav="passport">Můj pas <span id="passport-count" class="nav-count">0</span></a>
+      <a href="#/o-projektu" data-nav="about">Jak to funguje</a>
+    </nav>
+    <span class="header-region"><span class="status-dot"></span> Rožmitál a okolí</span>
+  </header>
+  <div id="mode-banner" class="mode-banner" hidden></div>
+  <main id="main" class="page-shell" tabindex="-1"><div class="loading-state" role="status"><span class="spinner"></span> Připravujeme výlety…</div></main>
+  <footer class="site-footer"><a class="brand small" href="#/">czekpoint.</a><span>Malé výpravy. Lepší přehled.</span><a href="#/o-projektu">O datech a soukromí</a><span class="version">Pilot · v0.1</span></footer>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <dialog id="report-dialog" class="report-dialog" aria-labelledby="report-title"></dialog>
+  <dialog id="confirm-dialog" class="confirm-dialog" aria-labelledby="confirm-title"></dialog>
+  <noscript><p class="noscript">Czekpoint potřebuje zapnutý JavaScript pro filtrování a ukládání návštěv.</p></noscript>
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>
