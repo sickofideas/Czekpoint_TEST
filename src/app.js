@@ -3,6 +3,10 @@ import { createRepository } from './repository.js';
 import { filterRoutes, validateReport, haversineMeters, isReportFresh, summarizeReports } from './domain.js';
 import { escapeHtml as e, safeUrl, icon, formatDate, localDateInput, number } from './ui.js';
 import { preparePhoto } from './media.js';
+import { mountWalk } from './walk.js';
+import { clearWalk } from './walk-store.js';
+
+let disposeWalk = null;
 
 const main = document.querySelector('#main');
 const reportDialog = document.querySelector('#report-dialog');
@@ -70,7 +74,7 @@ function renderExplore() {
     <div class="hero-copy"><div class="eyebrow">${icon('leaf')} Začni kousek od domova</div>
       <h1 id="hero-title" tabindex="-1">Ven s dobrým<br><em>přehledem.</em></h1>
       <p>Krásný výhled je začátek. Zjisti, jaká cesta k němu vede, na co se připravit a co zažili lidé před tebou.</p>
-      <div class="hero-actions"><a class="button primary" href="#vylety" data-action="scroll-routes">Najít můj výlet ${icon('arrow')}</a><button class="button ghost" type="button" data-action="locate">${icon('locate')}Výlety v mém okolí</button></div>
+      <div class="hero-actions"><a class="button primary" href="#/prochazka">Spustit mapu a procházku ${icon('arrow')}</a><a class="button ghost" href="#vylety" data-action="scroll-routes">Vybrat výlet</a></div>
       <div class="trust-line"><span>${icon('check')}Bez registrace na prohlížení</span><span>${icon('book')}Tvoje zkušenost pomáhá</span></div>
     </div>
     <div class="hero-art"><img class="project-art" src="./assets/czekpoint-brand.png" width="1024" height="1024" alt="Czekpoint: turista v přírodě s motivem QR kódu"></div>
@@ -172,8 +176,8 @@ function renderAbout() {
     <section class="panel">${icon('shield')}<h2>Neznámé přiznáváme.</h2><p>Úvodní karty vycházejí z veřejných zdrojů. Terénní ověření zatím neproběhlo. Ilustrace nejsou fotografie skutečného stavu. Když chybí čas, převýšení nebo čerstvé hlášení, zobrazíme to.</p></section>
     <section class="panel">${icon('camera')}<h2>Zkušenost má své datum.</h2><p>Napiš, kdy jsi na místě byl/a, a popiš konkrétní úsek. Fotka překážky nebo povrchu může pomoci víc než obecné hodnocení. Hlášení starší než 7 dní označujeme jako starší.</p><p>Volitelné porovnání polohy ukazuje jen přibližnou vzdálenost telefonu. Nedokazuje pravost fotografie ani průchodnost trasy.</p></section>
     <section class="panel">${icon('lock')}<h2>Tvoje data a soukromí</h2><p>${state.repo.mode==='local'?'Teď používáš lokální test. Hlášení, fotky, uložená místa i návštěvy ukládáme do tohoto prohlížeče. Ostatní lidé je neuvidí.':'Používáš sdílenou verzi. Příspěvek a fotka se odešlou provozovateli a po schválení budou veřejné. Vlastní čekající příspěvky vidíš jen ty. Identita přispěvatele je anonymní účet spojený s tímto prohlížečem.'}</p><p>Fotky před uložením zmenšíme a odstraníme vložená EXIF metadata. Polohu zjišťujeme pouze po stisku tlačítka; přesné souřadnice telefonu k hlášení neposíláme. Pas i oblíbená místa zůstávají lokální.</p></section></div>
-    <div class="about-foot"><p class="small-note">Bez sledovacích reklam a bez analytických měřicích skriptů. Odkaz na mapu nebo zdroj otevře jinou službu s vlastními pravidly. Toto je pilotní verze 0.1.</p><div class="notice">${state.repo.mode==='local'?'Lokální test není záloha. Smazání dat prohlížeče odstraní i uložené fotky a záznamy.':'Přístup k vlastním hlášením je spojený s anonymní relací tohoto prohlížeče. Vymazáním relace můžeš ztratit možnost příspěvky smazat; případné odstranění pak řeší provozovatel.'}</div>
-    <div class="data-actions"><button type="button" class="button danger small" data-action="clear-local">${icon('trash')}Vymazat lokální testovací data</button><p>${state.repo.mode==='local'?'Smaže hlášení, fotky, pas a uložená místa v tomto prohlížeči.':'Smaže lokální pas a uložená místa. Příspěvky na serveru zůstanou; vlastní můžeš smazat jednotlivě u výletu.'}</p></div></div>`;
+    <div class="about-foot"><p class="small-note">Bez sledovacích reklam a bez analytických měřicích skriptů. Odkaz na mapu nebo zdroj otevře jinou službu s vlastními pravidly. Průzkum mapy navíc ukládá přibližně navštívené dílky v tomto prohlížeči. Mapové podklady načítá OpenStreetMap; volitelné hledání míst odešle zaokrouhlenou oblast do Overpass API. Toto je pilotní verze 0.2.</p><div class="notice">${state.repo.mode==='local'?'Lokální test není záloha. Smazání dat prohlížeče odstraní i uložené fotky a záznamy.':'Přístup k vlastním hlášením je spojený s anonymní relací tohoto prohlížeče. Vymazáním relace můžeš ztratit možnost příspěvky smazat; případné odstranění pak řeší provozovatel.'}</div>
+    <div class="data-actions"><button type="button" class="button danger small" data-action="clear-local">${icon('trash')}Vymazat lokální testovací data</button><p>${state.repo.mode==='local'?'Smaže hlášení, fotky, pas, uložená místa a herní průzkum (mapu, body, trofeje) v tomto prohlížeči.':'Smaže lokální pas, uložená místa a herní průzkum. Příspěvky na serveru zůstanou; vlastní můžeš smazat jednotlivě u výletu.'}</p></div></div>`;
 }
 
 function renderNotFound() {
@@ -181,17 +185,19 @@ function renderNotFound() {
 }
 
 async function renderPage({ focus = false } = {}) {
+  disposeWalk?.(); disposeWalk = null;
   const renderId = ++state.renderId;
   const parts = location.hash.replace(/^#\/?/,'').split('/');
   const view = parts[0] || '';
-  state.view = view==='pas'?'passport':view==='o-projektu'?'about':view==='trasa'?'detail':'explore';
+  state.view = view==='prochazka'?'walk':view==='pas'?'passport':view==='o-projektu'?'about':view==='trasa'?'detail':'explore';
   document.title = 'Czekpoint — Začni cestu s přehledem';
   document.querySelectorAll('[data-nav]').forEach(link=>{const active = link.dataset.nav === state.view || (state.view==='detail' && link.dataset.nav==='explore');link.classList.toggle('active',active);if(active)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');});
   document.querySelector('#passport-count').textContent = state.visits.length;
   if (view==='trasa') {
     let id; try { id=decodeURIComponent(parts[1] || ''); } catch { id=''; }
     await renderDetail(id,renderId);
-  } else if(view==='pas') renderPassport();
+  } else if(view==='prochazka') { disposeWalk=mountWalk(main,state.routes,CONFIG); }
+  else if(view==='pas') renderPassport();
   else if(view==='o-projektu') renderAbout();
   else if(view==='') renderExplore();
   else renderNotFound();
@@ -348,8 +354,8 @@ document.addEventListener('click',async event=>{
       button.disabled=true;await state.repo.deleteReport(id);await renderPage();toast('Zkušenost byla smazána.');return;
     }
     if(action==='clear-local'){
-      if(!await askConfirmation('Vymazat lokální data?',state.repo.mode==='local'?'Z tohoto prohlížeče se smažou všechna testovací hlášení, fotky, návštěvy a uložená místa.':'Z tohoto prohlížeče se smaže výletový pas a uložená místa. Serverové příspěvky ani přístup k nim se nemažou.','Vymazat data'))return;
-      button.disabled=true;await state.repo.clearLocalData();try{localStorage.removeItem('czekpoint.author');}catch{}await refreshPersonal();await renderPage();toast('Lokální data byla vymazána.');
+      if(!await askConfirmation('Vymazat lokální data?',state.repo.mode==='local'?'Z tohoto prohlížeče se smažou všechna testovací hlášení, fotky, návštěvy, uložená místa i odkrytá mapa, body a trofeje.':'Z tohoto prohlížeče se smaže výletový pas, uložená místa a herní průzkum s body. Serverové příspěvky ani přístup k nim se nemažou.','Vymazat data'))return;
+      button.disabled=true;await state.repo.clearLocalData();clearWalk();try{localStorage.removeItem('czekpoint.author');}catch{}await refreshPersonal();await renderPage();toast('Lokální data včetně průzkumu byla vymazána.');
     }
   }catch(error){toast(errorMessage(error),true);}finally{if(button.isConnected)button.disabled=false;}
 });
@@ -372,3 +378,4 @@ async function boot() {
   }
 }
 boot();
+

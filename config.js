@@ -6,4 +6,6 @@ export const CONFIG = Object.freeze({
   supabaseAnonKey: '', // pouze veřejný publishable / anon klíč
   reportFreshDays: 7,
   maxPhotoBytes: 2097152,
+  mapTileUrl: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+  overpassUrl: 'https://overpass-api.de/api/interpreter',
 });

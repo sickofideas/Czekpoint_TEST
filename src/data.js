@@ -95,3 +95,19 @@ export const routes = [
     featured: false,
   },
 ];
+
+// Additional sourced destinations. A destination card is not a measured walking route.
+const additions = [
+  {id:'tremsin-okruh',title:'Za králem brdských lesů na Třemšín',subtitle:'Celodenní okruh z Rožmitálu',kind:'forest',distanceKm:19,difficulty:'hard',location:{lat:49.6030031,lng:13.8629039},startLabel:'Start v centru Rožmitálu podle turistického portálu',summary:'Oficiální 19km okruh vede z Rožmitálu na Třemšín a zpět kolem Kobylí hlavy. Značka v mapě označuje start, nikoli vrchol. Není to krátká večerní procházka.',highlights:['Třemšín','Lesní okruh','Třemšínská bouda'],slug:'za-kralem-brdskych-lesu',illustration:'forest'},
+  {id:'podbrdske-muzeum',title:'Podbrdské muzeum',subtitle:'Místní příběhy a historické vozy',kind:'culture',summary:'Cíl městské procházky s regionálními expozicemi a sbírkou automobilů Aero. Návštěva interiéru závisí na aktuální otevírací době a vstupném.',highlights:['Historie Podbrdska','Automobily Aero'],slug:'podbrdske-muzeum',illustration:'castle'},
+  {id:'cvokarske-muzeum',title:'Cvokařské muzeum',subtitle:'Za řemeslem do Starého Rožmitálu',kind:'culture',summary:'Malé soukromé muzeum věnované výrobě hřebíků a cvočků. Hodí se jako zastávka ve Starém Rožmitále; dnešní přístup si ověř u provozovatele.',highlights:['Cvokařské řemeslo','Starý Rožmitál'],slug:'cvokarske-muzeum',illustration:'castle'},
+  {id:'kostel-stary-rozmital',title:'Kostel Povýšení sv. Kříže',subtitle:'Hudební historie Starého Rožmitálu',kind:'culture',pointKind:'place',location:{lat:49.6082050,lng:13.8507389},summary:'Kostel spojený s Jakubem Janem Rybou stojí vedle hřbitova ve Starém Rožmitále, kolem vede zelená turistická značka. Přiblížení na mapě neznamená vstup do kostela.',highlights:['Jakub Jan Ryba','Historie Starého Rožmitálu'],slug:'kostel-povyseni-sv-krize',illustration:'castle'},
+  {id:'voltusska-vyhlidka',title:'Voltušská vyhlídka',subtitle:'Odbočka za pohledem do kraje',kind:'view',summary:'Vyhlídku zmiňuje oficiální popis třemšínského okruhu jako odbočku v závěru trasy. Samostatná délka přístupu ani souřadnice zde zatím nejsou ověřeny; cestu vyber podle mapy a místního značení.',highlights:['Vyhlídka','Lesy u Voltuše'],slug:'za-kralem-brdskych-lesu',illustration:'forest'},
+];
+routes.push(...additions.map(p=>({
+  ...p,region:'Rožmitál pod Třemšínem',durationMinutes:null,distanceKm:p.distanceKm??null,elevationM:null,
+  access:{stroller:'unknown',surface:'Povrch přístupu zatím terénně neověřen.',difficulty:p.difficulty||'unknown'},
+  location:p.location??null,startLabel:p.startLabel||'Místo vyhledej v mapě; konkrétní přístup není terénně ověřen.',
+  mapUrl:mapSearch(`${p.title}, Rožmitál pod Třemšínem`),obstacles:['Ověř aktuální přístup, místní značení a u interiérů otevírací dobu.'],
+  source:{label:'Brdy a Podbrdsko – oficiální turistický portál',url:`https://www.brdyapodbrdsko.cz/${p.slug}`,checkedAt},fieldCheckedAt:null,featured:false,
+})));
