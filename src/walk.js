@@ -1,137 +1,704 @@
-import { emptyWalk, acceptFix, cellBounds, cellCenter, score, trophies, discoverNearby } from './walk-engine.js';
-import { loadWalk, saveWalk, WALK_KEY } from './walk-store.js';
+import { emptyWalk, acceptFix, cellBounds, cellCenter, score, trophies, discoverNearby, appendTrail, pruneTrail, explorerRank, sectorStatus, dailyChallenge, totalScore } from './walk-engine.js';
+import { loadWalk, saveWalk, WALK_KEY, loadWalkMeta, saveWalkMeta } from './walk-store.js';
 import { fetchNearby } from './nearby.js';
 import { haversineMeters } from './domain.js';
 import { escapeHtml as e, number } from './ui.js';
+import { SECTORS, COLLECTIONS, RELICS } from './data.js';
 
-export function mountWalk(root, routes, config) {
-  const L=window.L;
-  let progress=emptyWalk(),storageError='';
-  try {progress=loadWalk();}catch(error){storageError=error.message;}
-  let map, fog, tileLayer, player, accuracyRing, anchor=null, lastFix=null, watch=null, active=false, disposed=false, demo=false, demoIndex=0, releaseLock=null, wake=null, frame=null, starting=false;
-  let sessionMeters=0, sessionCells=0, follow=true, reveal=true, nearby=[];
-  const aborter=new AbortController();
-  const catalogue=routes.filter(r=>r.location).map(r=>({id:`catalog:${r.id}`,title:r.pointKind==='place'?r.title:`Start výletu: ${r.title}`,lat:r.location.lat,lng:r.location.lng,url:`#/trasa/${r.id}`,collectible:r.pointKind==='place'}));
-  root.innerHTML=`<section class="walk-heading"><div><div class="eyebrow">Malé kroky. Nový svět.</div><h1 tabindex="-1">Tvoje mapa dobrodružství.</h1><p>Vyraz, rozkryj mlhu a proměň obyčejnou procházku v malou výpravu.</p></div><span class="walk-tag">PROCHÁZKA · BETA</span></section>
-  <div class="walk-stats" aria-label="Celkový průzkum"><div><strong id="walk-points">0</strong><span>bodů celkem</span></div><div><strong id="walk-cells">0</strong><span>odkrytých dílků</span></div><div><strong id="walk-distance">0</strong><span>km chůze celkem</span></div><div><strong id="walk-relics">0</strong><span>mystery nálezů</span></div></div>
-  <div id="walk-demo-banner" class="notice" hidden>UKÁZKA · Simulovaný pohyb v Rožmitále. Žádná GPS, žádné ukládání bodů. Skutečnou návštěvu nepotvrzuje.</div>
-  <div class="walk-map-wrap"><div id="walk-map" aria-label="Interaktivní mapa průzkumu"></div><div class="walk-map-toolbar"><button class="button small" id="walk-center">◎ Moje poloha</button><button class="button small" id="walk-fog" aria-pressed="true">Mlha: zapnutá</button></div></div>
-  <p id="tile-status" class="small-note" role="status"></p>
-  <div class="walk-controls"><button id="walk-start" class="button primary">▶ Vyrazit s GPS</button><button id="walk-stop" class="button" disabled>Ⅱ Pozastavit</button><button id="walk-demo" class="button">Ukázka bez GPS</button><button id="walk-step" class="button lime" hidden>Další krok ukázky</button></div>
-  <div class="walk-status-panel"><strong id="walk-status" role="status" aria-live="polite">${e(storageError||'Připraveno. Venku spusť GPS a povol přístup k poloze.')}</strong><span id="walk-session">Dnes v této relaci: 0 m · 0 nových dílků</span><label><input type="checkbox" id="walk-awake" checked> Při chůzi držet displej zapnutý</label><span id="wake-status" class="small-note">Displej: zámek není aktivní.</span></div>
-  <div class="walk-columns"><section class="panel"><h2>Co odhalíš za další zatáčkou?</h2><p id="walk-mystery"></p><div id="walk-collection" class="mystery-collection"></div><div id="walk-trophies" class="trophy-grid"></div><p class="small-note">Mystery nálezy jsou herní odměny za každých 6 nových dílků. Nejsou to skutečné předměty schované v terénu.</p></section>
-  <section class="panel"><h2>Skutečná místa poblíž</h2><p>Muzea, vyhlídky a památky v okolí. Otazník se odhalí do 180 m; do 60 m získáš místní objev (+30 bodů).</p><button class="button" id="walk-nearby">Najít místa poblíž (OSM)</button><p class="small-note">Hledání odešle do Overpass API oblast kolem polohy zaokrouhlené na 0,01°. Bez přesné trasy. Body za chůzi fungují i bez hledání.</p><div id="nearby-status" role="status"></div><p id="nearby-origin" class="small-note"></p><div id="walk-places"></div><p class="small-note">Zdroj míst: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> a uvedené zdroje katalogu. Dostupnost ani vstup nejsou ověřeny. Vzdálenosti jsou vzdušné.</p></section></div>
-  <details class="walk-help"><summary>Jak procházku testovat a co ukládáme</summary><p>Nech stránku v popředí. Při přepnutí aplikace, zamknutí telefonu nebo odchodu z této mapy záznam pozastavíme. Po návratu stiskni znovu Vyrazit s GPS. Používej HTTPS adresu GitHub Pages; soubor otevřený dvojklikem nefunguje.</p><p>Každý nový dílek přidá 10 bodů; každých 50 započítaných metrů 1 bod. Přesnost GPS musí být do 40 m. Stání, výpadky a rychlé skoky nebodují spolehlivě; nejde o krokoměr ani soutěžní důkaz chůze. Drž se veřejných cest. Odměny tě neposílají mimo cestu.</p><p>Odkryté dílky (přibližná poloha), vzdálenost a objevy zůstávají jen v tomto prohlížeči. Mapový podklad se načítá z OpenStreetMap, který vidí zobrazenou oblast a síťový požadavek. Mapu lze vždy odkrýt tlačítkem Mlha; to nepřidá body. Bez internetu se nové mapové podklady ani okolní místa nenačtou.</p><button id="walk-export" class="button small">Exportovat průzkum do JSON</button><p class="small-note">Export obsahuje přibližně navštívené oblasti. Reset je v Jak to funguje → Vymazat lokální testovací data. Ukázka skutečný průzkum nikdy nepřepisuje.</p></details>`;
-  const $=id=>root.querySelector(`#${id}`);
-  const status=text=>{if(!disposed)$('walk-status').textContent=text;};
-  const placesLayer=L?.layerGroup();
-  function drawFog(){
-    if(!map||disposed)return;
-    const canvas=fog, size=map.getSize(), ratio=Math.min(devicePixelRatio||1,2);
-    canvas.width=size.x*ratio;canvas.height=size.y*ratio;canvas.style.width=`${size.x}px`;canvas.style.height=`${size.y}px`;
-    L.DomUtil.setPosition(canvas,map.containerPointToLayerPoint([0,0]));
-    const ctx=canvas.getContext('2d');ctx.scale(ratio,ratio);
-    if(!reveal)return;
-    ctx.fillStyle='rgba(16,43,39,.79)';ctx.fillRect(0,0,size.x,size.y);
-    ctx.globalCompositeOperation='destination-out';
-    for(const id of progress.cells){const [sw,ne]=cellBounds(id),a=map.latLngToContainerPoint([ne.lat,sw.lng]),b=map.latLngToContainerPoint([sw.lat,ne.lng]);if(b.x<0||a.x>size.x||b.y<0||a.y>size.y)continue;ctx.fillRect(a.x-1,a.y-1,b.x-a.x+2,b.y-a.y+2);}
+export function mountWalk(root, routes, config, actions = {}) {
+  const L = window.L;
+  const { onOpenReport, onAddVisit } = actions;
+  let progress = emptyWalk(), storageError = '';
+  try { progress = loadWalk(); } catch (error) { storageError = error.message; }
+  let meta = loadWalkMeta();
+
+  let map, fog, tileLayer, trailLayer, player, accuracyRing, anchor = null, lastFix = null, watch = null;
+  let active = false, disposed = false, demo = false, demoIndex = 0, releaseLock = null, wake = null, frame = null, starting = false;
+  let sessionMeters = 0, sessionCells = 0, sessionTrophies = 0, follow = true, reveal = true, nearby = [];
+  const aborter = new AbortController();
+
+  const catalogue = routes.filter(r => r.location).map(r => ({
+    id: `catalog:${r.id}`,
+    routeId: r.id,
+    title: r.pointKind === 'place' ? r.title : `Start výletu: ${r.title}`,
+    lat: r.location.lat,
+    lng: r.location.lng,
+    kind: r.kind,
+    sector: r.sector,
+    watchtower: Boolean(r.watchtower),
+    hiddenUntilWatchtower: Boolean(r.hiddenUntilWatchtower),
+    url: `#/trasa/${r.id}`,
+    collectible: r.pointKind === 'place',
+  }));
+
+  root.innerHTML = `
+    <section class="walk-heading">
+      <div>
+        <div class="eyebrow">Malé kroky. Skutečný průzkum.</div>
+        <h1 tabindex="-1">Tvoje mapa dobrodružství.</h1>
+        <p>100% neprozkoumaná mlha, trofeje, mizející stopa a odemykání sektorů Rožmitálska.</p>
+      </div>
+      <span class="walk-tag">PILOT · v0.3</span>
+    </section>
+
+    <div class="walk-stats" aria-label="Celkový průzkum">
+      <div><strong id="walk-points">0</strong><span>bodů celkem</span></div>
+      <div><strong id="walk-cells">0</strong><span>odkrytých dílků</span></div>
+      <div><strong id="walk-distance">0</strong><span>km chůze celkem</span></div>
+      <div><strong id="walk-relics">0</strong><span>mystery relikvií</span></div>
+    </div>
+
+    <div class="rank-card" id="rank-card">
+      <div class="rank-info">
+        <span class="rank-title" id="rank-title">Hodnost: Sváteční chodec</span>
+        <span class="rank-fog" id="rank-fog">Dosah odkrývání mlhy: 65 m · Do další úrovně zbývá 200 b.</span>
+      </div>
+      <div class="rank-progress" id="rank-badge">Úroveň 1</div>
+    </div>
+
+    <div class="daily-challenge-card" id="daily-card">
+      <div>
+        <div class="eyebrow" style="margin-bottom:4px">Dnešní výprava</div>
+        <div class="daily-title" id="daily-title">Načítám výzvu…</div>
+      </div>
+      <div id="daily-action"></div>
+    </div>
+
+    <div id="walk-demo-banner" class="notice" hidden>UKÁZKA · Simulovaný pohyb v Rožmitále. Žádná GPS, žádné ukládání bodů.</div>
+
+    <div class="walk-compass-bar" id="walk-compass" role="status">🧭 Čekám na polohu pro určení směru k nejbližší trofeji…</div>
+
+    <div class="walk-map-wrap">
+      <div id="walk-map" aria-label="Interaktivní mapa průzkumu"></div>
+      <div class="walk-map-toolbar">
+        <button class="button small" id="walk-center">◎ Moje poloha</button>
+        <button class="button small" id="walk-fog" aria-pressed="true">Mlha: zapnutá</button>
+      </div>
+    </div>
+    <div class="trail-note" id="trail-info">Stopa za poslední hodinu: 0 bodů (automaticky mizí po 60 min)</div>
+    <p id="tile-status" class="small-note" role="status"></p>
+
+    <div class="walk-controls">
+      <button id="walk-start" class="button primary">▶ Vyrazit s GPS</button>
+      <button id="walk-stop" class="button" disabled>Ⅱ Pozastavit</button>
+      <button id="walk-demo" class="button">Ukázka bez GPS</button>
+      <button id="walk-step" class="button lime" hidden>Další krok ukázky</button>
+    </div>
+
+    <div class="walk-status-panel">
+      <strong id="walk-status" role="status" aria-live="polite">${e(storageError || 'Připraveno. Venku spusť GPS a povol přístup k poloze.')}</strong>
+      <span id="walk-session">Dnes v této relaci: 0 m · 0 nových dílků</span>
+      <label><input type="checkbox" id="walk-awake" checked> Při chůzi držet displej zapnutý</label>
+      <span id="wake-status" class="small-note">Displej: zámek není aktivní.</span>
+    </div>
+
+    <div class="sectors-overview">
+      <div class="section-heading">
+        <div>
+          <h2>Sektory Rožmitálska (SnowRunner průzkum)</h2>
+          <p>Získej zlaté trofeje ve všech místech sektoru. Odemkne se Pečeť a trvale se rozpustí mlha nad celou oblastí (+300 b.).</p>
+        </div>
+      </div>
+      <div class="sector-list" id="sector-list"></div>
+    </div>
+
+    <div class="walk-columns">
+      <section class="panel">
+        <h2>Rožmitálské relikvie a mystery nálezy</h2>
+        <p id="walk-mystery"></p>
+        <div id="walk-collection" class="mystery-collection"></div>
+        <div id="walk-trophies" class="trophy-grid"></div>
+        <p class="small-note">Relikvie se odemykají za každých 6 nově odkrytých dílků mapy. Zrcadlí bohatou historii Rožmitálska.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Trofeje a orientační body v dosahu</h2>
+        <p>Rozhledny odhalují 250 m v mlze. Do 180 m se odhalí název místa, do 60 m získáš Bronzovou trofej (+30 b.).</p>
+        <button class="button" id="walk-nearby">Najít místa v okolí (OSM)</button>
+        <div id="nearby-status" role="status"></div>
+        <p id="nearby-origin" class="small-note"></p>
+        <div id="walk-places"></div>
+        <p class="small-note">Zdroj: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> a ověřené body Rožmitálu.</p>
+      </section>
+    </div>
+
+    <div id="session-summary-container"></div>
+
+    <details class="walk-help">
+      <summary>Pravidla průzkumu, mlhy a trofejí v0.3</summary>
+      <p>100% neprůhledná mlha zakrývá celý svět dokud neprojdeš terénem. Odemčené rozhledny vidí 250 m daleko a odhalují ukrytá místa. Dokončením všech míst v sektoru získáš Pečeť a trvale odhalíš celý sektor.</p>
+      <p>Stupně trofejí: <strong>Bronzová</strong> (přiblížení do 60 m, +30 b.), <strong>Stříbrná</strong> (záznam návštěvy v pasu, +60 b. celkem), <strong>Zlatá</strong> (návštěva + fotka z terénu, +120 b. celkem). Bonus Průkopníka (+100 b.) získáš za první fotku u místa po více než 7 dnech.</p>
+      <p>Mizející stopa: tvoje trasa za posledních 60 minut svítí limetkově na mapě a postupně bledne, dokud po hodině zcela nezmizí.</p>
+      <button id="walk-export" class="button small">Exportovat průzkum do JSON</button>
+    </details>
+  `;
+
+  const $ = id => root.querySelector(`#${id}`);
+  const status = text => { if (!disposed) $('walk-status').textContent = text; };
+  const placesLayer = L?.layerGroup();
+  trailLayer = L?.layerGroup();
+
+  function metersToPx(lat, meters) {
+    if (!map) return 30;
+    const p1 = map.latLngToContainerPoint([lat, 0]);
+    const p2 = map.latLngToContainerPoint([lat + (meters / 111320), 0]);
+    return Math.max(12, Math.abs(p2.y - p1.y));
   }
-  function scheduleFog(){if(frame)cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>{frame=null;drawFog();});}
-  function renderPlaces(){
-    $('nearby-origin').textContent=demo?'Vzdálenosti od simulovaného bodu.':lastFix?'Vzdálenosti od poslední přijaté GPS polohy.':'Vzdálenosti od středu mapy, nikoli od tebe. Tvoji polohu ještě neznáme.';
+
+  function drawFog() {
+    if (!map || disposed) return;
+    const canvas = fog, size = map.getSize(), ratio = Math.min(devicePixelRatio || 1, 2);
+    canvas.width = size.x * ratio; canvas.height = size.y * ratio;
+    canvas.style.width = `${size.x}px`; canvas.style.height = `${size.y}px`;
+    L.DomUtil.setPosition(canvas, map.containerPointToLayerPoint([0, 0]));
+    const ctx = canvas.getContext('2d');
+    ctx.scale(ratio, ratio);
+
+    if (!reveal) return;
+
+    // 100% Opaque WoW Fog layer
+    ctx.fillStyle = '#163329';
+    ctx.fillRect(0, 0, size.x, size.y);
+
+    // Subtle texture grid
+    ctx.strokeStyle = 'rgba(216, 233, 158, 0.035)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < size.x; x += 40) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, size.y); ctx.stroke();
+    }
+    for (let y = 0; y < size.y; y += 40) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(size.x, y); ctx.stroke();
+    }
+
+    ctx.globalCompositeOperation = 'destination-out';
+    const totalPts = totalScore(progress, meta, SECTORS, COLLECTIONS, routes);
+    const rank = explorerRank(totalPts);
+
+    // 1. Visited cells cutout with soft radial gradient
+    for (const id of progress.cells) {
+      const center = cellCenter(id);
+      const cp = map.latLngToContainerPoint([center.lat, center.lng]);
+      const radPx = metersToPx(center.lat, rank.fogRadiusM);
+      if (cp.x + radPx < 0 || cp.x - radPx > size.x || cp.y + radPx < 0 || cp.y - radPx > size.y) continue;
+      const g = ctx.createRadialGradient(cp.x, cp.y, radPx * 0.4, cp.x, cp.y, radPx);
+      g.addColorStop(0, 'rgba(0,0,0,1)');
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(cp.x, cp.y, radPx, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 2. Watchtowers cutouts (250 m)
+    for (const wtId of (meta.watchtowers || [])) {
+      const r = routes.find(item => item.id === wtId);
+      if (r?.location) {
+        const cp = map.latLngToContainerPoint([r.location.lat, r.location.lng]);
+        const radPx = metersToPx(r.location.lat, 250);
+        const g = ctx.createRadialGradient(cp.x, cp.y, radPx * 0.4, cp.x, cp.y, radPx);
+        g.addColorStop(0, 'rgba(0,0,0,1)');
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(cp.x, cp.y, radPx, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // 3. Unlocked SnowRunner sectors (radiusM)
+    const sStatus = sectorStatus(SECTORS, routes, meta.tiers);
+    for (const s of Object.values(sStatus)) {
+      if (s.unlocked && s.center) {
+        const cp = map.latLngToContainerPoint([s.center.lat, s.center.lng]);
+        const radPx = metersToPx(s.center.lat, s.radiusM);
+        const g = ctx.createRadialGradient(cp.x, cp.y, radPx * 0.6, cp.x, cp.y, radPx);
+        g.addColorStop(0, 'rgba(0,0,0,1)');
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(cp.x, cp.y, radPx, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  function scheduleFog() {
+    if (frame) cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(() => { frame = null; drawFog(); });
+  }
+
+  function renderTrail() {
+    trailLayer?.clearLayers();
+    if (!map) return;
+    const now = Date.now();
+    const activeTrail = pruneTrail(meta.trail, now);
+    $('trail-info').textContent = `Stopa za poslední hodinu: ${activeTrail.length} bodů (automaticky mizí po 60 min)`;
+    for (const pt of activeTrail) {
+      L.circleMarker([pt.lat, pt.lng], {
+        radius: 3,
+        color: '#d8e99e',
+        weight: 1,
+        fillColor: '#d8e99e',
+        fillOpacity: pt.opacity,
+        opacity: pt.opacity,
+        pane: 'markerPane',
+      }).addTo(trailLayer);
+    }
+  }
+
+  function renderCompass(origin) {
+    if (!origin) return;
+    let nearestTrophy = null;
+    let nearestDist = Infinity;
+    for (const p of catalogue) {
+      if (meta.tiers?.[p.routeId] === 'gold') continue;
+      const d = haversineMeters(origin, p) ?? Infinity;
+      if (d < nearestDist) {
+        nearestDist = d;
+        nearestTrophy = p;
+      }
+    }
+    if (nearestTrophy && Number.isFinite(nearestDist)) {
+      const angle = Math.atan2(nearestTrophy.lng - origin.lng, nearestTrophy.lat - origin.lat) * 180 / Math.PI;
+      const arrows = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'];
+      const arrow = arrows[Math.round(((angle + 360) % 360) / 45) % 8];
+      const kindLabel = { culture: 'Kultura', view: 'Vyhlídka', forest: 'Les', water: 'Voda' }[nearestTrophy.kind] || 'Místo';
+      $('walk-compass').innerHTML = `🧭 <strong>Nejbližší cíl:</strong> ${Math.round(nearestDist)} m ${arrow} · ${e(nearestTrophy.title)} (${kindLabel})`;
+    } else {
+      $('walk-compass').innerHTML = '🧭 <strong>Všechny trofeje zkompletovány!</strong> Rožmitálsko je plně zmapované.';
+    }
+  }
+
+  const kindIcons = { culture: '🏰', view: '⛰️', forest: '🌲', water: '💧' };
+
+  function renderPlaces() {
+    $('nearby-origin').textContent = demo ? 'Vzdálenosti od simulovaného bodu.' : lastFix ? 'Vzdálenosti od poslední přijaté GPS polohy.' : 'Vzdálenosti od středu mapy, nikoli od tebe.';
     placesLayer?.clearLayers();
-    const all=[...catalogue,...nearby];
-    const origin=lastFix||map?.getCenter();
-    const normalized=origin?{lat:origin.lat,lng:origin.lng}:null;
-    const list=all.map(p=>({...p,distance:haversineMeters(normalized,p)??Infinity})).filter(p=>p.distance<=2500).sort((a,b)=>a.distance-b.distance);
-    $('walk-places').innerHTML=list.slice(0,8).map(p=>{const known=p.distance<=180||progress.discoveries.includes(p.id)||!p.collectible;return `<div class="nearby-place"><strong>${known?e(p.title):'✧ Neodhalené místo'}</strong><span>${Math.round(p.distance)} m vzdušně ${progress.discoveries.includes(p.id)?'· objeveno':''}</span>${known?`<a href="${e(p.url)}" ${p.url.startsWith('#')?'':'target="_blank" rel="noopener"'}>Detail místa ↗</a>`:'<small>Přiblížením odhalíš, co tu je.</small>'}</div>`;}).join('')||'<p class="small-note">Zatím nemáme načtené místo v dosahu. Spusť GPS a hledej okolí; mapa se odkrývá i bez míst.</p>';
-    if(!map)return;
-    for(const p of list){const known=p.distance<=180||progress.discoveries.includes(p.id)||!p.collectible;L.marker([p.lat,p.lng],{icon:L.divIcon({className:'mystery-pin',html:progress.discoveries.includes(p.id)?'✓':known?'◇':'?',iconSize:[30,30]}),title:known?p.title:'Neodhalené místo'}).bindPopup(`<strong>${known?e(p.title):'Neodhalené místo'}</strong><br>${Math.round(p.distance)} m vzdušně${known?`<br><a href="${e(p.url)}" ${p.url.startsWith('#')?'':'target="_blank" rel="noopener"'}>Detail a zdroj</a>`:''}`).addTo(placesLayer);}
+    const all = [...catalogue, ...nearby];
+    const origin = lastFix || map?.getCenter();
+    const normalized = origin ? { lat: origin.lat, lng: origin.lng } : null;
+    renderCompass(normalized);
+
+    const list = all.map(p => ({ ...p, distance: haversineMeters(normalized, p) ?? Infinity })).filter(p => p.distance <= 3500).sort((a, b) => a.distance - b.distance);
+    $('walk-places').innerHTML = list.slice(0, 10).map(p => {
+      const tier = p.routeId ? (meta.tiers?.[p.routeId] || (progress.discoveries.includes(p.id) ? 'bronze' : null)) : (progress.discoveries.includes(p.id) ? 'bronze' : null);
+      const isWatchtowerUnlocked = p.sector && meta.watchtowers?.some(w => routes.find(r => r.id === w)?.sector === p.sector);
+      const isHidden = p.hiddenUntilWatchtower && !isWatchtowerUnlocked;
+      const known = !isHidden && (p.distance <= 180 || progress.discoveries.includes(p.id) || !p.collectible);
+      const tierLabel = tier === 'gold' ? '🥇 Zlato' : tier === 'silver' ? '🥈 Stříbro' : tier === 'bronze' ? '🥉 Bronz' : 'Neobjeveno';
+      return `<div class="nearby-place">
+        <strong>${known ? e(p.title) : '✧ Neodhalené tajemství'}</strong>
+        <span>${Math.round(p.distance)} m vzdušně · ${tierLabel} ${p.watchtower ? '· 🔭 Rozhledna' : ''}</span>
+        ${known ? `<a href="${e(p.url)}" ${p.url.startsWith('#') ? '' : 'target="_blank" rel="noopener"'}>Detail místa ↗</a>` : '<small>Přiblížením nebo rozhlednou odhalíš, co tu je.</small>'}
+      </div>`;
+    }).join('') || '<p class="small-note">V dosahu zatím není žádné místo. Vydej se na cestu!</p>';
+
+    if (!map) return;
+
+    for (const p of list) {
+      const tier = p.routeId ? (meta.tiers?.[p.routeId] || (progress.discoveries.includes(p.id) ? 'bronze' : null)) : (progress.discoveries.includes(p.id) ? 'bronze' : null);
+      const isWatchtowerUnlocked = p.sector && meta.watchtowers?.some(w => routes.find(r => r.id === w)?.sector === p.sector);
+      const isHidden = p.hiddenUntilWatchtower && !isWatchtowerUnlocked;
+      const known = !isHidden && (p.distance <= 180 || progress.discoveries.includes(p.id) || !p.collectible);
+      const kindIcon = kindIcons[p.kind] || '📍';
+      const tierClass = tier === 'gold' ? 'tier-gold' : tier === 'silver' ? 'tier-silver' : tier === 'bronze' ? 'tier-bronze' : 'tier-none';
+      const pinContent = tier === 'gold' ? '★' : known ? kindIcon : '?';
+      const isPioneer = p.routeId && !meta.pioneerAwards?.includes(p.routeId);
+
+      const marker = L.marker([p.lat, p.lng], {
+        icon: L.divIcon({
+          className: `mystery-pin ${tierClass}`,
+          html: `${pinContent}${isPioneer ? '<span class="pioneer-badge">2×</span>' : ''}`,
+          iconSize: [32, 32],
+        }),
+        title: known ? p.title : 'Neodhalené místo',
+      });
+
+      const popupHtml = `
+        <div style="min-width:180px">
+          <strong>${known ? e(p.title) : 'Neodhalené místo v mlze'}</strong><br>
+          <small>${Math.round(p.distance)} m vzdušně · ${tier === 'gold' ? '🥇 Zlatá trofej' : tier === 'silver' ? '🥈 Stříbrná trofej' : tier === 'bronze' ? '🥉 Bronzová trofej' : 'Dosud nezískáno'}</small>
+          ${isPioneer ? '<br><small style="color:#d85a12;font-weight:700">⭐ Bonus Průkopníka (+100 b.) k dispozici!</small>' : ''}
+          <div class="popup-actions">
+            ${known ? `<a href="${e(p.url)}" class="button small">Detail a fotky</a>` : ''}
+            ${p.routeId ? `<button type="button" class="button small lime" data-walk-action="visit" data-route="${e(p.routeId)}">✓ Byl/a jsem tady (+Stříbro)</button>` : ''}
+            ${p.routeId ? `<button type="button" class="button small primary" data-walk-action="photo" data-route="${e(p.routeId)}">📸 Vyfotit a získat Zlato</button>` : ''}
+          </div>
+        </div>
+      `;
+
+      marker.bindPopup(popupHtml).addTo(placesLayer);
+    }
   }
-  function stats(){
-    $('walk-points').textContent=score(progress);$('walk-cells').textContent=progress.cells.length;$('walk-distance').textContent=number(progress.meters/1000);$('walk-relics').textContent=Math.floor(progress.cells.length/6);
-    $('walk-session').textContent=`${demo?'Ukázka':'Tato relace'}: ${Math.round(sessionMeters)} m · ${sessionCells} nových dílků`;
-    const remaining=6-progress.cells.length%6;
-    $('walk-mystery').textContent=`Ještě ${remaining} nových dílků do dalšího mystery nálezu. Za každým šestým čeká fragment tvého příběhu a 25 bodů.`;
-    const fragments=['Mlžný kompas','List tichého lesa','Kamenná hvězda','Klíč od obzoru','Kapka ranní rosy','Srdce objevitele'];
-    const count=Math.floor(progress.cells.length/6);
-    $('walk-collection').innerHTML=fragments.map((name,i)=>`<span class="fragment ${count>i?'found':''}">${count>i?`✧ ${name}${count>6?` ×${Math.floor((count+5-i)/6)}`:''}`:'? Neznámý fragment'}</span>`).join('');
-    $('walk-trophies').innerHTML=trophies(progress).map(t=>`<div class="trophy ${t.earned?'earned':''}"><span>${t.earned?'✦':'◇'}</span><strong>${e(t.title)}</strong><small>${t.earned?'Získáno':e(t.goal)}</small></div>`).join('');
-    $('walk-start').disabled=active||starting||demo||!!storageError;
-    $('walk-stop').disabled=!active&&!starting;
-    $('walk-step').hidden=!demo;$('walk-demo-banner').hidden=!demo;
-    $('walk-demo').textContent=demo?'Ukončit ukázku':'Ukázka bez GPS';
-    scheduleFog();renderPlaces();
+
+  function stats() {
+    const totalPts = totalScore(progress, meta, SECTORS, COLLECTIONS, routes);
+    const rank = explorerRank(totalPts);
+
+    $('walk-points').textContent = totalPts;
+    $('walk-cells').textContent = progress.cells.length;
+    $('walk-distance').textContent = number(progress.meters / 1000);
+    $('walk-relics').textContent = Math.min(6, Math.floor(progress.cells.length / 6));
+
+    $('walk-session').textContent = `${demo ? 'Ukázka' : 'Tato relace'}: ${Math.round(sessionMeters)} m · ${sessionCells} nových dílků`;
+
+    $('rank-title').textContent = `Hodnost: Úroveň ${rank.level} · ${rank.title}`;
+    $('rank-fog').textContent = `Dosah odkrývání v mlze: ${rank.fogRadiusM} m · Dosah trofejí: ${rank.revealDistanceM} m${rank.nextAt ? ` · Do další úrovně zbývá ${rank.nextAt - totalPts} b.` : ' · Nejvyšší hodnost dosažena!'}`;
+    $('rank-badge').textContent = `Lvl ${rank.level}`;
+
+    const today = new Date().toISOString().slice(0, 10);
+    const challenge = dailyChallenge(today, progress, { cells: sessionCells, meters: sessionMeters, trophies: sessionTrophies }, meta);
+    $('daily-title').textContent = `${challenge.title} — postup: ${challenge.progress}/${challenge.target}`;
+    if (challenge.claimed) {
+      $('daily-action').innerHTML = '<span class="status-dot"></span> <small style="color:#4a6828;font-weight:700">Splněno a vyzvednuto</small>';
+    } else if (challenge.completed) {
+      $('daily-action').innerHTML = `<button type="button" class="button small lime" id="claim-daily">Vyzvednout +${challenge.points} b.</button>`;
+      $('claim-daily')?.addEventListener('click', () => {
+        meta.dailyClaimed = [...(meta.dailyClaimed || []), today];
+        saveWalkMeta(meta);
+        stats();
+        status(`Denní výzva splněna! Získáno +${challenge.points} bodů.`);
+      });
+    } else {
+      $('daily-action').innerHTML = `<small class="small-note">+${challenge.points} b.</small>`;
+    }
+
+    const sStatus = sectorStatus(SECTORS, routes, meta.tiers);
+    $('sector-list').innerHTML = Object.values(sStatus).map(s => `
+      <div class="sector-card ${s.unlocked ? 'unlocked' : ''}">
+        <strong>${e(s.title)}</strong>
+        <span>Zlaté trofeje: ${s.completed}/${s.total}</span>
+        <span class="sector-seal">${s.unlocked ? `🏆 ${e(s.sealTitle)} získána!` : `🔒 ${e(s.sealTitle)} (+300 b.)`}</span>
+      </div>
+    `).join('');
+
+    const remaining = 6 - (progress.cells.length % 6);
+    $('walk-mystery').textContent = `Ještě ${remaining} nových dílků do další relikvie. Za každých 6 dílků čeká odhalení relikvie a +25 b.`;
+    const relicsFound = Math.floor(progress.cells.length / 6);
+    $('walk-collection').innerHTML = RELICS.map((relic, i) => `
+      <span class="fragment ${relicsFound > i ? 'found' : ''}" title="${relicsFound > i ? e(relic.lore) : 'Zatím neobjeveno'}">
+        ${relicsFound > i ? `✧ ${e(relic.title)}` : '? Neznámá relikvie'}
+      </span>
+    `).join('');
+
+    $('walk-trophies').innerHTML = trophies(progress).map(t => `
+      <div class="trophy ${t.earned ? 'earned' : ''}">
+        <span>${t.earned ? '✦' : '◇'}</span>
+        <strong>${e(t.title)}</strong>
+        <small>${t.earned ? 'Získáno' : e(t.goal)}</small>
+      </div>
+    `).join('');
+
+    $('walk-start').disabled = active || starting || demo || Boolean(storageError);
+    $('walk-stop').disabled = !active && !starting;
+    $('walk-step').hidden = !demo;
+    $('walk-demo-banner').hidden = !demo;
+    $('walk-demo').textContent = demo ? 'Ukončit ukázku' : 'Ukázka bez GPS';
+
+    scheduleFog();
+    renderTrail();
+    renderPlaces();
   }
-  async function releaseWake(){if(wake){const w=wake;wake=null;await w.release().catch(()=>{});}if(!disposed)$('wake-status').textContent='Displej: zámek není aktivní.';}
-  async function holdWake(){
-    if(!active||!$('walk-awake').checked)return;
-    if(!navigator.wakeLock){$('wake-status').textContent='Telefon neumí držet displej zapnutý. Hlídej jeho zhasnutí.';return;}
-    try {const w=await navigator.wakeLock.request('screen');if(!active||disposed||!$('walk-awake').checked){await w.release();return;}wake=w;$('wake-status').textContent='Displej zůstává zapnutý (vyšší spotřeba baterie).';w.addEventListener('release',()=>{if(wake===w){wake=null;if(!disposed)$('wake-status').textContent='Telefon uvolnil zámek displeje. Hlídej jeho zhasnutí.';}});}
-    catch{if(!disposed)$('wake-status').textContent='Zámek displeje nebyl povolen. Nech obrazovku zapnutou ručně.';}
+
+  function showSessionSummary() {
+    if (sessionMeters <= 0 && sessionCells <= 0) return;
+    const earnedSessionPoints = sessionCells * 10 + Math.floor(sessionMeters / 50);
+    const container = $('session-summary-container');
+    container.innerHTML = `
+      <div class="session-modal" id="session-summary-modal">
+        <div class="session-modal-card">
+          <h2>Výprava pozastavena</h2>
+          <p>Shrnutí tvého postupu v této vycházce:</p>
+          <div class="session-stats-grid">
+            <div class="session-stat-box"><strong>${Math.round(sessionMeters)} m</strong><span>Ušlá vzdálenost</span></div>
+            <div class="session-stat-box"><strong>+${sessionCells}</strong><span>Nové dílky v mlze</span></div>
+            <div class="session-stat-box"><strong>+${earnedSessionPoints}</strong><span>Získané body</span></div>
+            <div class="session-stat-box"><strong>${Math.min(100, Math.round((progress.cells.length / 60) * 100))}%</strong><span>Zmapování Rožmitálska</span></div>
+          </div>
+          <button type="button" class="button primary full" id="close-summary-btn">Zavřít a pokračovat</button>
+        </div>
+      </div>
+    `;
+    $('close-summary-btn')?.addEventListener('click', () => { container.innerHTML = ''; });
   }
-  function stop(message){active=false;starting=false;if(watch!==null){navigator.geolocation.clearWatch(watch);watch=null;}anchor=null;releaseWake();releaseLock?.();releaseLock=null;if(!disposed){stats();if(message)status(message);}}
-  function sample(fix,now=Date.now()){
-    if(disposed||(!active&&!demo))return;
-    const result=acceptFix(progress,anchor,fix,now);anchor=result.anchor;
-    if(!result.accepted){status(result.reason);return;}
-    const next=discoverNearby(result.progress,fix,[...catalogue,...nearby]);
-    if(!demo){try{saveWalk(next);}catch(error){stop(error.message);return;}}
-    sessionMeters+=next.meters-progress.meters;if(result.fresh)sessionCells++;
-    const discoveries=next.discoveries.length-progress.discoveries.length;
-    progress=next;lastFix=fix;
-    if(map){player.setLatLng([fix.lat,fix.lng]).setStyle({opacity:1,fillOpacity:1});accuracyRing.setLatLng([fix.lat,fix.lng]).setRadius(fix.accuracy);if(follow)map.setView([fix.lat,fix.lng],Math.max(16,map.getZoom()),{animate:false});}
-    stats();status(`${discoveries?'Místní objev! +30 bodů. ':''}${result.reason} GPS ±${Math.round(fix.accuracy)} m.`);
+
+  async function releaseWake() {
+    if (wake) { const w = wake; wake = null; await w.release().catch(() => {}); }
+    if (!disposed) $('wake-status').textContent = 'Displej: zámek není aktivní.';
   }
-  async function start(){
-    if(active||starting||demo||disposed)return;
-    if(!isSecureContext||!navigator.geolocation){status('GPS vyžaduje HTTPS (GitHub Pages) a podporovaný prohlížeč.');return;}
-    if(!navigator.locks){status('Tento prohlížeč nepodporuje bezpečný souběh záznamu. Použij aktuální Chrome nebo Safari.');return;}
-    starting=true;stats();status('Spouštím GPS…');
-    try{await navigator.locks.request('czekpoint-walk',{ifAvailable:true},async lock=>{
-      if(disposed||!starting)return;
-      if(!lock){starting=false;stats();status('Procházka už běží v jiné kartě. Pozastav ji tam.');return;}
-      progress=loadWalk();starting=false;active=true;anchor=null;follow=true;stats();status('Čekám na GPS. Povol polohu a vyjdi na otevřené místo.');
-      const held=new Promise(resolve=>{releaseLock=resolve;});
-      watch=navigator.geolocation.watchPosition(p=>sample({lat:p.coords.latitude,lng:p.coords.longitude,accuracy:p.coords.accuracy,speed:p.coords.speed,timestamp:p.timestamp}),error=>{if(error.code===1)stop('Poloha není povolená. Povol ji v nastavení webu, nebo zkus ukázku.');else{anchor=null;status('GPS zatím není dostupná. Počkej venku; výpadek se do vzdálenosti nezapočítá.');}}, {enableHighAccuracy:true,maximumAge:0,timeout:15000});
-      holdWake();await held;
-    });}catch(error){stop(error.message||'GPS nelze spustit.');}
+
+  async function holdWake() {
+    if (!active || !$('walk-awake').checked) return;
+    if (!navigator.wakeLock) { $('wake-status').textContent = 'Telefon neumí držet displej zapnutý.'; return; }
+    try {
+      const w = await navigator.wakeLock.request('screen');
+      if (!active || disposed || !$('walk-awake').checked) { await w.release(); return; }
+      wake = w;
+      $('wake-status').textContent = 'Displej zůstává zapnutý.';
+      w.addEventListener('release', () => {
+        if (wake === w) { wake = null; if (!disposed) $('wake-status').textContent = 'Telefon uvolnil zámek displeje.'; }
+      });
+    } catch {
+      if (!disposed) $('wake-status').textContent = 'Zámek displeje nebyl povolen.';
+    }
   }
-  if(L){
-    const center=progress.cells.length?cellCenter(progress.cells.at(-1)):{lat:49.6030031,lng:13.8629039};
-    map=L.map($('walk-map'),{zoomControl:true,minZoom:3,maxZoom:18,maxBounds:[[-85,-180],[85,180]],maxBoundsViscosity:1}).setView([center.lat,center.lng],16);
-    tileLayer=L.tileLayer(config.mapTileUrl,{maxZoom:19,noWrap:true,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
-    tileLayer.on('tileerror',()=>{$('tile-status').textContent='Mapový podklad se nenačetl. Zkontroluj internet; body a uložený průzkum nejsou ztraceny.';});
-    const pane=map.createPane('walk-fog');pane.style.zIndex='450';pane.style.pointerEvents='none';fog=L.DomUtil.create('canvas','walk-fog',pane);fog.setAttribute('aria-hidden','true');
-    placesLayer.addTo(map);accuracyRing=L.circle([center.lat,center.lng],{radius:0,color:'#68c8ff',weight:1,fillOpacity:.12,pane:'markerPane'}).addTo(map);player=L.circleMarker([center.lat,center.lng],{radius:8,color:'white',weight:3,fillColor:'#218bea',opacity:0,fillOpacity:0,pane:'markerPane'}).addTo(map);
-    map.on('move zoom resize',scheduleFog);map.on('dragstart',()=>{follow=false;});
-    map.on('moveend',()=>{if(!lastFix)renderPlaces();});
-  }else{$('walk-map').textContent='Mapová knihovna chybí. Nahraj celý balíček včetně assets/vendor. GPS a body lze testovat bez podkladu.';}
-  $('walk-start').addEventListener('click',start);$('walk-stop').addEventListener('click',()=>stop('Pozastaveno. Průzkum je uložený; pokračuj znovu tlačítkem Vyrazit s GPS.'));
-  $('walk-awake').addEventListener('change',()=>{$('walk-awake').checked?holdWake():releaseWake();});
-  $('walk-fog').addEventListener('click',()=>{reveal=!reveal;$('walk-fog').textContent=`Mlha: ${reveal?'zapnutá':'vypnutá'}`;$('walk-fog').setAttribute('aria-pressed',reveal);scheduleFog();});
-  $('walk-center').addEventListener('click',()=>{follow=true;if(lastFix&&map)map.setView([lastFix.lat,lastFix.lng],16);else status('Nejdřív spusť GPS nebo ukázku.');});
-  $('walk-demo').addEventListener('click',()=>{
-    stop();demo=!demo;lastFix=null;nearby=[];anchor=null;sessionCells=0;sessionMeters=0;
-    if(demo){progress=emptyWalk();demoIndex=0;stats();stepDemo();}
-    else{try{progress=loadWalk();}catch(error){storageError=error.message;progress=emptyWalk();}stats();status(storageError||'Ukázka skončila. Skutečný průzkum zůstal zachovaný.');if(map){player.setStyle({opacity:0,fillOpacity:0});accuracyRing.setRadius(0);const c=progress.cells.length?cellCenter(progress.cells.at(-1)):{lat:49.6030031,lng:13.8629039};map.setView([c.lat,c.lng],16);}}
+
+  function stop(message) {
+    const wasActive = active;
+    active = false; starting = false;
+    if (watch !== null) { navigator.geolocation.clearWatch(watch); watch = null; }
+    anchor = null;
+    releaseWake();
+    releaseLock?.(); releaseLock = null;
+    if (!disposed) {
+      stats();
+      if (message) status(message);
+      if (wasActive && (sessionMeters > 0 || sessionCells > 0)) showSessionSummary();
+    }
+  }
+
+  function sample(fix, now = Date.now()) {
+    if (disposed || (!active && !demo)) return;
+    const result = acceptFix(progress, anchor, fix, now);
+    anchor = result.anchor;
+    if (!result.accepted) { status(result.reason); return; }
+
+    const next = discoverNearby(result.progress, fix, [...catalogue, ...nearby]);
+
+    // Append to 1h disappearing trail
+    meta.trail = appendTrail(meta.trail, fix, now);
+
+    // Check newly reached watchtowers within 60 m
+    for (const r of routes) {
+      if (r.watchtower && r.location) {
+        const d = haversineMeters(fix, r.location);
+        if (d != null && d <= 60 && !meta.watchtowers.includes(r.id)) {
+          meta.watchtowers.push(r.id);
+          status(`🔭 Rozhledna ${r.title} odemčena! Poloměr rozhledu 250 m.`);
+        }
+      }
+    }
+
+    // Award bronze trophy tier for any newly discovered catalog place
+    for (const discId of next.discoveries) {
+      if (!progress.discoveries.includes(discId) && discId.startsWith('catalog:')) {
+        const routeId = discId.slice('catalog:'.length);
+        if (!meta.tiers[routeId]) {
+          meta.tiers[routeId] = 'bronze';
+          sessionTrophies++;
+        }
+      }
+    }
+
+    if (!demo) {
+      try {
+        saveWalk(next);
+        saveWalkMeta(meta);
+      } catch (error) {
+        stop(error.message);
+        return;
+      }
+    }
+
+    sessionMeters += next.meters - progress.meters;
+    if (result.fresh) sessionCells++;
+    const discoveries = next.discoveries.length - progress.discoveries.length;
+    progress = next;
+    lastFix = fix;
+
+    if (map) {
+      player.setLatLng([fix.lat, fix.lng]).setStyle({ opacity: 1, fillOpacity: 1 });
+      accuracyRing.setLatLng([fix.lat, fix.lng]).setRadius(fix.accuracy);
+      if (follow) map.setView([fix.lat, fix.lng], Math.max(16, map.getZoom()), { animate: false });
+    }
+
+    stats();
+    status(`${discoveries ? 'Místní objev! +30 bodů. ' : ''}${result.reason} GPS ±${Math.round(fix.accuracy)} m.`);
+  }
+
+  async function start() {
+    if (active || starting || demo || disposed) return;
+    if (!isSecureContext || !navigator.geolocation) { status('GPS vyžaduje HTTPS a podporovaný prohlížeč.'); return; }
+    if (!navigator.locks) { status('Prohlížeč nepodporuje bezpečný souběh. Použij aktuální Chrome nebo Safari.'); return; }
+    starting = true; stats(); status('Spouštím GPS…');
+    try {
+      await navigator.locks.request('czekpoint-walk', { ifAvailable: true }, async lock => {
+        if (disposed || !starting) return;
+        if (!lock) { starting = false; stats(); status('Procházka už běží v jiné kartě.'); return; }
+        progress = loadWalk();
+        meta = loadWalkMeta();
+        starting = false; active = true; anchor = null; follow = true; stats();
+        status('Čekám na GPS. Povol polohu a vyjdi na otevřené místo.');
+        const held = new Promise(resolve => { releaseLock = resolve; });
+        watch = navigator.geolocation.watchPosition(
+          p => sample({ lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy, speed: p.coords.speed, timestamp: p.timestamp }),
+          error => {
+            if (error.code === 1) stop('Poloha není povolená. Povol ji v nastavení.');
+            else { anchor = null; status('GPS zatím není dostupná.'); }
+          },
+          { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 }
+        );
+        holdWake();
+        await held;
+      });
+    } catch (error) { stop(error.message || 'GPS nelze spustit.'); }
+  }
+
+  if (L) {
+    const center = progress.cells.length ? cellCenter(progress.cells.at(-1)) : { lat: 49.6018, lng: 13.8635 };
+    map = L.map($('walk-map'), { zoomControl: true, minZoom: 3, maxZoom: 18, maxBounds: [[-85, -180], [85, 180]], maxBoundsViscosity: 1 }).setView([center.lat, center.lng], 16);
+    tileLayer = L.tileLayer(config.mapTileUrl, { maxZoom: 19, noWrap: true, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }).addTo(map);
+    tileLayer.on('tileerror', () => { $('tile-status').textContent = 'Mapový podklad se nenačetl. Průzkum funguje dál.'; });
+
+    const pane = map.createPane('walk-fog');
+    pane.style.zIndex = '450';
+    pane.style.pointerEvents = 'none';
+    fog = L.DomUtil.create('canvas', 'walk-fog', pane);
+    fog.setAttribute('aria-hidden', 'true');
+
+    placesLayer.addTo(map);
+    trailLayer.addTo(map);
+
+    accuracyRing = L.circle([center.lat, center.lng], { radius: 0, color: '#68c8ff', weight: 1, fillOpacity: .12, pane: 'markerPane' }).addTo(map);
+    player = L.circleMarker([center.lat, center.lng], { radius: 8, color: 'white', weight: 3, fillColor: '#218bea', opacity: 0, fillOpacity: 0, pane: 'markerPane' }).addTo(map);
+
+    map.on('move zoom resize', scheduleFog);
+    map.on('dragstart', () => { follow = false; });
+    map.on('moveend', () => { if (!lastFix) renderPlaces(); });
+  } else {
+    $('walk-map').textContent = 'Mapová knihovna chybí.';
+  }
+
+  $('walk-start').addEventListener('click', start);
+  $('walk-stop').addEventListener('click', () => stop('Pozastaveno. Průzkum je uložený.'));
+  $('walk-awake').addEventListener('change', () => { $('walk-awake').checked ? holdWake() : releaseWake(); });
+  $('walk-fog').addEventListener('click', () => {
+    reveal = !reveal;
+    $('walk-fog').textContent = `Mlha: ${reveal ? 'zapnutá' : 'vypnutá'}`;
+    $('walk-fog').setAttribute('aria-pressed', String(reveal));
+    scheduleFog();
   });
-  function stepDemo(){const fix={lat:49.6030031+demoIndex*.00046,lng:13.8629039+Math.sin(demoIndex*.7)*.0002,accuracy:5,timestamp:Date.now()+demoIndex*40000};demoIndex++;sample(fix,fix.timestamp);}
-  $('walk-step').addEventListener('click',stepDemo);
-  $('walk-nearby').addEventListener('click',async()=>{
-    if(demo){$('nearby-status').textContent='Ukázka okolí používá pouze připravený katalog. Pro hledání u sebe zapni skutečnou GPS.';return;}
-    if(!lastFix||Date.now()-lastFix.timestamp>60000){$('nearby-status').textContent='Nejdřív spusť GPS a získej čerstvou polohu.';return;}
-    $('walk-nearby').disabled=true;$('nearby-status').textContent='Hledám skutečná místa v okolí…';
-    try{const found=await fetchNearby(lastFix,config.overpassUrl,aborter.signal);if(disposed||demo)return;nearby=found;renderPlaces();$('nearby-status').textContent=found.length?`Načteno ${found.length} míst. Objevy se připíšou při dalším započítaném pohybu.`:'V okolí nemáme odpovídající místa. Průzkum a mystery odměny fungují dál.';}
-    catch(error){if(!disposed)$('nearby-status').textContent=error.name==='AbortError'?'Hledání trvalo příliš dlouho. Zkus to za chvíli.':error.message;}
-    finally{if(!disposed)$('walk-nearby').disabled=false;}
+  $('walk-center').addEventListener('click', () => {
+    follow = true;
+    if (lastFix && map) map.setView([lastFix.lat, lastFix.lng], 16);
+    else status('Nejdřív spusť GPS nebo ukázku.');
   });
-  $('walk-export').addEventListener('click',()=>{try{const raw=localStorage.getItem(WALK_KEY)||JSON.stringify(emptyWalk());const url=URL.createObjectURL(new Blob([raw],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='czekpoint-pruzkum.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(error){status(error.message);}});
-  const visibility=()=>{if(document.hidden&&(active||starting))stop('Záznam se pozastavil při skrytí aplikace. Pro pokračování znovu zapni GPS.');};
-  document.addEventListener('visibilitychange',visibility);
-  const pagehide=()=>stop();window.addEventListener('pagehide',pagehide);
-  const storageChanged=event=>{if(event.key===WALK_KEY&&!demo){stop();try{progress=loadWalk();storageError='';}catch(error){storageError=error.message;}stats();status(storageError||'Průzkum se změnil v jiné kartě. Pro pokračování znovu spusť GPS.');}};
-  window.addEventListener('storage',storageChanged);
+  $('walk-demo').addEventListener('click', () => {
+    stop();
+    demo = !demo;
+    lastFix = null; nearby = []; anchor = null; sessionCells = 0; sessionMeters = 0; sessionTrophies = 0;
+    if (demo) {
+      progress = emptyWalk();
+      meta = loadWalkMeta();
+      demoIndex = 0;
+      stats();
+      stepDemo();
+    } else {
+      try { progress = loadWalk(); } catch (error) { storageError = error.message; progress = emptyWalk(); }
+      meta = loadWalkMeta();
+      stats();
+      status(storageError || 'Ukázka skončila.');
+      if (map) {
+        player.setStyle({ opacity: 0, fillOpacity: 0 });
+        accuracyRing.setRadius(0);
+        const c = progress.cells.length ? cellCenter(progress.cells.at(-1)) : { lat: 49.6018, lng: 13.8635 };
+        map.setView([c.lat, c.lng], 16);
+      }
+    }
+  });
+
+  function stepDemo() {
+    const fix = {
+      lat: 49.6018 + demoIndex * .00045,
+      lng: 13.8635 + Math.sin(demoIndex * .7) * .00025,
+      accuracy: 5,
+      timestamp: Date.now() + demoIndex * 40000,
+    };
+    demoIndex++;
+    sample(fix, fix.timestamp);
+  }
+  $('walk-step').addEventListener('click', stepDemo);
+
+  // Popup button handler (visit & photo report from map pins)
+  root.addEventListener('click', async event => {
+    const btn = event.target.closest('[data-walk-action]');
+    if (!btn) return;
+    const actionType = btn.dataset.walkAction;
+    const routeId = btn.dataset.route;
+    const targetRoute = routes.find(r => r.id === routeId);
+    if (!targetRoute) return;
+
+    if (actionType === 'visit') {
+      btn.disabled = true;
+      if (onAddVisit) await onAddVisit(routeId);
+      if (meta.tiers[routeId] !== 'gold') meta.tiers[routeId] = 'silver';
+      saveWalkMeta(meta);
+      stats();
+      status(`Návštěva ${targetRoute.title} zapsána! Získána Stříbrná trofej.`);
+    } else if (actionType === 'photo') {
+      if (onOpenReport) onOpenReport(targetRoute);
+    }
+  });
+
+  $('walk-nearby').addEventListener('click', async () => {
+    if (demo) { $('nearby-status').textContent = 'Ukázka používá připravený katalog.'; return; }
+    if (!lastFix || Date.now() - lastFix.timestamp > 60000) { $('nearby-status').textContent = 'Nejdřív spusť GPS a získej polohu.'; return; }
+    $('walk-nearby').disabled = true;
+    $('nearby-status').textContent = 'Hledám místa v okolí…';
+    try {
+      const found = await fetchNearby(lastFix, config.overpassUrl, aborter.signal);
+      if (disposed || demo) return;
+      nearby = found;
+      renderPlaces();
+      $('nearby-status').textContent = found.length ? `Načteno ${found.length} míst.` : 'V okolí nejsou další známá místa.';
+    } catch (error) {
+      if (!disposed) $('nearby-status').textContent = error.name === 'AbortError' ? 'Hledání trvalo příliš dlouho.' : error.message;
+    } finally {
+      if (!disposed) $('walk-nearby').disabled = false;
+    }
+  });
+
+  $('walk-export').addEventListener('click', () => {
+    try {
+      const exportData = {
+        walk: localStorage.getItem(WALK_KEY) ? JSON.parse(localStorage.getItem(WALK_KEY)) : emptyWalk(),
+        meta: loadWalkMeta(),
+      };
+      const url = URL.createObjectURL(new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'czekpoint-pruzkum-v0.3.json';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) { status(error.message); }
+  });
+
+  const visibility = () => { if (document.hidden && (active || starting)) stop('Záznam byl pozastaven při skrytí aplikace.'); };
+  document.addEventListener('visibilitychange', visibility);
+  const pagehide = () => stop();
+  window.addEventListener('pagehide', pagehide);
+
+  const storageChanged = event => {
+    if (event.key === WALK_KEY && !demo) {
+      stop();
+      try { progress = loadWalk(); storageError = ''; } catch (err) { storageError = err.message; }
+      meta = loadWalkMeta();
+      stats();
+      status(storageError || 'Průzkum se změnil v jiné kartě.');
+    }
+  };
+  window.addEventListener('storage', storageChanged);
+
   stats();
-  return ()=>{disposed=true;stop();aborter.abort();document.removeEventListener('visibilitychange',visibility);window.removeEventListener('pagehide',pagehide);window.removeEventListener('storage',storageChanged);if(frame)cancelAnimationFrame(frame);map?.remove();};
+
+  return () => {
+    disposed = true;
+    stop();
+    aborter.abort();
+    document.removeEventListener('visibilitychange', visibility);
+    window.removeEventListener('pagehide', pagehide);
+    window.removeEventListener('storage', storageChanged);
+    if (frame) cancelAnimationFrame(frame);
+    map?.remove();
+  };
 }

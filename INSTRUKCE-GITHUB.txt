@@ -1,0 +1,36 @@
+========================================================
+  CZEKPOINT PILOT v0.3 — POSTUP NAHRÁNÍ NA GITHUB
+========================================================
+
+Tato složka ("SOUBORY K APLIKACI") obsahuje vše, co potřebuješ
+nahrát do svého GitHub repozitáře, aby aplikace běžela online.
+
+KTERÉ SOUBORY A SLOŽKY SE NAHRÁVAJÍ:
+-----------------------------------
+1. index.html              (vstupní stránka webu)
+2. config.js               (veřejná konfigurace aplikace)
+3. manifest.webmanifest    (PWA manifest pro mobilní instalaci)
+4. .nojekyll               (vypíná Jekyll v GitHub Pages)
+5. složka "src"            (veškerá aplikační logika a data v0.3)
+6. složka "assets"         (styly CSS, ikony, grafika a Leaflet)
+
+
+POSTUP KROK ZA KROKEM:
+----------------------
+1. Otevři svůj GitHub repozitář ve webovém prohlížeči (např. github.com/TVOJE-JMENO/czekpoint).
+2. Pokud je repozitář prázdný, klikni na "uploading an existing file".
+   Pokud již obsahuje soubory, klikni nahoře na "Add file" > "Upload files".
+3. Otevři v počítači složku "SOUBORY K APLIKACI".
+4. Označ VŠECHNY soubory a složky uvnitř této složky (Ctrl+A)
+   a přetáhni je myší (Drag & Drop) do okna GitHubu.
+   (Poznámka: Nenahrávej samotnou složku "SOUBORY K APLIKACI", ale její VNITŘEK tak,
+   aby v kořenu repozitáře byl přímo index.html, složka src a složka assets).
+5. Dole klikni na zelené tlačítko "Commit changes".
+6. V repozitáři přejdi do záložky "Settings" (Nastavení) > v levém menu vyber "Pages".
+7. V sekci "Build and deployment":
+   - Source: "Deploy from a branch"
+   - Branch: vyber "main" (nebo "master")
+   - Folder: vyber "/(root)"
+   - Klikni na "Save"
+8. Za cca 1 až 2 minuty GitHub stránku nasadí a zobrazí zelený odkaz
+   (např. https://TVOJE-JMENO.github.io/czekpoint/).

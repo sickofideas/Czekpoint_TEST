@@ -27,12 +27,15 @@ export function validateReportInput(input, config = {}, now = Date.now()) {
     if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > max) throw new Error('Neplatná přesnost nebo vzdálenost polohy.');
     return value;
   };
-  return {
+  const tags = input.tags != null ? (Array.isArray(input.tags) ? input.tags.filter(t => typeof t === 'string').slice(0, 6) : []) : undefined;
+  const result = {
     routeId: input.routeId, kind: input.kind, note, author,
     observedAt: observed.toISOString(), photoBlob,
     // Whitelist fields: precise GPS coordinates never enter storage.
     locationCheck: { state: check.state, accuracy: numberOrNull(check.accuracy, 100_000), distance: numberOrNull(check.distance, 40_000_000) },
   };
+  if (tags && tags.length) result.tags = tags;
+  return result;
 }
 
 export function createLocalRepository(config = {}) {

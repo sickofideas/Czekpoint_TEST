@@ -2,6 +2,15 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const FUTURE_TOLERANCE_MS = 5 * 60 * 1000;
 const REPORT_KINDS = new Set(['clear', 'mud', 'obstacle', 'closure', 'other']);
 
+export const QUICK_TAGS = [
+  { id: 'stroller-ok', label: 'Sjízdné s kočárkem' },
+  { id: 'dry', label: 'Suchá cesta' },
+  { id: 'muddy', label: 'Bláto' },
+  { id: 'obstacle', label: 'Spadlý strom / překážka' },
+  { id: 'open', label: 'Otevřeno' },
+  { id: 'quiet', label: 'Klidné místo' },
+];
+
 function searchText(value) {
   return String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('cs').trim();
 }
@@ -68,10 +77,23 @@ export function validateReport(input, now = Date.now()) {
     errors.push('Hlášení nesmí být starší než 30 dní.');
   }
   if (record.photo != null && typeof record.photo !== 'string') errors.push('Fotografie musí být připravená jako obrazový odkaz.');
+  const validTagIds = new Set(QUICK_TAGS.map((t) => t.id));
+  if (record.tags != null) {
+    if (!Array.isArray(record.tags) || record.tags.length > 6 || record.tags.some((t) => typeof t !== 'string' || !validTagIds.has(t))) {
+      errors.push('Uveďte platné rychlé štítky.');
+    }
+  }
   const valid = errors.length === 0;
   const value = valid ? { routeId, kind, note, author, observedAt: new Date(observed).toISOString() } : null;
   if (valid && record.photo) value.photo = record.photo;
+  if (valid && record.tags && record.tags.length) value.tags = [...new Set(record.tags)];
   return { valid, errors, value };
+}
+
+/** Place is eligible for pioneer bonus if no published report is fresh in the last 7 days. */
+export function isPioneerEligible(reports, now = Date.now(), days = 7) {
+  if (!Array.isArray(reports) || reports.length === 0) return true;
+  return !reports.some((report) => isReportFresh(report, now, days));
 }
 
 /** Returns null for missing/invalid coordinates instead of pretending proximity is known. */

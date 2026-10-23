@@ -2,3 +2,31 @@
 @media(max-width:760px){.walk-heading{display:block}.walk-tag{display:inline-block;margin-top:12px}.walk-stats{gap:10px;padding:16px}.walk-stats strong{font-size:25px}.walk-stats span{font-size:10px}.walk-stats>div{padding-left:8px}.walk-columns{grid-template-columns:1fr}#walk-map{height:460px}.site-header{gap:12px}.main-nav{gap:12px}.main-nav>a{font-size:12px}.brand{font-size:21px}.walk-controls .button{flex-grow:1}.walk-heading .eyebrow{font-size:10px}}
 @media(max-width:460px){.site-header{flex-wrap:wrap}.site-header .brand{font-size:23px}.main-nav{width:100%;margin-left:0;justify-content:space-between}.main-nav>a:last-child{display:block}.main-nav>a{font-size:11px}.walk-heading h1{font-size:35px}.walk-stats{grid-template-columns:repeat(2,1fr);row-gap:18px}.walk-stats>div:nth-child(3){border:0;padding-left:0}#walk-map{height:420px}.walk-map-toolbar{bottom:30px;left:8px}.walk-map-toolbar button{font-size:11px;padding:7px 9px}.trophy-grid{gap:6px}.walk-columns .panel{padding:18px}}
 .mystery-collection{display:flex;flex-wrap:wrap;gap:7px;margin:16px 0}.fragment{padding:8px 10px;border-radius:9px;background:#eef0e8;font-size:11px;color:#76816d}.fragment.found{background:#f4e8b8;color:#68501d;border:1px solid #d8c570}
+.walk-compass-bar{background:#193e32;color:#f7f9ed;padding:11px 16px;border-radius:14px;margin-bottom:12px;font-size:13px;display:flex;align-items:center;gap:10px;box-shadow:0 3px 12px #0001}.walk-compass-bar strong{color:#d8e99e}
+.rank-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 18px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.rank-info{display:flex;flex-direction:column;gap:2px}.rank-title{font-weight:700;color:#193e32;font-size:14px}.rank-fog{font-size:12px;color:var(--muted)}
+.daily-challenge-card{background:#fefefa;border:1px solid #c7d8be;border-radius:14px;padding:13px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.daily-title{font-weight:650;color:#193e32;font-size:13px}
+.sectors-overview{margin:18px 0;display:flex;flex-direction:column;gap:10px}
+.sector-list{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:760px){.sector-list{grid-template-columns:1fr}}
+.sector-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:5px;font-size:12px}
+.sector-card.unlocked{border-color:#8da949;background:#f7faee}
+.sector-seal{font-size:11px;font-weight:700;color:#4a6828}
+.mystery-pin{position:relative;display:grid!important;place-items:center;border-radius:50%;font-size:15px;font-weight:700;cursor:pointer;transition:transform .15s}
+.mystery-pin:hover{transform:scale(1.15)}
+.mystery-pin.tier-gold{background:#fff5cc!important;border:2px solid #e5a912!important;box-shadow:0 0 10px #f9c74f99,0 2px 6px #0004!important}
+.mystery-pin.tier-silver{background:#f0f3f5!important;border:2px solid #a0b2bc!important;box-shadow:0 2px 6px #0004!important}
+.mystery-pin.tier-bronze{background:#faeedb!important;border:2px solid #c77b38!important;box-shadow:0 2px 6px #0004!important}
+.mystery-pin.tier-none{background:#24463a!important;border:2px solid #94ad9d!important;color:#d8e99e!important;box-shadow:0 2px 6px #0006!important}
+.pioneer-badge{position:absolute;top:-6px;right:-8px;background:#ff5722;color:#fff;font-size:9px;font-weight:800;padding:1px 4px;border-radius:8px;border:1px solid #fff;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+.session-modal{position:fixed;inset:0;background:rgba(16,43,39,.75);display:grid;place-items:center;z-index:1000;padding:20px}
+.session-modal-card{background:#fff;border-radius:20px;max-width:440px;width:100%;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.3);display:flex;flex-direction:column;gap:14px}
+.session-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.session-stat-box{background:var(--soft);border-radius:12px;padding:12px;text-align:center}
+.session-stat-box strong{display:block;font-size:22px;color:var(--ink)}
+.session-stat-box span{font-size:11px;color:var(--muted)}
+.trail-note{font-size:11px;color:var(--muted);margin-top:6px}
+.popup-actions{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.popup-actions .button{font-size:11px;padding:6px 10px;min-height:30px}
