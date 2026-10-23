@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 460" width="100%" height="100%">
+  <defs>
+    <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#eaf2e8"/>
+      <stop offset="70%" stop-color="#d5e5cf"/>
+      <stop offset="100%" stop-color="#c1d9bb"/>
+    </linearGradient>
+    <linearGradient id="hill1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#8ba888"/>
+      <stop offset="100%" stop-color="#6e8f6b"/>
+    </linearGradient>
+    <linearGradient id="hill2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#557c53"/>
+      <stop offset="100%" stop-color="#3d633b"/>
+    </linearGradient>
+    <linearGradient id="foreground" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2a4e32"/>
+      <stop offset="100%" stop-color="#193e32"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Sky -->
+  <rect width="720" height="460" rx="24" fill="url(#skyGrad)"/>
+
+  <!-- Morning Sun -->
+  <circle cx="530" cy="115" r="48" fill="#fce59c" opacity="0.85"/>
+  <circle cx="530" cy="115" r="58" fill="#fce59c" opacity="0.35"/>
+
+  <!-- Distant Brdy Hills -->
+  <path d="M0 240 Q160 170 340 220 T720 205 L720 460 L0 460 Z" fill="url(#hill1)" opacity="0.6"/>
+  <path d="M0 270 Q210 200 450 260 T720 250 L720 460 L0 460 Z" fill="url(#hill2)" opacity="0.85"/>
+
+  <!-- Forest Silhouettes on Ridge -->
+  <g fill="#436842" opacity="0.7">
+    <!-- Pine group left -->
+    <polygon points="120,225 110,250 130,250"/>
+    <polygon points="135,215 124,248 146,248"/>
+    <polygon points="152,228 142,252 162,252"/>
+    <!-- Pine group mid -->
+    <polygon points="360,220 348,255 372,255"/>
+    <polygon points="380,210 367,250 393,250"/>
+    <polygon points="402,224 391,254 413,254"/>
+    <!-- Pine group right -->
+    <polygon points="610,230 600,258 620,258"/>
+    <polygon points="630,222 618,256 642,256"/>
+  </g>
+
+  <!-- Winding Trail / Footpath -->
+  <path d="M420 460 C390 380 430 340 370 295 C330 265 310 240 320 220" fill="none" stroke="#e8dfc5" stroke-width="26" stroke-linecap="round"/>
+  <path d="M420 460 C390 380 430 340 370 295 C330 265 310 240 320 220" fill="none" stroke="#d5c8a3" stroke-width="16" stroke-linecap="round" stroke-dasharray="1 2"/>
+
+  <!-- Foreground Forest Floor -->
+  <path d="M0 330 Q220 310 420 360 T720 340 L720 460 L0 460 Z" fill="url(#foreground)"/>
+
+  <!-- Detailed Trees in Midground -->
+  <g fill="#214729">
+    <polygon points="80,230 55,295 105,295"/>
+    <polygon points="80,210 60,265 100,265"/>
+    <polygon points="80,190 65,235 95,235"/>
+    <rect x="76" y="295" width="8" height="35" fill="#1b2f1e"/>
+
+    <polygon points="130,250 110,310 150,310"/>
+    <polygon points="130,230 115,280 145,280"/>
+    <rect x="127" y="310" width="6" height="30" fill="#1b2f1e"/>
+
+    <polygon points="630,260 605,330 655,330"/>
+    <polygon points="630,235 612,295 648,295"/>
+    <rect x="626" y="330" width="8" height="40" fill="#1b2f1e"/>
+  </g>
+
+  <!-- Explorer Silhouette with Map & Walking Staff -->
+  <g transform="translate(260, 240)">
+    <!-- Walking staff -->
+    <line x1="86" y1="25" x2="82" y2="140" stroke="#876840" stroke-width="4.5" stroke-linecap="round"/>
+
+    <!-- Backpack -->
+    <path d="M22 45 C15 45 10 55 10 70 C10 85 16 95 24 95 Z" fill="#2d5540"/>
+    <rect x="8" y="55" width="12" height="28" rx="4" fill="#3b694f"/>
+
+    <!-- Legs & Boots walking -->
+    <path d="M36 100 L32 135 L24 138" stroke="#193e32" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M48 98 L58 132 L68 136" stroke="#193e32" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Body / Jacket -->
+    <path d="M24 45 C24 35 38 35 52 40 L56 75 C56 88 48 102 36 102 C26 102 24 88 24 75 Z" fill="#2d5b3f"/>
+    <!-- Scarf / Collar -->
+    <path d="M40 36 C45 36 50 38 52 42" fill="none" stroke="#d8e99e" stroke-width="4" stroke-linecap="round"/>
+
+    <!-- Arm holding Atlas / Map -->
+    <path d="M42 48 L65 58 L72 52" fill="none" stroke="#2d5b3f" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Opened Field Map / Atlas booklet -->
+    <polygon points="68,46 84,40 88,58 72,64" fill="#faf6e6" stroke="#8f7e5d" stroke-width="1.5"/>
+    <line x1="76" y1="43" x2="80" y2="61" stroke="#8f7e5d" stroke-width="1.2"/>
+    <line x1="72" y1="52" x2="84" y2="48" stroke="#718d39" stroke-width="1.5"/>
+
+    <!-- Right Arm holding staff -->
+    <path d="M46 48 L70 60 L84 66" fill="none" stroke="#234a33" stroke-width="6" stroke-linecap="round"/>
+
+    <!-- Head & Explorer Cap -->
+    <circle cx="48" cy="27" r="11" fill="#193e32"/>
+    <!-- Cap visor pointing right -->
+    <path d="M40 22 C44 17 56 17 60 23 L67 24 C68 25 66 28 61 28 Z" fill="#193e32"/>
+  </g>
+
+  <!-- Small Local Wildlife / Birds -->
+  <path d="M460 140 Q468 132 476 140 Q484 132 492 140" fill="none" stroke="#3d5a45" stroke-width="2" stroke-linecap="round"/>
+  <path d="M495 160 Q501 154 507 160 Q513 154 519 160" fill="none" stroke="#3d5a45" stroke-width="1.8" stroke-linecap="round"/>
+
+  <!-- Compass Rose Accent in top right -->
+  <g transform="translate(645, 65) scale(0.7)" opacity="0.6">
+    <circle cx="0" cy="0" r="30" fill="none" stroke="#193e32" stroke-width="2" stroke-dasharray="3 3"/>
+    <polygon points="0,-28 6,-6 0,0" fill="#193e32"/>
+    <polygon points="0,-28 -6,-6 0,0" fill="#718d39"/>
+    <polygon points="0,28 6,6 0,0" fill="#718d39"/>
+    <polygon points="0,28 -6,6 0,0" fill="#193e32"/>
+    <polygon points="28,0 6,6 0,0" fill="#718d39"/>
+    <polygon points="-28,0 -6,-6 0,0" fill="#718d39"/>
+    <text x="-4" y="-33" font-family="sans-serif" font-size="11" font-weight="bold" fill="#193e32">S</text>
+  </g>
+</svg>

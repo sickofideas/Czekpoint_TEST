@@ -98,10 +98,18 @@ export function createSupabaseRepository(config, dependencies = {}) {
     try { url = await photoUrl(row.photo_path, session); }
     catch { photoUnavailable = true; }
     return {
-      id: row.id, routeId: row.route_id, kind: row.kind, note: row.note, author: row.author,
-      observedAt: row.observed_at, createdAt: row.created_at, status: row.status,
+      id: row.id,
+      routeId: row.route_id,
+      kind: row.kind,
+      note: row.note || '',
+      author: row.author || 'Návštěvník',
+      observedAt: row.observed_at,
+      createdAt: row.created_at,
+      status: row.status,
       locationCheck: { state: row.location_state, accuracy: row.location_accuracy, distance: row.location_distance },
-      photoUrl: url, photoUnavailable, isOwn: row.user_id === session?.user.id,
+      photoUrl: url,
+      photoUnavailable,
+      isOwn: row.user_id === session?.user.id,
     };
   }
   async function removePhoto(path, session) {
@@ -128,25 +136,22 @@ export function createSupabaseRepository(config, dependencies = {}) {
       const clean = validateReportInput(input, config);
       const session = await auth.getSession(true);
       const id = crypto.randomUUID();
-      const extension = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }[clean.photoBlob?.type];
-      const path = clean.photoBlob ? `${session.user.id}/${id}.${extension}` : null;
-      const body = { id, route_id: clean.routeId, user_id: session.user.id, kind: clean.kind, note: clean.note, author: clean.author, observed_at: clean.observedAt, photo_path: path, location_state: clean.locationCheck.state, location_accuracy: clean.locationCheck.accuracy, location_distance: clean.locationCheck.distance };
+      const body = {
+        id,
+        route_id: clean.routeId,
+        user_id: session.user.id,
+        kind: clean.kind,
+        note: '',
+        author: 'Návštěvník',
+        observed_at: clean.observedAt,
+        photo_path: null,
+        location_state: clean.locationCheck.state,
+        location_accuracy: clean.locationCheck.accuracy,
+        location_distance: clean.locationCheck.distance,
+      };
       const rows = await auth.request('/rest/v1/reports', { method: 'POST', body, session, headers: { Prefer: 'return=representation' } });
       const row = rows?.[0];
       if (!row?.id) throw new Error('Cloud nepotvrdil uložení hlášení. Před opakováním obnovte stránku.');
-      if (clean.photoBlob) {
-        try {
-          await auth.request(`/storage/v1/object/${BUCKET}/${encodePath(path)}`, { method: 'POST', body: clean.photoBlob, headers: { 'Content-Type': clean.photoBlob.type, 'x-upsert': 'false' }, session });
-        } catch (error) {
-          // A failed network response may still follow a committed upload.
-          try {
-            await removePhoto(path, session);
-            await auth.request(`/rest/v1/reports?id=eq.${id}`, { method: 'DELETE', session });
-          } catch { throw new Error('Fotografii se nepodařilo potvrdit. Hlášení může zůstat mezi vašimi čekajícími; obnovte stránku a případně je smažte.'); }
-          throw error;
-        }
-      }
-      // Preview errors are explicit metadata, never a retry of a committed insert.
       return present(row, session);
     },
     async deleteReport(id) {
@@ -164,7 +169,6 @@ export function createSupabaseRepository(config, dependencies = {}) {
     listVisits: () => local.listVisits(),
     addVisit: (id) => local.addVisit(id),
     removeVisit: (id) => local.removeVisit(id),
-    // Keep Auth: deleting local passport data must not lose ownership of cloud reports.
     clearLocalData: () => local.clearLocalData(),
   };
 }

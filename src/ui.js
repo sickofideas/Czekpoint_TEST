@@ -48,7 +48,4 @@ export function localDateInput(date = new Date()) {
   const offset = date.getTimezoneOffset() * 60000;
   return new Date(date.getTime() - offset).toISOString().slice(0,16);
 }
-export function number(val) {
-  if (val == null || !Number.isFinite(val)) return '';
-  return new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 1 }).format(val);
-}
+export function number(value) { return new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 1 }).format(value); }

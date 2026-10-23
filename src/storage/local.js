@@ -2,37 +2,59 @@ import { routes } from '../data.js';
 
 export const REPORT_KINDS = ['clear', 'mud', 'obstacle', 'closure', 'other'];
 const LOCATION_STATES = ['nearby', 'away', 'unavailable', 'not-requested'];
-const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const DB_NAME = 'czekpoint-local-v1';
 
 export function validateReportInput(input, config = {}, now = Date.now()) {
-  if (!input || typeof input.routeId !== 'string' || !/^[a-z0-9][a-z0-9-]{0,79}$/.test(input.routeId)) throw new Error('Vyberte platné místo.');
-  if (!REPORT_KINDS.includes(input.kind)) throw new Error('Vyberte druh hlášení.');
-  const note = String(input.note ?? '').trim();
-  const author = String(input.author ?? '').trim() || 'Návštěvník';
-  if (note.length > 1000) throw new Error('Poznámka může mít nejvýše 1 000 znaků.');
-  if (author.length > 60) throw new Error('Přezdívka může mít nejvýše 60 znaků.');
-  const observed = new Date(input.observedAt ?? now);
-  if (!Number.isFinite(observed.getTime()) || observed.getTime() > now + 5 * 60_000) throw new Error('Datum pozorování musí být platné a nesmí být v budoucnosti.');
-  const photoBlob = input.photoBlob ?? null;
-  if (photoBlob !== null) {
-    if (!(photoBlob instanceof Blob) || !PHOTO_TYPES.includes(photoBlob.type)) throw new Error('Fotografie musí být JPEG, PNG nebo WebP.');
-    const maxBytes = Math.min(Number(config.maxPhotoBytes) || 2_097_152, 2_097_152);
-    if (!photoBlob.size || photoBlob.size > maxBytes) throw new Error('Fotografie je prázdná nebo větší než povolené 2 MB.');
+  if (!input || typeof input.routeId !== 'string' || !/^[a-z0-9][a-z0-9-]{0,79}$/.test(input.routeId)) {
+    throw new Error('Vyberte platné místo.');
   }
+  if (!REPORT_KINDS.includes(input.kind)) {
+    throw new Error('Vyberte druh hlášení.');
+  }
+
+  // Reject photos in v0.4
+  if (input.photo != null || input.photoBlob != null || input.photoUrl != null) {
+    throw new Error('Nahrávání nových fotografií bylo ukončeno.');
+  }
+
+  // Reject free text in v0.4
+  if (input.note != null && String(input.note).trim() !== '') {
+    throw new Error('Zadávání volného textu poznámky bylo ukončeno.');
+  }
+  if (input.author != null && String(input.author).trim() !== '' && String(input.author).trim() !== 'Návštěvník') {
+    throw new Error('Zadávání vlastního jména autora bylo ukončeno.');
+  }
+
+  const observed = new Date(input.observedAt ?? now);
+  if (!Number.isFinite(observed.getTime()) || observed.getTime() > now + 5 * 60_000) {
+    throw new Error('Datum pozorování musí být platné a nesmí být v budoucnosti.');
+  }
+
   const check = input.locationCheck ?? { state: 'not-requested' };
   if (!LOCATION_STATES.includes(check.state)) throw new Error('Neplatný výsledek kontroly polohy.');
   const numberOrNull = (value, max) => {
     if (value == null) return null;
-    if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > max) throw new Error('Neplatná přesnost nebo vzdálenost polohy.');
+    if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > max) {
+      throw new Error('Neplatná přesnost nebo vzdálenost polohy.');
+    }
     return value;
   };
+
   const tags = input.tags != null ? (Array.isArray(input.tags) ? input.tags.filter(t => typeof t === 'string').slice(0, 6) : []) : undefined;
+
   const result = {
-    routeId: input.routeId, kind: input.kind, note, author,
-    observedAt: observed.toISOString(), photoBlob,
+    routeId: input.routeId,
+    kind: input.kind,
+    note: '',
+    author: 'Návštěvník',
+    observedAt: observed.toISOString(),
+    photoBlob: null,
     // Whitelist fields: precise GPS coordinates never enter storage.
-    locationCheck: { state: check.state, accuracy: numberOrNull(check.accuracy, 100_000), distance: numberOrNull(check.distance, 40_000_000) },
+    locationCheck: {
+      state: check.state,
+      accuracy: numberOrNull(check.accuracy, 100_000),
+      distance: numberOrNull(check.distance, 40_000_000),
+    },
   };
   if (tags && tags.length) result.tags = tags;
   return result;
@@ -82,9 +104,11 @@ export function createLocalRepository(config = {}) {
       catch (error) { tx.abort(); reject(error); }
     });
   }
+
   const readAll = (store) => transaction([store], 'readonly', (tx, done) => {
     tx.objectStore(store).getAll().onsuccess = (event) => done(event.target.result);
   });
+
   function present(row) {
     let photoUrl = null;
     if (row.photoBlob) {
@@ -122,7 +146,6 @@ export function createLocalRepository(config = {}) {
     },
     async listSavedIds() { return (await readAll('saved')).map((row) => row.routeId); },
     async toggleSaved(routeId) {
-      // Cloud IDs need not occur in the bundled example catalogue.
       if (typeof routeId !== 'string' || !routeId) throw new Error('Neplatné místo.');
       return transaction(['saved'], 'readwrite', (tx, done) => {
         const store = tx.objectStore('saved');
