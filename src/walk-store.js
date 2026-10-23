@@ -6,6 +6,9 @@ export const WALK_KEY = 'czekpoint.walk.v1';
 export const WALK_META_KEY = 'czekpoint.walk.meta.v1';
 export const RESET_MARKER_KEY = 'czekpoint.reset.done';
 export const MAX_EXPEDITION_HISTORY = 100;
+export const COMPANION_MODES = ['solo', 'dog', 'stroller', 'family'];
+export const EXPLORATION_MODES = ['compass', 'focus', 'radar'];
+export const MAX_STICK_BADGES = 200;
 
 export const emptyState = () => ({
   schemaVersion: 2,
@@ -25,6 +28,14 @@ export const emptyState = () => ({
   seals: [],
   activeExpedition: null,
   expeditionHistory: [],
+  companionMode: 'solo',
+  explorationMode: 'focus',
+  soundEnabled: true,
+  pilgrimsOptIn: false,
+  clinksCount: 0,
+  stickBadges: [],
+  summitEntries: {},
+  plannedRoute: null,
 });
 
 export const emptyWalkMeta = () => ({
@@ -79,6 +90,14 @@ export function loadState() {
           seals: Array.isArray(data.seals) ? data.seals : [],
           activeExpedition: data.activeExpedition ?? null,
           expeditionHistory: Array.isArray(data.expeditionHistory) ? data.expeditionHistory.slice(0, MAX_EXPEDITION_HISTORY) : [],
+          companionMode: COMPANION_MODES.includes(data.companionMode) ? data.companionMode : 'solo',
+          explorationMode: EXPLORATION_MODES.includes(data.explorationMode) ? data.explorationMode : 'focus',
+          soundEnabled: typeof data.soundEnabled === 'boolean' ? data.soundEnabled : true,
+          pilgrimsOptIn: typeof data.pilgrimsOptIn === 'boolean' ? data.pilgrimsOptIn : false,
+          clinksCount: Number.isFinite(data.clinksCount) && data.clinksCount >= 0 ? Math.floor(data.clinksCount) : 0,
+          stickBadges: Array.isArray(data.stickBadges) ? data.stickBadges.slice(0, MAX_STICK_BADGES) : [],
+          summitEntries: data.summitEntries && typeof data.summitEntries === 'object' && !Array.isArray(data.summitEntries) ? data.summitEntries : {},
+          plannedRoute: data.plannedRoute && typeof data.plannedRoute === 'object' ? data.plannedRoute : null,
         };
       }
     }
@@ -134,6 +153,14 @@ export function loadState() {
       seals: [],
       activeExpedition: null,
       expeditionHistory: [],
+      companionMode: 'solo',
+      explorationMode: 'focus',
+      soundEnabled: true,
+      pilgrimsOptIn: false,
+      clinksCount: 0,
+      stickBadges: [],
+      summitEntries: {},
+      plannedRoute: null,
     };
 
     try {
@@ -171,6 +198,14 @@ export function saveState(state) {
       expeditionHistory: Array.isArray(state.expeditionHistory)
         ? state.expeditionHistory.slice(0, MAX_EXPEDITION_HISTORY)
         : [],
+      companionMode: COMPANION_MODES.includes(state.companionMode) ? state.companionMode : 'solo',
+      explorationMode: EXPLORATION_MODES.includes(state.explorationMode) ? state.explorationMode : 'focus',
+      soundEnabled: typeof state.soundEnabled === 'boolean' ? state.soundEnabled : true,
+      pilgrimsOptIn: typeof state.pilgrimsOptIn === 'boolean' ? state.pilgrimsOptIn : false,
+      clinksCount: Number.isFinite(state.clinksCount) && state.clinksCount >= 0 ? Math.floor(state.clinksCount) : 0,
+      stickBadges: Array.isArray(state.stickBadges) ? state.stickBadges.slice(0, MAX_STICK_BADGES) : [],
+      summitEntries: state.summitEntries && typeof state.summitEntries === 'object' && !Array.isArray(state.summitEntries) ? state.summitEntries : {},
+      plannedRoute: state.plannedRoute && typeof state.plannedRoute === 'object' ? state.plannedRoute : null,
       revision: (Number(state.revision) || 0) + 1,
     };
     localStorage.setItem(STATE_KEY, JSON.stringify(nextState));
@@ -217,7 +252,7 @@ export function exportStateJson() {
   const exportPayload = {
     exportedAt: new Date().toISOString(),
     appName: 'czekpoint',
-    appVersion: '0.5.0',
+    appVersion: '0.6.0',
     schemaVersion: 2,
     data: {
       profile: state.profile,
@@ -229,6 +264,14 @@ export function exportStateJson() {
       legacyRewards: state.legacyRewards,
       seals: state.seals,
       expeditionHistory: state.expeditionHistory,
+      companionMode: state.companionMode || 'solo',
+      explorationMode: state.explorationMode || 'focus',
+      soundEnabled: state.soundEnabled ?? true,
+      pilgrimsOptIn: state.pilgrimsOptIn ?? false,
+      clinksCount: state.clinksCount || 0,
+      stickBadges: state.stickBadges || [],
+      summitEntries: state.summitEntries || {},
+      plannedRoute: state.plannedRoute || null,
     },
   };
   return JSON.stringify(exportPayload, null, 2);
@@ -269,6 +312,7 @@ export function previewImportState(jsonString) {
   const metersKm = (d.meters / 1000).toFixed(1).replace('.', ',');
   const stampsCount = d.discoveries.length;
   const historyCount = Array.isArray(d.expeditionHistory) ? d.expeditionHistory.length : 0;
+  const badgesCount = Array.isArray(d.stickBadges) ? d.stickBadges.length : 0;
 
   return {
     valid: true,
@@ -277,6 +321,7 @@ export function previewImportState(jsonString) {
     metersKm,
     stampsCount,
     historyCount,
+    badgesCount,
     payload: d,
   };
 }
@@ -310,6 +355,14 @@ export function importStateJson(jsonString) {
     seals: Array.isArray(d.seals) ? d.seals : [],
     activeExpedition: activeExp,
     expeditionHistory: Array.isArray(d.expeditionHistory) ? d.expeditionHistory.slice(0, MAX_EXPEDITION_HISTORY) : [],
+    companionMode: COMPANION_MODES.includes(d.companionMode) ? d.companionMode : 'solo',
+    explorationMode: EXPLORATION_MODES.includes(d.explorationMode) ? d.explorationMode : 'focus',
+    soundEnabled: typeof d.soundEnabled === 'boolean' ? d.soundEnabled : true,
+    pilgrimsOptIn: typeof d.pilgrimsOptIn === 'boolean' ? d.pilgrimsOptIn : false,
+    clinksCount: Number.isFinite(d.clinksCount) && d.clinksCount >= 0 ? Math.floor(d.clinksCount) : 0,
+    stickBadges: Array.isArray(d.stickBadges) ? d.stickBadges.slice(0, MAX_STICK_BADGES) : [],
+    summitEntries: d.summitEntries && typeof d.summitEntries === 'object' && !Array.isArray(d.summitEntries) ? d.summitEntries : {},
+    plannedRoute: d.plannedRoute && typeof d.plannedRoute === 'object' ? d.plannedRoute : null,
   };
 
   saveState(newState);

@@ -36,6 +36,20 @@ dialog{border:1px solid var(--line);border-radius:22px;box-shadow:0 20px 120px #
 .relics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
 .relic-item{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:6px}
 .relic-item.locked{opacity:.55;filter:grayscale(1);background:#f4f5ee}
+.page-enter{animation:pageEnter .18s ease-out forwards}
+@keyframes pageEnter{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+button:active,.button:active{transform:scale(.97)}
+.summit-book-panel{border:1.5px solid #cbd2c5;border-radius:18px;margin-top:20px}
+.summit-book-panel.signed{border-color:#8da949;background:#f9faee}
+.summit-book-header{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+.summit-book-icon{font-size:28px}
+.summit-entry-card{display:flex;gap:14px;align-items:center;background:#fff;border:1px solid #d8e4cf;border-radius:14px;padding:12px 16px}
+.summit-avatar{border-radius:12px;background:#eef2e6;padding:2px}
+.summit-entry-details{display:flex;flex-direction:column;gap:3px}
+.summit-signature{color:#193e32;font-size:14px}
+.summit-meta{font-size:12px;color:var(--muted)}
+.summit-badge-tag{font-size:11px;font-weight:700;color:#4a6828}
+.summit-empty-card{background:#f8f9f4;border:1px dashed #cbd2c5;border-radius:14px;padding:14px;text-align:center}
 @media(max-width:760px){.seals-grid,.collections-grid,.relics-grid{grid-template-columns:1fr}}
 
 @media(min-width:1500px){.page-shell{padding-top:45px}.hero{padding-bottom:42px;gap:60px}.hero-art>img{max-height:355px}.hero h1{font-size:68px}}

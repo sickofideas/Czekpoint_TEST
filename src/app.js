@@ -16,6 +16,9 @@ import { ALLOWED_AVATARS, avatarUrl } from './avatars.js';
 import { generatePostcardDataUrl, generatePostcardBlob } from './postcard.js';
 import { explorerRank, chapterStatus, totalScore } from './walk-engine.js';
 import { CHAPTERS, COLLECTIONS, RELICS } from './data.js';
+import { renderWalkingStickHtml } from './walking-stick.js';
+import { renderPilgrimsSection, renderSummitBook } from './pilgrims.js';
+import { playTick, playHammer, triggerHaptic } from './fx.js';
 
 let disposeWalk = null;
 
@@ -183,6 +186,7 @@ async function renderDetail(id, renderId) {
           <p>Údaje z veřejného zdroje jsme zpracovali ${formatDate(route.source?.checkedAt)}. Toto datum není terénní kontrola ani potvrzení aktuálního stavu.</p>
           ${safeUrl(route.source?.url) ? `<a class="source-link" href="${e(safeUrl(route.source.url))}" target="_blank" rel="noopener noreferrer">${e(route.source.label)} ${icon('external')}</a>` : ''}
         </section>
+        ${renderSummitBook(route.id, stateObj.summitEntries || {})}
       </div>
       <aside class="panel sidebar-card" aria-label="Přehled výletu">
         <div class="facts">
@@ -304,6 +308,14 @@ function renderPassport() {
           `;
         }).join('')}
       </div>
+    </section>
+
+    <section class="passport-section" id="passport-stick-section">
+      ${renderWalkingStickHtml(stateObj)}
+    </section>
+
+    <section class="passport-section" id="passport-pilgrims-section">
+      ${renderPilgrimsSection(stateObj, state.position)}
     </section>
 
     <div class="passport-rank-card">
@@ -462,6 +474,9 @@ function renderNotFound() {
 
 async function renderPage({ focus = false } = {}) {
   disposeWalk?.(); disposeWalk = null;
+  main.classList.remove('page-enter');
+  void main.offsetWidth;
+  main.classList.add('page-enter');
   const renderId = ++state.renderId;
   const parts = location.hash.replace(/^#\/?/, '').split('/');
   const view = parts[0] || '';
@@ -508,6 +523,50 @@ function locate() {
 }
 
 document.addEventListener('click', async event => {
+  const hammerBtn = event.target.closest('.hammer-badge-btn');
+  if (hammerBtn) {
+    const badgeId = hammerBtn.dataset.badgeId;
+    const s = loadState();
+    const badge = (s.stickBadges || []).find(b => b.id === badgeId);
+    if (badge) {
+      badge.pinned = true;
+      hammerBtn.classList.add('hammering');
+      playHammer(s.soundEnabled);
+      triggerHaptic([40, 50, 40]);
+      setTimeout(() => {
+        saveState(s);
+        renderPassport();
+        toast('Plechový štítek byl přibit na tvoji hůl!');
+      }, 320);
+    }
+    return;
+  }
+
+  const clinkBtn = event.target.closest('.clink-btn');
+  if (clinkBtn) {
+    const s = loadState();
+    clinkBtn.classList.add('clinking');
+    playHammer(s.soundEnabled);
+    triggerHaptic(50);
+    s.clinksCount = (Number(s.clinksCount) || 0) + 1;
+    saveState(s);
+    setTimeout(() => {
+      renderPassport();
+      toast('Cinknul jsi holí na pozdrav!');
+    }, 300);
+    return;
+  }
+
+  const pilgrimsToggleBtn = event.target.closest('#toggle-pilgrims-optin-btn');
+  if (pilgrimsToggleBtn) {
+    const s = loadState();
+    s.pilgrimsOptIn = !s.pilgrimsOptIn;
+    playTick(s.soundEnabled);
+    saveState(s);
+    renderPassport();
+    return;
+  }
+
   const button = event.target.closest('[data-action]');
   if (!button || !state.repo) return;
   const action = button.dataset.action;
