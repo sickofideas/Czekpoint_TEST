@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="20" fill="#193e32"/>
+  <!-- Datel / Woodpecker -->
+  <!-- Red Crown -->
+  <path d="M22 25 Q28 12 38 16 Q36 24 30 26 Z" fill="#d93829"/>
+  <!-- Tree bark background strip -->
+  <line x1="16" y1="8" x2="16" y2="56" stroke="#4a3728" stroke-width="5" stroke-linecap="round"/>
+  <!-- Head & Body -->
+  <path d="M24 24 Q35 22 36 32 Q38 48 30 52 L26 44 Z" fill="#2b2d2f"/>
+  <!-- White facial markings -->
+  <path d="M28 25 Q35 27 34 35 Q30 38 27 34 Z" fill="#f7f9ed"/>
+  <!-- Sharp beak -->
+  <polygon points="35,28 49,33 34,36" fill="#8c9196"/>
+  <!-- Eye -->
+  <circle cx="31" cy="29" r="2" fill="#193e32"/>
+  <circle cx="31.5" cy="28.5" r="0.7" fill="#f7f9ed"/>
+  <!-- Red tail/belly patch -->
+  <ellipse cx="28" cy="48" rx="3" ry="5" fill="#d93829"/>
+</svg>

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="20" fill="#193e32"/>
+  <!-- Rys / Lynx -->
+  <!-- Pointed Ears with black tufts -->
+  <polygon points="18,32 23,15 28,30" fill="#b88354"/>
+  <line x1="23" y1="15" x2="22" y2="8" stroke="#193e32" stroke-width="2.5" stroke-linecap="round"/>
+  <polygon points="46,32 41,15 36,30" fill="#b88354"/>
+  <line x1="41" y1="15" x2="42" y2="8" stroke="#193e32" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Side beard tufts -->
+  <polygon points="14,42 22,34 22,46" fill="#f7f9ed"/>
+  <polygon points="50,42 42,34 42,46" fill="#f7f9ed"/>
+  <!-- Head -->
+  <ellipse cx="32" cy="35" rx="13" ry="12" fill="#c99463"/>
+  <!-- Muzzle -->
+  <ellipse cx="32" cy="41" rx="6.5" ry="5" fill="#f7f9ed"/>
+  <polygon points="32,39 30,37 34,37" fill="#d97777"/>
+  <!-- Eyes (sharp feline) -->
+  <path d="M23 31 Q26 27 29 31 Q26 34 23 31 Z" fill="#d8e99e"/>
+  <ellipse cx="26" cy="31" rx="1.2" ry="2.2" fill="#193e32"/>
+  <path d="M41 31 Q38 27 35 31 Q38 34 41 31 Z" fill="#d8e99e"/>
+  <ellipse cx="38" cy="31" rx="1.2" ry="2.2" fill="#193e32"/>
+  <!-- Forehead spots -->
+  <circle cx="32" cy="27" r="1.2" fill="#66462c"/>
+  <circle cx="30" cy="24" r="1" fill="#66462c"/>
+  <circle cx="34" cy="24" r="1" fill="#66462c"/>
+</svg>

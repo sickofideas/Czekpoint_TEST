@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="20" fill="#193e32"/>
+  <!-- Sova / Owl -->
+  <path d="M18 16 L25 24 L14 26 Z" fill="#8c6d46"/>
+  <path d="M46 16 L39 24 L50 26 Z" fill="#8c6d46"/>
+  <ellipse cx="32" cy="38" rx="18" ry="17" fill="#a48053"/>
+  <circle cx="25" cy="33" r="8.5" fill="#f7f9ed"/>
+  <circle cx="39" cy="33" r="8.5" fill="#f7f9ed"/>
+  <circle cx="25" cy="33" r="4.5" fill="#193e32"/>
+  <circle cx="39" cy="33" r="4.5" fill="#193e32"/>
+  <circle cx="26.5" cy="31.5" r="1.5" fill="#f7f9ed"/>
+  <circle cx="40.5" cy="31.5" r="1.5" fill="#f7f9ed"/>
+  <polygon points="32,36 29,42 35,42" fill="#d99b26"/>
+  <path d="M26 47 Q32 50 38 47" stroke="#8c6d46" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>

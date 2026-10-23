@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="20" fill="#193e32"/>
+  <!-- Kapradina / Fern Frond -->
+  <!-- Stem -->
+  <path d="M18 56 Q28 44 38 10" stroke="#d8e99e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- Fern fronds / pinnae -->
+  <!-- Pair 1 (top) -->
+  <path d="M37 13 Q43 11 46 13" stroke="#88be62" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M36 15 Q30 14 27 16" stroke="#88be62" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- Pair 2 -->
+  <path d="M35 20 Q44 17 48 21" stroke="#72aa4d" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M34 22 Q25 20 22 24" stroke="#72aa4d" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- Pair 3 -->
+  <path d="M32 28 Q44 25 50 30" stroke="#5d9638" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <path d="M31 30 Q20 27 16 33" stroke="#5d9638" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <!-- Pair 4 -->
+  <path d="M29 37 Q42 34 49 41" stroke="#4a8029" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <path d="M27 39 Q16 36 12 43" stroke="#4a8029" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <!-- Pair 5 -->
+  <path d="M25 46 Q37 44 43 51" stroke="#3b6920" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <path d="M23 48 Q15 46 11 52" stroke="#3b6920" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+</svg>

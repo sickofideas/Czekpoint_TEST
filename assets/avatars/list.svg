@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="20" fill="#193e32"/>
+  <!-- List / Oak or Beech Leaf -->
+  <path d="M32 10 C46 16 50 34 36 48 C34 50 32 52 32 54 M32 54 L32 58" stroke="#d8e99e" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <path d="M32 10 C18 16 14 34 28 48 C30 50 32 52 32 54 C32 52 34 50 36 48 C50 34 46 16 32 10 Z" fill="#6ba348"/>
+  <path d="M32 10 C24 16 22 28 32 38 C42 28 40 16 32 10 Z" fill="#88be62"/>
+  <!-- Leaf Veins -->
+  <line x1="32" y1="18" x2="32" y2="48" stroke="#d8e99e" stroke-width="2" stroke-linecap="round"/>
+  <line x1="32" y1="24" x2="24" y2="20" stroke="#d8e99e" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="32" y1="26" x2="40" y2="22" stroke="#d8e99e" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="32" y1="32" x2="23" y2="29" stroke="#d8e99e" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="32" y1="34" x2="41" y2="31" stroke="#d8e99e" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="32" y1="40" x2="26" y2="38" stroke="#d8e99e" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="32" y1="42" x2="38" y2="40" stroke="#d8e99e" stroke-width="1.8" stroke-linecap="round"/>
+</svg>

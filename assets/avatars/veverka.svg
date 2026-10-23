@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="20" fill="#193e32"/>
+  <!-- Veverka / Squirrel -->
+  <!-- Fluffy Tail -->
+  <path d="M22 46 C12 44 8 28 14 18 C20 8 30 12 28 20 C26 28 18 34 22 46 Z" fill="#d97724"/>
+  <!-- Body -->
+  <ellipse cx="36" cy="42" rx="10" ry="11" fill="#c46215"/>
+  <ellipse cx="38" cy="42" rx="6" ry="8" fill="#f7f9ed"/>
+  <!-- Ears with tufts -->
+  <polygon points="34,22 37,12 40,22" fill="#c46215"/>
+  <line x1="37" y1="12" x2="38" y2="8" stroke="#d97724" stroke-width="2" stroke-linecap="round"/>
+  <polygon points="44,24 48,15 49,25" fill="#c46215"/>
+  <line x1="48" y1="15" x2="50" y2="11" stroke="#d97724" stroke-width="2" stroke-linecap="round"/>
+  <!-- Head -->
+  <ellipse cx="42" cy="27" rx="8" ry="7" fill="#d97724"/>
+  <circle cx="45" cy="25" r="2" fill="#193e32"/>
+  <circle cx="45.5" cy="24.5" r="0.7" fill="#f7f9ed"/>
+  <polygon points="49,27 49,29 51,28" fill="#193e32"/>
+  <!-- Little acorn in paws -->
+  <ellipse cx="43" cy="38" rx="3.5" ry="4.5" fill="#7d5029"/>
+  <path d="M39 35 Q43 33 47 35" stroke="#4d2f14" stroke-width="2" fill="none"/>
+</svg>

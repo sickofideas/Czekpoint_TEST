@@ -13,7 +13,25 @@ import {
   dailyChallenge,
   totalScore,
 } from './walk-engine.js';
-import { loadState, saveState, STATE_KEY } from './walk-store.js';
+import {
+  loadState,
+  saveState,
+  exportStateJson,
+  previewImportState,
+  importStateJson,
+  STATE_KEY,
+} from './walk-store.js';
+import {
+  createExpedition,
+  pauseExpedition,
+  resumeExpedition,
+  updateExpeditionGoal,
+  isGoalAchieved,
+  recordExpeditionVisit,
+  endExpedition,
+  DEFAULT_GOALS,
+} from './expedition-engine.js';
+import { renderPostcard, generatePostcardBlob, generatePostcardDataUrl } from './postcard.js';
 import { fetchNearby } from './nearby.js';
 import { haversineMeters } from './domain.js';
 import { escapeHtml as e, number } from './ui.js';
@@ -35,10 +53,23 @@ export function mountWalk(root, routes, config, actions = {}) {
   let anchor = null, lastFix = null, watch = null;
   let active = false, disposed = false, demo = false, demoIndex = 0;
   let releaseLock = null, wake = null, frame = null, starting = false;
-  let sessionMeters = 0, sessionCells = 0, sessionStamps = 0, follow = true, reveal = true, nearby = [];
+  let follow = true, nearby = [];
   let memoryTrail = [];
   let pendingPlaceStamps = {};
   const aborter = new AbortController();
+
+  // Map fog mode: 'explore' (alpha 0.65, default) | 'full' (alpha 1.0) | 'none' (Běžná mapa)
+  let fogMode = 'explore';
+  let previousFogMode = 'explore';
+
+  // Active expedition from persisted state
+  let currentExpedition = stateObj.activeExpedition;
+  if (currentExpedition && currentExpedition.state === 'active') {
+    // If loaded from reload/storage, keep paused until user explicitly clicks continue
+    currentExpedition = pauseExpedition(currentExpedition);
+    stateObj.activeExpedition = currentExpedition;
+    try { saveState(stateObj); } catch {}
+  }
 
   const catalogue = routes
     .filter(r => r.location)
@@ -61,9 +92,9 @@ export function mountWalk(root, routes, config, actions = {}) {
       <div>
         <div class="eyebrow">Malé kroky. Skutečný průzkum.</div>
         <h1 tabindex="-1">Tvoje mapa dobrodružství.</h1>
-        <p>Neprozkoumaná mlha, GPS razítka ověřených míst a mizející stopa na Rožmitálsku.</p>
+        <p>Osobní atlas, 12 avatarů, GPS razítka a ilustrovaná pohlednice z každé výpravy.</p>
       </div>
-      <span class="walk-tag">PILOT · v0.4</span>
+      <span class="walk-tag">PILOT · v0.5</span>
     </section>
 
     <div class="walk-stats" aria-label="Celkový průzkum">
@@ -81,12 +112,12 @@ export function mountWalk(root, routes, config, actions = {}) {
       <div class="rank-progress" id="rank-badge">Úroveň 1</div>
     </div>
 
-    <div class="daily-challenge-card" id="daily-card">
+    <div class="daily-challenge-card" id="expedition-goal-card">
       <div>
-        <div class="eyebrow" style="margin-bottom:4px">Dnešní výprava</div>
-        <div class="daily-title" id="daily-title">Načítám výzvu…</div>
+        <div class="eyebrow" style="margin-bottom:4px">Cíl výpravy</div>
+        <div class="daily-title" id="expedition-goal-title">Zvol cíl pro novou výpravu…</div>
       </div>
-      <div id="daily-action"></div>
+      <div id="expedition-goal-action"></div>
     </div>
 
     <div id="walk-demo-banner" class="notice" hidden>UKÁZKA · Simulovaný pohyb v Rožmitále. Žádná GPS, žádné ukládání bodů.</div>
@@ -96,23 +127,27 @@ export function mountWalk(root, routes, config, actions = {}) {
     <div class="walk-map-wrap">
       <div id="walk-map" aria-label="Interaktivní mapa průzkumu"></div>
       <div class="walk-map-toolbar">
-        <button class="button small" id="walk-center">◎ Moje poloha</button>
-        <button class="button small" id="walk-fog" aria-pressed="true">Mlha: zapnutá</button>
+        <button class="button small" id="walk-center" title="Vycentrovat na moji polohu">◎ Moje poloha</button>
+        <button class="button small" id="walk-fog-toggle" aria-pressed="true" title="Přepnout krytí mlhy">Mlha: Průzkumná (65 %)</button>
+        <button class="button small" id="walk-plain-map" aria-pressed="false" title="Zobrazit běžný mapový podklad">Běžná mapa</button>
       </div>
     </div>
-    <div class="trail-note" id="trail-info">Stopa za poslední hodinu: 0 bodů (automaticky mizí po 60 min, pouze v paměti)</div>
+    <div class="trail-note" id="trail-info">Stopa za poslední hodinu: 0 bodů (automaticky mizí po 60 min, pouze v paměti relace)</div>
     <p id="tile-status" class="small-note" role="status"></p>
 
     <div class="walk-controls">
-      <button id="walk-start" class="button primary">▶ Vyrazit s GPS</button>
-      <button id="walk-stop" class="button" disabled>Ⅱ Pozastavit</button>
-      <button id="walk-demo" class="button">Ukázka bez GPS</button>
-      <button id="walk-step" class="button lime" hidden>Další krok ukázky</button>
+      <div id="expedition-buttons" style="display:flex;flex-wrap:wrap;gap:9px;width:100%">
+        <button id="walk-start" class="button primary">▶ Vyrazit s GPS</button>
+        <button id="walk-stop" class="button" disabled>Ⅱ Pozastavit</button>
+        <button id="walk-end" class="button danger" disabled>⏹ Ukončit výpravu</button>
+        <button id="walk-demo" class="button">Ukázka bez GPS</button>
+        <button id="walk-step" class="button lime" hidden>Další krok ukázky</button>
+      </div>
     </div>
 
     <div class="walk-status-panel">
-      <strong id="walk-status" role="status" aria-live="polite">${e(storageError || 'Připraveno. Venku spusť GPS a povol přístup k poloze.')}</strong>
-      <span id="walk-session">Dnes v této relaci: 0 m · 0 nových dílků</span>
+      <strong id="walk-status" role="status" aria-live="polite">${e(storageError || 'Připraveno. Zvol cíl a vyraž s GPS.')}</strong>
+      <span id="walk-session">V této výpravě: 0 m · 0 nových dílků · 0 razítek</span>
       <label><input type="checkbox" id="walk-awake" checked> Při chůzi držet displej zapnutý</label>
       <span id="wake-status" class="small-note">Displej: zámek není aktivní.</span>
     </div>
@@ -150,11 +185,15 @@ export function mountWalk(root, routes, config, actions = {}) {
     <div id="session-summary-container"></div>
 
     <details class="walk-help">
-      <summary>Pravidla průzkumu, mlhy a GPS razítek v0.4</summary>
-      <p>Neprůhledná mlha zakrývá terén, dokud jím osobně neprojdeš. Hodnost je čistě kosmetický milník a dosah mlhy je pevný standardní rozměr buňky (65 m).</p>
-      <p>Pravidlo jednoho GPS razítka (+30 b. jednou za život): vyžaduje 2 validní GPS polohy v okruhu 60 m od ověřeného místa, s odstupem 10–60 sekund. Začátky tras (okruhy) ani neověřené body razítko neudělují.</p>
-      <p>Mizející stopa: pracovní trasa se drží pouze v paměti této otevřené relace (max 600 bodů za 60 minut). Při pauze se stopa přeruší a po ukončení či reloadu se vymaže.</p>
-      <button id="walk-export" class="button small">Exportovat průzkum do JSON</button>
+      <summary>Pravidla průzkumu, 3 režimy mapy a záloha dat v0.5</summary>
+      <p><strong>3 režimy mapy:</strong> Průzkumná mlha (výchozí, alpha 0.65) zachovává orientaci a rozlišuje navštívená místa. Plná mlha (alpha 1.0) zakrývá terén neprozkoumaných oblastí. Běžná mapa okamžitě ukáže celý mapový podklad bez vlivu na body.</p>
+      <p><strong>Životní cyklus výpravy:</strong> Výprava má stav aktivní, pozastavená nebo ukončená. Pozastavení přeruší stopu a zastaví GPS. Tlačítko Ukončit výpravu atomicky uloží konečný stav a vytvoří pohlednici.</p>
+      <p><strong>Pravidlo GPS razítka:</strong> Vyžaduje 2 validní GPS polohy v okruhu 60 m od ověřeného místa, s odstupem 10–60 sekund. Opakovaná návštěva ve stejné výpravě se započte do motivu pohlednice, ale nepřidává dalších 30 bodů.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+        <button id="walk-export" class="button small">Exportovat průzkum (JSON)</button>
+        <button id="walk-import-btn" class="button small">Obnovit průzkum z JSON</button>
+        <input type="file" id="walk-import-file" accept=".json,application/json" hidden>
+      </div>
     </details>
   `;
 
@@ -179,14 +218,20 @@ export function mountWalk(root, routes, config, actions = {}) {
     const ctx = canvas.getContext('2d');
     ctx.scale(ratio, ratio);
 
-    if (!reveal) return;
+    if (fogMode === 'none') {
+      canvas.style.display = 'none';
+      return;
+    }
+    canvas.style.display = 'block';
 
-    // 100% Opaque Fog layer
-    ctx.fillStyle = '#163329';
+    // Alpha level according to fog mode:
+    // 'explore' -> 0.65 | 'full' -> 1.0
+    const alpha = fogMode === 'full' ? 1.0 : 0.65;
+    ctx.fillStyle = `rgba(22, 51, 41, ${alpha})`;
     ctx.fillRect(0, 0, size.x, size.y);
 
     // Subtle texture grid
-    ctx.strokeStyle = 'rgba(216, 233, 158, 0.035)';
+    ctx.strokeStyle = `rgba(216, 233, 158, ${fogMode === 'full' ? 0.04 : 0.025})`;
     ctx.lineWidth = 1;
     for (let x = 0; x < size.x; x += 40) {
       ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, size.y); ctx.stroke();
@@ -196,9 +241,8 @@ export function mountWalk(root, routes, config, actions = {}) {
     }
 
     ctx.globalCompositeOperation = 'destination-out';
-    const standardRadius = 65; // Fixed fog radius in v0.4
+    const standardRadius = 65; // Fixed fog cutout radius
 
-    // Visited cells cutout with soft radial gradient
     for (const id of progress.cells) {
       const center = cellCenter(id);
       const cp = map.latLngToContainerPoint([center.lat, center.lng]);
@@ -224,7 +268,7 @@ export function mountWalk(root, routes, config, actions = {}) {
     if (!map) return;
     const now = Date.now();
     const activeTrail = pruneTrail(memoryTrail, now);
-    $('trail-info').textContent = `Stopa za poslední hodinu: ${activeTrail.length} bodů (automaticky mizí po 60 min, pouze v paměti)`;
+    $('trail-info').textContent = `Stopa za poslední hodinu: ${activeTrail.length} bodů (automaticky mizí po 60 min, pouze v paměti relace)`;
     for (const pt of activeTrail) {
       if (pt.segmentBreak) continue;
       L.circleMarker([pt.lat, pt.lng], {
@@ -253,10 +297,20 @@ export function mountWalk(root, routes, config, actions = {}) {
     }
     if (nearestStamp && Number.isFinite(nearestDist)) {
       const angle = Math.atan2(nearestStamp.lng - origin.lng, nearestStamp.lat - origin.lat) * 180 / Math.PI;
-      const arrows = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'];
-      const arrow = arrows[Math.round(((angle + 360) % 360) / 45) % 8];
+      const normalizedAngle = (angle + 360) % 360;
+      const directions = [
+        { name: 'sever', arrow: '↑' },
+        { name: 'severovýchod', arrow: '↗' },
+        { name: 'východ', arrow: '→' },
+        { name: 'jihovýchod', arrow: '↘' },
+        { name: 'jih', arrow: '↓' },
+        { name: 'jihozápad', arrow: '↙' },
+        { name: 'západ', arrow: '←' },
+        { name: 'severozápad', arrow: '↖' },
+      ];
+      const dir = directions[Math.round(normalizedAngle / 45) % 8];
       const kindLabel = { culture: 'Kultura', view: 'Vyhlídka', forest: 'Les', water: 'Voda' }[nearestStamp.kind] || 'Místo';
-      $('walk-compass').innerHTML = `🧭 <strong>Nejbližší razítko:</strong> ${Math.round(nearestDist)} m ${arrow} · ${e(nearestStamp.title)} (${kindLabel})`;
+      $('walk-compass').innerHTML = `🧭 <strong>Nejbližší razítko:</strong> ${Math.round(nearestDist)} m vzdušně · ${dir.name} (${dir.arrow}) · ${e(nearestStamp.title)} (${kindLabel})`;
     } else {
       $('walk-compass').innerHTML = '🧭 <strong>Všechna dostupná razítka získána!</strong> Skvělá práce.';
     }
@@ -328,6 +382,46 @@ export function mountWalk(root, routes, config, actions = {}) {
     }
   }
 
+  function renderExpeditionGoalUI() {
+    const cardTitle = $('expedition-goal-title');
+    const cardAction = $('expedition-goal-action');
+
+    if (!currentExpedition || currentExpedition.state === 'ended') {
+      cardTitle.innerHTML = 'Výchozí cíl: <strong>Projdi dnes 500 metrů</strong>';
+      cardAction.innerHTML = `
+        <select id="select-goal" class="button small" style="background:#fff;border:1px solid #b8c6af">
+          <option value="meters-500">Projdi dnes 500 metrů</option>
+          <option value="cells-3">Odkryj 3 nové dílky</option>
+          <option value="none">Bez cíle</option>
+        </select>
+      `;
+      $('select-goal')?.addEventListener('change', (ev) => {
+        const val = ev.target.value;
+        let chosen = DEFAULT_GOALS[0];
+        if (val === 'cells-3') chosen = DEFAULT_GOALS[1];
+        else if (val === 'none') chosen = DEFAULT_GOALS[2];
+        cardTitle.innerHTML = `Vybraný cíl: <strong>${e(chosen.label)}</strong>`;
+      });
+      return;
+    }
+
+    const g = currentExpedition.goal;
+    const gainedM = Math.max(0, progress.meters - (currentExpedition.startMeters || 0));
+    const gainedC = Math.max(0, progress.cells.length - (currentExpedition.startCells || 0));
+    const done = isGoalAchieved(currentExpedition, progress);
+
+    let goalProgressText = '';
+    if (g.type === 'meters') goalProgressText = `${gainedM} / ${g.target} m`;
+    else if (g.type === 'cells') goalProgressText = `${gainedC} / ${g.target} dílků`;
+    else if (g.type === 'place') goalProgressText = done ? 'Navštíveno!' : 'Čeká na přiblížení';
+    else goalProgressText = 'Volná chůze';
+
+    cardTitle.innerHTML = `${e(g.label)} — <strong>${done ? '✓ Splněno!' : goalProgressText}</strong>`;
+    cardAction.innerHTML = done
+      ? '<span class="status-dot"></span> <small style="color:#4a6828;font-weight:700">Cíl splněn</small>'
+      : '<small class="small-note">Probíhá výprava</small>';
+  }
+
   function stats() {
     const totalPts = totalScore(stateObj);
     const rank = explorerRank(totalPts);
@@ -337,18 +431,17 @@ export function mountWalk(root, routes, config, actions = {}) {
     $('walk-distance').textContent = number(progress.meters / 1000);
     $('walk-relics').textContent = progress.discoveries.length;
 
-    $('walk-session').textContent = `${demo ? 'Ukázka' : 'Tato relace'}: ${Math.round(sessionMeters)} m · ${sessionCells} nových dílků · ${sessionStamps} razítek`;
+    const gainedM = currentExpedition ? Math.max(0, progress.meters - currentExpedition.startMeters) : 0;
+    const gainedC = currentExpedition ? Math.max(0, progress.cells.length - currentExpedition.startCells) : 0;
+    const gainedS = currentExpedition ? Math.max(0, progress.discoveries.length - currentExpedition.startDiscoveries) : 0;
+
+    $('walk-session').textContent = `${demo ? 'Ukázka' : 'Tato výprava'}: ${Math.round(gainedM)} m · ${gainedC} nových dílků · ${gainedS} nových razítek`;
 
     $('rank-title').textContent = `Hodnost: Úroveň ${rank.level} · ${rank.title}`;
     $('rank-fog').textContent = `Dosah odkrývání v mlze: ${rank.fogRadiusM} m · Dosah odhalení: ${rank.revealDistanceM} m${rank.nextAt ? ` · Do další úrovně zbývá ${rank.nextAt - totalPts} b.` : ' · Nejvyšší úroveň dosažena!'}`;
     $('rank-badge').textContent = `Lvl ${rank.level}`;
 
-    const today = new Date().toISOString().slice(0, 10);
-    const challenge = dailyChallenge(today, progress, { cells: sessionCells, meters: sessionMeters, stamps: sessionStamps }, stateObj.legacyRewards);
-    $('daily-title').textContent = `${challenge.title} — postup: ${challenge.progress}/${challenge.target}`;
-    $('daily-action').innerHTML = challenge.completed
-      ? '<span class="status-dot"></span> <small style="color:#4a6828;font-weight:700">Splněno</small>'
-      : '<small class="small-note">Milník dne</small>';
+    renderExpeditionGoalUI();
 
     const cStatus = chapterStatus(CHAPTERS, routes, progress.discoveries);
     $('sector-list').innerHTML = Object.values(cStatus).map(c => `
@@ -376,8 +469,29 @@ export function mountWalk(root, routes, config, actions = {}) {
       </div>
     `).join('');
 
-    $('walk-start').disabled = active || starting || demo || Boolean(storageError);
-    $('walk-stop').disabled = !active && !starting;
+    // Button states
+    const hasExpedition = Boolean(currentExpedition && currentExpedition.state !== 'ended');
+    const isPaused = hasExpedition && currentExpedition.state === 'paused';
+
+    if (hasExpedition) {
+      if (active) {
+        $('walk-start').textContent = '▶ Běží záznam';
+        $('walk-start').disabled = true;
+        $('walk-stop').disabled = false;
+        $('walk-end').disabled = false;
+      } else if (isPaused) {
+        $('walk-start').textContent = '▶ Pokračovat ve výpravě';
+        $('walk-start').disabled = starting || demo || Boolean(storageError);
+        $('walk-stop').disabled = true;
+        $('walk-end').disabled = false;
+      }
+    } else {
+      $('walk-start').textContent = '▶ Vyrazit s GPS';
+      $('walk-start').disabled = active || starting || demo || Boolean(storageError);
+      $('walk-stop').disabled = true;
+      $('walk-end').disabled = true;
+    }
+
     $('walk-step').hidden = !demo;
     $('walk-demo-banner').hidden = !demo;
     $('walk-demo').textContent = demo ? 'Ukončit ukázku' : 'Ukázka bez GPS';
@@ -387,26 +501,68 @@ export function mountWalk(root, routes, config, actions = {}) {
     renderPlaces();
   }
 
-  function showSessionSummary() {
-    if (sessionMeters <= 0 && sessionCells <= 0 && sessionStamps <= 0) return;
-    const earnedSessionPoints = sessionCells * 10 + Math.floor(sessionMeters / 50) + sessionStamps * 30;
+  function showPostcardModal(summary) {
     const container = $('session-summary-container');
+    const dataUrl = generatePostcardDataUrl(summary);
+
     container.innerHTML = `
-      <div class="session-modal" id="session-summary-modal">
-        <div class="session-modal-card">
-          <h2>Výprava pozastavena</h2>
-          <p>Shrnutí tvého postupu v této vycházce:</p>
-          <div class="session-stats-grid">
-            <div class="session-stat-box"><strong>${Math.round(sessionMeters)} m</strong><span>Ušlá vzdálenost</span></div>
-            <div class="session-stat-box"><strong>+${sessionCells}</strong><span>Nové dílky v mlze</span></div>
-            <div class="session-stat-box"><strong>+${sessionStamps}</strong><span>Nová GPS razítka</span></div>
-            <div class="session-stat-box"><strong>+${earnedSessionPoints}</strong><span>Získané body</span></div>
+      <div class="session-modal" id="postcard-modal">
+        <div class="session-modal-card" style="max-width:520px;text-align:center">
+          <h2>Výprava úspěšně ukončena! 🎉</h2>
+          <p>Tvoje malá výprava byla zaznamenána do osobního atlasu.</p>
+          <div class="session-stats-grid" style="margin-bottom:12px">
+            <div class="session-stat-box"><strong>${summary.distanceMeters >= 1000 ? (summary.distanceMeters / 1000).toFixed(1).replace('.', ',') + ' km' : Math.round(summary.distanceMeters) + ' m'}</strong><span>Ušlá vzdálenost</span></div>
+            <div class="session-stat-box"><strong>+${summary.newCellsCount}</strong><span>Nové dílky</span></div>
+            <div class="session-stat-box"><strong>+${summary.newStampsCount}</strong><span>Nová razítka</span></div>
+            <div class="session-stat-box"><strong>${summary.goalAchieved ? '✓ Splněn' : 'Nesplněn'}</strong><span>Cíl výpravy</span></div>
           </div>
-          <button type="button" class="button primary full" id="close-summary-btn">Zavřít a pokračovat</button>
+          <div style="margin:8px 0;border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,0.18);line-height:0">
+            <img src="${dataUrl}" alt="Ilustrovaná pohlednice z výpravy" style="width:100%;height:auto;display:block">
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px">
+            <button type="button" class="button primary" id="btn-download-postcard">Stáhnout pohlednici (PNG)</button>
+            <button type="button" class="button" id="btn-share-postcard">Sdílet</button>
+            <button type="button" class="button ghost" id="btn-close-postcard">Zavřít deník</button>
+          </div>
         </div>
       </div>
     `;
-    $('close-summary-btn')?.addEventListener('click', () => { container.innerHTML = ''; });
+
+    $('btn-download-postcard')?.addEventListener('click', () => {
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = `pohlednice-${summary.id}.png`;
+      a.click();
+    });
+
+    $('btn-share-postcard')?.addEventListener('click', async () => {
+      try {
+        const blob = await generatePostcardBlob(summary);
+        const file = new File([blob], `pohlednice-${summary.id}.png`, { type: 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: 'Moje malá výprava · Czekpoint',
+            text: `Moje malá výprava s Czekpointem. Ujeto ${summary.distanceMeters >= 1000 ? (summary.distanceMeters / 1000).toFixed(1) + ' km' : Math.round(summary.distanceMeters) + ' m'}, ${summary.newCellsCount} nových dílků.`,
+            files: [file],
+          });
+        } else if (navigator.share) {
+          await navigator.share({
+            title: 'Moje malá výprava · Czekpoint',
+            text: `Moje malá výprava s Czekpointem. Ujeto ${summary.distanceMeters >= 1000 ? (summary.distanceMeters / 1000).toFixed(1) + ' km' : Math.round(summary.distanceMeters) + ' m'}.`,
+          });
+        } else {
+          // Fallback to download
+          const a = document.createElement('a');
+          a.href = dataUrl;
+          a.download = `pohlednice-${summary.id}.png`;
+          a.click();
+        }
+      } catch (err) {
+        if (err.name !== 'AbortError') status('Sdílení se nezdařilo.');
+      }
+    });
+
+    $('btn-close-postcard')?.addEventListener('click', () => { container.innerHTML = ''; });
   }
 
   async function releaseWake() {
@@ -430,8 +586,7 @@ export function mountWalk(root, routes, config, actions = {}) {
     }
   }
 
-  function stop(message) {
-    const wasActive = active;
+  function pauseSession(message) {
     active = false; starting = false;
     if (watch !== null) { navigator.geolocation.clearWatch(watch); watch = null; }
     anchor = null;
@@ -441,11 +596,61 @@ export function mountWalk(root, routes, config, actions = {}) {
     }
     releaseWake();
     releaseLock?.(); releaseLock = null;
+
+    if (currentExpedition && currentExpedition.state === 'active') {
+      currentExpedition = pauseExpedition(currentExpedition);
+      stateObj.activeExpedition = currentExpedition;
+      if (!demo) {
+        try { saveState(stateObj); } catch {}
+      }
+    }
+
     if (!disposed) {
       stats();
       if (message) status(message);
-      if (wasActive && (sessionMeters > 0 || sessionCells > 0 || sessionStamps > 0)) showSessionSummary();
     }
+  }
+
+  function finishExpedition() {
+    pauseSession();
+    if (!currentExpedition) return;
+
+    const gainedM = Math.max(0, progress.meters - (currentExpedition.startMeters || 0));
+    const gainedC = Math.max(0, progress.cells.length - (currentExpedition.startCells || 0));
+    const gainedS = Math.max(0, progress.discoveries.length - (currentExpedition.startDiscoveries || 0));
+    const earnedPoints = gainedC * 10 + Math.floor(gainedM / 50) + gainedS * 30;
+
+    const endResult = endExpedition({
+      expedition: currentExpedition,
+      currentProgress: progress,
+      pointsEarned: earnedPoints,
+      avatarId: stateObj.profile?.avatarId || 'liska',
+    });
+
+    if (!endResult) return;
+
+    const { summary } = endResult;
+    const history = [summary, ...(stateObj.expeditionHistory || [])].slice(0, 100);
+
+    stateObj = {
+      ...stateObj,
+      activeExpedition: null,
+      expeditionHistory: history,
+    };
+    currentExpedition = null;
+
+    if (!demo) {
+      try {
+        saveState(stateObj);
+      } catch (err) {
+        status('Chyba při ukládání ukončené výpravy: ' + err.message);
+        return;
+      }
+    }
+
+    stats();
+    status('Výprava byla úspěšně ukončena a uložena.');
+    showPostcardModal(summary);
   }
 
   function sample(fix, now = Date.now()) {
@@ -466,10 +671,23 @@ export function mountWalk(root, routes, config, actions = {}) {
       }
 
       // Proximity check for GPS stamps using 2-sample rule (10s - 60s)
-      const stampedProgress = discoverNearby(progress, validFix, [...catalogue, ...nearby], pendingPlaceStamps);
+      const allPlaces = [...catalogue, ...nearby];
+      const stampedProgress = discoverNearby(progress, validFix, allPlaces, pendingPlaceStamps);
+
+      // Check for places within qualified proximity in this expedition
+      for (const p of allPlaces) {
+        if (!p.collectible && p.pointKind !== 'place') continue;
+        const d = haversineMeters(validFix, p);
+        if (d != null && d <= 60 && pendingPlaceStamps[p.id]?.count >= 2) {
+          if (currentExpedition) {
+            currentExpedition = recordExpeditionVisit(currentExpedition, p);
+            stateObj.activeExpedition = currentExpedition;
+          }
+        }
+      }
+
       if (stampedProgress.discoveries.length > progress.discoveries.length) {
         const addedCount = stampedProgress.discoveries.length - progress.discoveries.length;
-        sessionStamps += addedCount;
         progress = { ...progress, discoveries: stampedProgress.discoveries };
         stateObj = { ...stateObj, discoveries: progress.discoveries };
         if (!demo) {
@@ -486,8 +704,6 @@ export function mountWalk(root, routes, config, actions = {}) {
     }
 
     // Advance progress when threshold reached
-    sessionMeters += result.metersAdded || (result.progress.meters - progress.meters);
-    if (result.fresh) sessionCells++;
     progress = {
       ...progress,
       cells: result.progress.cells,
@@ -503,7 +719,7 @@ export function mountWalk(root, routes, config, actions = {}) {
       try {
         saveState(stateObj);
       } catch (error) {
-        stop(error.message);
+        pauseSession(error.message);
         return;
       }
     }
@@ -516,20 +732,40 @@ export function mountWalk(root, routes, config, actions = {}) {
     if (active || starting || demo || disposed) return;
     if (!isSecureContext || !navigator.geolocation) { status('GPS vyžaduje HTTPS a podporovaný prohlížeč.'); return; }
     if (!navigator.locks) { status('Prohlížeč nepodporuje bezpečný souběh. Použij aktuální Chrome nebo Safari.'); return; }
+
     starting = true; stats(); status('Spouštím GPS…');
     try {
       await navigator.locks.request('czekpoint-walk', { ifAvailable: true }, async lock => {
         if (disposed || !starting) return;
         if (!lock) { starting = false; stats(); status('Procházka už běží v jiné kartě.'); return; }
+
         stateObj = loadState();
         progress = { version: 1, cells: stateObj.cells, meters: stateObj.meters, discoveries: stateObj.discoveries };
+
+        if (!currentExpedition || currentExpedition.state === 'ended') {
+          // Initialize new expedition
+          const select = $('select-goal');
+          let goal = DEFAULT_GOALS[0];
+          if (select?.value === 'cells-3') goal = DEFAULT_GOALS[1];
+          else if (select?.value === 'none') goal = DEFAULT_GOALS[2];
+
+          currentExpedition = createExpedition({ progress, goal });
+        } else if (currentExpedition.state === 'paused') {
+          currentExpedition = resumeExpedition(currentExpedition);
+        }
+
+        stateObj.activeExpedition = currentExpedition;
+        if (!demo) {
+          try { saveState(stateObj); } catch {}
+        }
+
         starting = false; active = true; anchor = null; follow = true; stats();
         status('Čekám na GPS. Povol polohu a vyjdi na otevřené místo.');
         const held = new Promise(resolve => { releaseLock = resolve; });
         watch = navigator.geolocation.watchPosition(
           p => sample({ lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy, speed: p.coords.speed, timestamp: p.timestamp }),
           error => {
-            if (error.code === 1) stop('Poloha není povolená. Povol ji v nastavení.');
+            if (error.code === 1) pauseSession('Poloha není povolená. Povol ji v nastavení.');
             else { anchor = null; status('GPS zatím není dostupná.'); }
           },
           { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 }
@@ -537,7 +773,7 @@ export function mountWalk(root, routes, config, actions = {}) {
         holdWake();
         await held;
       });
-    } catch (error) { stop(error.message || 'GPS nelze spustit.'); }
+    } catch (error) { pauseSession(error.message || 'GPS nelze spustit.'); }
   }
 
   if (L) {
@@ -566,28 +802,57 @@ export function mountWalk(root, routes, config, actions = {}) {
   }
 
   $('walk-start').addEventListener('click', start);
-  $('walk-stop').addEventListener('click', () => stop('Pozastaveno. Průzkum je uložený.'));
+  $('walk-stop').addEventListener('click', () => pauseSession('Výprava pozastavena. Průzkum je uložený.'));
+  $('walk-end').addEventListener('click', finishExpedition);
   $('walk-awake').addEventListener('change', () => { $('walk-awake').checked ? holdWake() : releaseWake(); });
-  $('walk-fog').addEventListener('click', () => {
-    reveal = !reveal;
-    $('walk-fog').textContent = `Mlha: ${reveal ? 'zapnutá' : 'vypnutá'}`;
-    $('walk-fog').setAttribute('aria-pressed', String(reveal));
+
+  // Fog toggle: switches between explore (0.65) and full (1.0)
+  $('walk-fog-toggle').addEventListener('click', () => {
+    if (fogMode === 'none') {
+      fogMode = previousFogMode || 'explore';
+    } else if (fogMode === 'explore') {
+      fogMode = 'full';
+    } else {
+      fogMode = 'explore';
+    }
+    previousFogMode = fogMode;
+    const label = fogMode === 'full' ? 'Mlha: Plná (100 %)' : 'Mlha: Průzkumná (65 %)';
+    $('walk-fog-toggle').textContent = label;
+    $('walk-plain-map').setAttribute('aria-pressed', 'false');
     scheduleFog();
   });
+
+  // Plain map toggle: shows map with 0% fog without affecting points or progress
+  $('walk-plain-map').addEventListener('click', () => {
+    if (fogMode !== 'none') {
+      previousFogMode = fogMode;
+      fogMode = 'none';
+      $('walk-plain-map').setAttribute('aria-pressed', 'true');
+      $('walk-fog-toggle').textContent = 'Mlha: Vypnutá';
+    } else {
+      fogMode = previousFogMode || 'explore';
+      $('walk-plain-map').setAttribute('aria-pressed', 'false');
+      $('walk-fog-toggle').textContent = fogMode === 'full' ? 'Mlha: Plná (100 %)' : 'Mlha: Průzkumná (65 %)';
+    }
+    scheduleFog();
+  });
+
   $('walk-center').addEventListener('click', () => {
     follow = true;
     if (lastFix && map) map.setView([lastFix.lat, lastFix.lng], 16);
     else status('Nejdřív spusť GPS nebo ukázku.');
   });
+
   $('walk-demo').addEventListener('click', () => {
-    stop();
+    pauseSession();
     demo = !demo;
-    lastFix = null; nearby = []; anchor = null; sessionCells = 0; sessionMeters = 0; sessionStamps = 0;
+    lastFix = null; nearby = []; anchor = null;
     memoryTrail = [];
     pendingPlaceStamps = {};
     if (demo) {
       progress = emptyWalk();
       stateObj = emptyState();
+      currentExpedition = createExpedition({ progress, goal: DEFAULT_GOALS[0] });
       demoIndex = 0;
       stats();
       stepDemo();
@@ -595,9 +860,11 @@ export function mountWalk(root, routes, config, actions = {}) {
       try {
         stateObj = loadState();
         progress = { version: 1, cells: stateObj.cells, meters: stateObj.meters, discoveries: stateObj.discoveries };
+        currentExpedition = stateObj.activeExpedition;
       } catch (error) {
         storageError = error.message;
         progress = emptyWalk();
+        currentExpedition = null;
       }
       stats();
       status(storageError || 'Ukázka skončila.');
@@ -658,29 +925,64 @@ export function mountWalk(root, routes, config, actions = {}) {
 
   $('walk-export').addEventListener('click', () => {
     try {
-      const exportData = {
-        state: loadState(),
-      };
-      const url = URL.createObjectURL(new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' }));
+      const jsonStr = exportStateJson();
+      const today = new Date().toISOString().slice(0, 10);
+      const url = URL.createObjectURL(new Blob([jsonStr], { type: 'application/json' }));
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'czekpoint-pruzkum-v0.4.json';
+      a.download = `czekpoint-pruzkum-${today}.json`;
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
+      status('Průzkum byl úspěšně exportován.');
     } catch (error) { status(error.message); }
   });
 
-  const visibility = () => { if (document.hidden && (active || starting)) stop('Záznam byl pozastaven při skrytí aplikace.'); };
+  $('walk-import-btn')?.addEventListener('click', () => {
+    $('walk-import-file')?.click();
+  });
+
+  $('walk-import-file')?.addEventListener('change', async (ev) => {
+    const file = ev.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const preview = previewImportState(text);
+      const confirmed = window.confirm(
+        `Obnovit průzkum ze zálohy?\n\n` +
+        `• Avatar: ${preview.avatarId}\n` +
+        `• Odkryté dílky: ${preview.cellsCount}\n` +
+        `• Ušlá vzdálenost: ${preview.metersKm} km\n` +
+        `• GPS razítka: ${preview.stampsCount}\n` +
+        `• Uložené výpravy: ${preview.historyCount}\n\n` +
+        `Pozor: Současný postup v tomto prohlížeči bude nahrazen touto zálohou.`
+      );
+      if (confirmed) {
+        pauseSession();
+        stateObj = importStateJson(text);
+        progress = { version: 1, cells: stateObj.cells, meters: stateObj.meters, discoveries: stateObj.discoveries };
+        currentExpedition = stateObj.activeExpedition;
+        stats();
+        status('Průzkum byl úspěšně obnoven ze zálohy.');
+      }
+    } catch (err) {
+      alert('Chyba při obnově zálohy: ' + err.message);
+    } finally {
+      ev.target.value = '';
+    }
+  });
+
+  const visibility = () => { if (document.hidden && (active || starting)) pauseSession('Záznam byl pozastaven při skrytí aplikace.'); };
   document.addEventListener('visibilitychange', visibility);
-  const pagehide = () => stop();
+  const pagehide = () => pauseSession();
   window.addEventListener('pagehide', pagehide);
 
   const storageChanged = event => {
     if (event.key === STATE_KEY && !demo) {
-      stop();
+      pauseSession();
       try {
         stateObj = loadState();
         progress = { version: 1, cells: stateObj.cells, meters: stateObj.meters, discoveries: stateObj.discoveries };
+        currentExpedition = stateObj.activeExpedition;
         storageError = '';
       } catch (err) { storageError = err.message; }
       stats();
@@ -693,7 +995,7 @@ export function mountWalk(root, routes, config, actions = {}) {
 
   return () => {
     disposed = true;
-    stop();
+    pauseSession();
     aborter.abort();
     document.removeEventListener('visibilitychange', visibility);
     window.removeEventListener('pagehide', pagehide);

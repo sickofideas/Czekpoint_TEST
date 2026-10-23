@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="20" fill="#193e32"/>
+  <!-- Jelen / Deer -->
+  <!-- Antlers -->
+  <path d="M26 26 L22 14 M22 14 L16 11 M22 14 L20 8 M24 20 L16 19" stroke="#d8e99e" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <path d="M38 26 L42 14 M42 14 L48 11 M42 14 L44 8 M40 20 L48 19" stroke="#d8e99e" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <!-- Head -->
+  <ellipse cx="32" cy="38" rx="10" ry="14" fill="#a06836"/>
+  <!-- Ears -->
+  <path d="M22 28 Q14 26 16 32 Q20 34 24 30 Z" fill="#885226"/>
+  <path d="M42 28 Q50 26 48 32 Q44 34 40 30 Z" fill="#885226"/>
+  <!-- Muzzle -->
+  <ellipse cx="32" cy="46" rx="6" ry="5" fill="#f7f9ed"/>
+  <circle cx="32" cy="45" r="2.5" fill="#193e32"/>
+  <circle cx="27" cy="35" r="2" fill="#193e32"/>
+  <circle cx="37" cy="35" r="2" fill="#193e32"/>
+</svg>

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="20" fill="#193e32"/>
+  <!-- Liška / Fox -->
+  <path d="M14 16 L22 34 L12 40 Z" fill="#d97724"/>
+  <path d="M50 16 L42 34 L52 40 Z" fill="#d97724"/>
+  <path d="M17 22 L22 32 L15 35 Z" fill="#f7f9ed"/>
+  <path d="M47 22 L42 32 L49 35 Z" fill="#f7f9ed"/>
+  <polygon points="32,54 14,28 50,28" fill="#d97724"/>
+  <polygon points="32,54 14,28 24,28 32,40 40,28 50,28" fill="#f7f9ed"/>
+  <circle cx="24" cy="33" r="2.5" fill="#193e32"/>
+  <circle cx="40" cy="33" r="2.5" fill="#193e32"/>
+  <circle cx="32" cy="51" r="3" fill="#193e32"/>
+</svg>
