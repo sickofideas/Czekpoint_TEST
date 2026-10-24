@@ -263,6 +263,89 @@ export function autoSuggestTrip({
   };
 }
 
+const walkingGeometryCache = new Map();
+
+/**
+ * Fetches actual walking route geometry along footpaths using OSRM Foot Routing.
+ * Includes in-memory caching and 4-second timeout.
+ * Fails safely returning direct waypoint polyline and haversine distance.
+ */
+export async function fetchWalkingGeometry(waypoints, fetchImpl = typeof fetch !== 'undefined' ? fetch : null) {
+  if (!Array.isArray(waypoints) || waypoints.length === 0) {
+    return { coordinates: [], distanceM: 0 };
+  }
+  const valid = waypoints.filter(p => p && Number.isFinite(p.lat) && Number.isFinite(p.lng));
+  if (valid.length < 2) {
+    return {
+      coordinates: valid.map(p => [p.lat, p.lng]),
+      distanceM: 0,
+    };
+  }
+
+  // Fallback direct polyline & haversine distance
+  const fallback = () => {
+    let dist = 0;
+    for (let i = 0; i < valid.length - 1; i++) {
+      const seg = haversineMeters(valid[i], valid[i + 1]);
+      if (seg != null) dist += seg;
+    }
+    return {
+      coordinates: valid.map(p => [p.lat, p.lng]),
+      distanceM: Math.round(dist),
+    };
+  };
+
+  const cacheKey = valid.map(p => `${Number(p.lat).toFixed(4)},${Number(p.lng).toFixed(4)}`).join(';');
+  if (walkingGeometryCache.has(cacheKey)) {
+    return walkingGeometryCache.get(cacheKey);
+  }
+
+  if (!fetchImpl) {
+    const fb = fallback();
+    walkingGeometryCache.set(cacheKey, fb);
+    return fb;
+  }
+
+  try {
+    const coordsStr = valid.map(p => `${Number(p.lng).toFixed(5)},${Number(p.lat).toFixed(5)}`).join(';');
+    const url = `https://router.project-osrm.org/route/v1/foot/${coordsStr}?overview=full&geometries=geojson`;
+
+    let timeoutId;
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const signal = controller ? controller.signal : undefined;
+    if (controller) {
+      timeoutId = setTimeout(() => controller.abort(), 4000);
+    }
+
+    try {
+      const res = await fetchImpl(url, { signal });
+      if (!res.ok) {
+        const fb = fallback();
+        walkingGeometryCache.set(cacheKey, fb);
+        return fb;
+      }
+      const data = await res.json();
+      const route = data?.routes?.[0];
+      if (route?.geometry?.coordinates && Array.isArray(route.geometry.coordinates)) {
+        // OSRM GeoJSON is [lng, lat], Leaflet uses [lat, lng]
+        const coordinates = route.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+        const distanceM = Math.round(Number(route.distance) || 0);
+        const result = { coordinates, distanceM };
+        walkingGeometryCache.set(cacheKey, result);
+        return result;
+      }
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
+  } catch {
+    // Return fallback on network error or timeout
+  }
+
+  const fb = fallback();
+  walkingGeometryCache.set(cacheKey, fb);
+  return fb;
+}
+
 /**
  * Fetches elevation profile from open-meteo API with 4s timeout.
  * Coordinates are rounded to 3 decimal places.

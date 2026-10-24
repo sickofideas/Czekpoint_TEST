@@ -19,8 +19,10 @@ import { CHAPTERS, COLLECTIONS, RELICS } from './data.js';
 import { renderWalkingStickHtml } from './walking-stick.js';
 import { renderPilgrimsSection, renderSummitBook } from './pilgrims.js';
 import { playTick, playHammer, triggerHaptic, applyStaggerAnimation } from './fx.js';
+import { renderBrandLogoHtml, mountBrandLogo } from './brand-logo.js';
 
 let disposeWalk = null;
+let disposeBrandLogo = null;
 
 const main = document.querySelector('#main');
 const reportDialog = document.querySelector('#report-dialog');
@@ -113,7 +115,7 @@ function renderExplore() {
       <div class="hero-actions"><a class="button primary" href="#/prochazka">Spustit mapu a procházku ${icon('arrow')}</a><a class="button ghost" href="#vylety" data-action="scroll-routes">Vybrat výlet</a></div>
       <div class="trust-line"><span>${icon('check')}Bez registrace na prohlížení</span><span>${icon('book')}Osobní atlas bez reklam</span></div>
     </div>
-    <div class="hero-art"><img class="project-art" src="./assets/hero-atlas.svg" width="720" height="460" alt="Czekpoint: osobní atlas procházek v přírodě"></div>
+    <div class="hero-art">${renderBrandLogoHtml({ id: 'hero-brand-logo' })}</div>
     </section>
     <section id="vylety" class="explore-section" aria-labelledby="routes-heading">
       <div class="section-heading"><div><h2 id="routes-heading">Kam vyrazíme?</h2><p>Pár pečlivě vybraných míst. Každé má svůj příběh i přístup.</p></div><span class="subtle muted">Třemšínsko · pilotní výběr</span></div>
@@ -131,13 +133,15 @@ function renderExplore() {
   document.querySelector('#stroller-filter').addEventListener('change', event => { state.filters.strollerOnly = event.target.checked; renderExploreResults(); });
   document.querySelector('#saved-filter').addEventListener('change', event => { state.filters.savedOnly = event.target.checked; renderExploreResults(); });
   renderExploreResults();
+  disposeBrandLogo?.();
+  disposeBrandLogo = mountBrandLogo('#hero-brand-logo');
 }
 
 function renderExploreResults() {
   const grid = document.querySelector('#route-grid');
   if (!grid) return;
   let routes = filterRoutes(state.routes, { ...state.filters, savedIds: state.saved });
-  if (state.position) routes = [...routes].sort((a, b) => (a.location ? haversineMeters(state.position, a.location) : Infinity) - (b.location ? haversineMeters(state.position, a.location) : Infinity));
+  if (state.position) routes = [...routes].sort((a, b) => (a.location ? haversineMeters(state.position, a.location) : Infinity) - (b.location ? haversineMeters(state.position, b.location) : Infinity));
   document.querySelector('#results-info').textContent = `${routes.length} z ${state.routes.length} výletů${state.position ? ' · seřazeno podle vzdušné vzdálenosti ke známým bodům' : ''}${state.filters.maxDistance ? ' · trasy bez známé délky jsou skryté' : ''}`;
   grid.innerHTML = routes.length ? routes.map(route => renderCard(route)).join('') : `<div class="empty-state">${icon('search')}<h3>Tady je zatím ticho.</h3><p>Tomuto výběru žádný výlet neodpovídá. Zkus méně filtrů nebo jiné místo.</p><button type="button" class="button" data-action="reset-filters">Zobrazit všechny výlety</button></div>`;
 }
@@ -159,7 +163,7 @@ async function renderDetail(id, renderId) {
     : '<span class="detail-trophy-badge none">Začátek trasy / okruhu</span>';
 
   document.title = `${route.title} · Czekpoint`;
-  main.innerHTML = `<a class="back-link" href="#/">${icon('back')}Zpět na výlety</a>
+  main.innerHTML = `<a class="back-link" href="#/katalog">${icon('back')}Zpět na katalog výletů</a>
     <div class="detail-header">
       <div>
         <div class="eyebrow">${icon(kindIcons[route.kind] || 'pin')}${e(route.region)} · ${e(kinds[route.kind] || 'Výlet')}</div>
@@ -374,7 +378,7 @@ function renderPassport() {
           <button class="chip ${state.passportTab === 'visited' ? 'active' : ''}" data-action="passport-tab" data-tab="visited" aria-pressed="${state.passportTab === 'visited'}">${icon('check')}Moje návštěvy (${visitedRoutes.length})</button>
           <button class="chip ${state.passportTab === 'saved' ? 'active' : ''}" data-action="passport-tab" data-tab="saved" aria-pressed="${state.passportTab === 'saved'}">${icon('heart')}Na později (${savedRoutes.length})</button>
         </div>
-        <div class="route-grid">${routes.length ? routes.map(route => renderCard(route, true)).join('') : `<div class="empty-state">${icon(state.passportTab === 'visited' ? 'book' : 'heart')}<h3>${state.passportTab === 'visited' ? 'První stránka zatím čeká.' : 'Kam vyrazíš příště?'}</h3><p>${state.passportTab === 'visited' ? 'Na detailu výletu klepni po návštěvě na „Byl/a jsem tady“. Tvoje sbírka začne prvním místem.' : 'Srdíčkem si ulož výlety, které tě zaujmou. Najdeš je tady, až bude chuť vyrazit.'}</p><a class="button primary" href="#/">Objevit výlety ${icon('arrow')}</a></div>`}</div>
+        <div class="route-grid">${routes.length ? routes.map(route => renderCard(route, true)).join('') : `<div class="empty-state">${icon(state.passportTab === 'visited' ? 'book' : 'heart')}<h3>${state.passportTab === 'visited' ? 'První stránka zatím čeká.' : 'Kam vyrazíš příště?'}</h3><p>${state.passportTab === 'visited' ? 'Na detailu výletu klepni po návštěvě na „Byl/a jsem tady“. Tvoje sbírka začne prvním místem.' : 'Srdíčkem si ulož výlety, které tě zaujmou. Najdeš je tady, až bude chuť vyrazit.'}</p><a class="button primary" href="#/katalog">Katalog výletů ${icon('arrow')}</a></div>`}</div>
       </section>
     `;
   } else {
@@ -522,7 +526,7 @@ function renderAbout() {
     <section class="panel">${icon('pin')}<h2>Jedno GPS razítko místa (+30 b.).</h2><p>Razítko získáš osobní návštěvou na 10–60 sekund u ověřeného místa. Začátky okruhů razítka neudělují.</p></section>
     <section class="panel">${icon('lock')}<h2>Tvoje data a soukromí</h2><p>Všechna data o tvé chůzi, odkrývání mlhy, profil i navštívená místa jsou uložena výhradně v tvém zařízení. Žádná poloha se neposílá na externí servery.</p></section></div>
     <div class="about-foot">
-      <p class="small-note">Bez sledovacích reklam a bez analytických měřicích skriptů. Mapové podklady načítá OpenStreetMap; volitelné hledání míst odešle zaokrouhlenou oblast do Overpass API. Toto je verze v0.5.</p>
+      <p class="small-note">Bez sledovacích reklam a bez analytických měřicích skriptů. Mapové podklady načítá OpenStreetMap; volitelné hledání míst odešle zaokrouhlenou oblast do Overpass API. Toto je verze v0.7.</p>
       <div class="data-actions">
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
           <button type="button" class="button small" data-action="export-state">${icon('arrow')}Exportovat průzkum (JSON)</button>
@@ -541,29 +545,35 @@ function renderNotFound() {
 
 async function renderPage({ focus = false } = {}) {
   disposeWalk?.(); disposeWalk = null;
+  disposeBrandLogo?.(); disposeBrandLogo = null;
   main.classList.remove('page-enter');
   void main.offsetWidth;
   main.classList.add('page-enter');
   const renderId = ++state.renderId;
   const parts = location.hash.replace(/^#\/?/, '').split('/');
   const view = parts[0] || '';
-  state.view = view === 'prochazka' ? 'walk' : view === 'pas' ? 'passport' : view === 'o-projektu' ? 'about' : view === 'trasa' ? 'detail' : 'explore';
+  state.view = (view === '' || view === 'prochazka') ? 'walk' : view === 'katalog' ? 'catalog' : view === 'pas' ? 'passport' : view === 'o-projektu' ? 'about' : view === 'trasa' ? 'detail' : 'unknown';
   document.title = 'Czekpoint — Začni cestu s přehledem';
-  document.querySelectorAll('[data-nav]').forEach(link => { const active = link.dataset.nav === state.view || (state.view === 'detail' && link.dataset.nav === 'explore'); link.classList.toggle('active', active); if (active) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current'); });
+  document.querySelectorAll('[data-nav]').forEach(link => {
+    const active = link.dataset.nav === state.view || (state.view === 'detail' && link.dataset.nav === 'catalog');
+    link.classList.toggle('active', active);
+    if (active) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
+  });
   document.querySelector('#passport-count').textContent = state.visits.length;
   if (view === 'trasa') {
     let id; try { id = decodeURIComponent(parts[1] || ''); } catch { id = ''; }
     await renderDetail(id, renderId);
-  } else if (view === 'prochazka') {
+  } else if (view === '' || view === 'prochazka') {
     disposeWalk = mountWalk(main, state.routes, CONFIG, {
       onAddVisit: async (id) => {
         await state.repo.addVisit(id);
         await refreshPersonal();
       },
     });
-  } else if (view === 'pas') renderPassport();
+  } else if (view === 'katalog') renderExplore();
+  else if (view === 'pas') renderPassport();
   else if (view === 'o-projektu') renderAbout();
-  else if (view === '') renderExplore();
   else renderNotFound();
   if (focus && renderId === state.renderId) { window.scrollTo(0, 0); main.querySelector('h1')?.focus({ preventScroll: true }); }
 }
@@ -669,7 +679,7 @@ document.addEventListener('click', async event => {
     if (action === 'reload') { await renderPage(); return; }
     if (action === 'save' && route) {
       button.disabled = true; await state.repo.toggleSaved(id); await refreshPersonal();
-      if (state.view === 'explore') renderExploreResults(); else if (state.view === 'passport') renderPassport(); else await renderPage();
+      if (state.view === 'catalog' || state.view === 'explore') renderExploreResults(); else if (state.view === 'passport') renderPassport(); else await renderPage();
       toast(isSaved(id) ? 'Výlet máš uložený na později.' : 'Výlet byl odebrán z uložených.'); return;
     }
     if (action === 'visit' && route) {

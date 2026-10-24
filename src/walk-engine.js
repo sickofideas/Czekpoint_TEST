@@ -231,8 +231,8 @@ export function acceptFix(progress, anchor, fix, now = Date.now()) {
 
   // Measure displacement from distanceAnchor
   const distFromAnchor = haversineMeters(currentDistanceAnchor, fix);
-  // Threshold balances rejecting stationary jitter vs. crediting slow walking
-  const threshold = Math.max(20, Math.min(36, (currentDistanceAnchor.accuracy + fix.accuracy) * 0.5));
+  // Threshold balances rejecting stationary jitter vs. crediting slow walking in forest terrain
+  const threshold = Math.max(10, Math.min(28, (currentDistanceAnchor.accuracy + fix.accuracy) * 0.45));
 
   if (distFromAnchor < threshold) {
     // Sub-threshold movement: update lastValidFix to keep GPS session alive, keep distanceAnchor

@@ -47,6 +47,7 @@ import {
   optimizeRouteOrder,
   analyzePlannedRoute,
   autoSuggestTrip,
+  fetchWalkingGeometry,
   fetchElevationProfile,
   encodeRouteShareCode,
   decodeRouteShareCode,
@@ -238,14 +239,60 @@ export function mountWalk(root, routes, config, actions = {}) {
 
     <div class="walk-compass-bar" id="walk-compass" role="status">🧭 Čekám na polohu pro určení směru k cíli…</div>
 
-    <!-- Map Wrap with unmissable Close Fullscreen Button -->
+    <!-- Map Wrap with unmissable Close Fullscreen Button, Active Rotating Compass, and Quest HUD -->
     <div class="walk-map-wrap" id="walk-map-wrap">
       <div id="walk-map" aria-label="Interaktivní mapa průzkumu"></div>
+
+      <!-- Active Rotating Compass Medallion -->
+      <div class="active-compass-widget" id="active-compass-widget" title="Aktivní kompas výpravy (klepnutím aktivuj senzor na mobilu)" role="button" tabindex="0">
+        <div class="compass-dial" id="compass-dial">
+          <svg viewBox="0 0 100 100" class="compass-dial-svg">
+            <circle cx="50" cy="50" r="47" fill="#2d1d0e" stroke="#c49b4c" stroke-width="3"/>
+            <circle cx="50" cy="50" r="41" fill="#f4ebd9" stroke="#8c6239" stroke-width="1.5"/>
+            <text x="50" y="21" text-anchor="middle" font-size="13" font-weight="900" fill="#a82315">S</text>
+            <text x="83" y="55" text-anchor="middle" font-size="12" font-weight="800" fill="#4d3215">V</text>
+            <text x="50" y="88" text-anchor="middle" font-size="12" font-weight="800" fill="#4d3215">J</text>
+            <text x="17" y="55" text-anchor="middle" font-size="12" font-weight="800" fill="#4d3215">Z</text>
+            <line x1="50" y1="8" x2="50" y2="13" stroke="#a82315" stroke-width="2.5"/>
+            <circle cx="50" cy="50" r="5" fill="#a87c32" stroke="#2d1d0e" stroke-width="1.5"/>
+          </svg>
+          <div class="compass-needle" id="compass-needle">
+            <div class="needle-north"></div>
+            <div class="needle-south"></div>
+          </div>
+        </div>
+        <div class="compass-target-arrow" id="compass-target-arrow">
+          <div class="target-gem" title="Směr k cíli">◆</div>
+        </div>
+        <div class="compass-dist-badge" id="compass-dist-badge">-- m</div>
+      </div>
+
+      <!-- Side Game Legend - Quest HUD -->
+      <div class="quest-hud-panel" id="quest-hud-panel" hidden>
+        <button type="button" class="quest-hud-header" id="quest-hud-toggle-btn">
+          <span class="quest-hud-title">📜 Úkoly výpravy (<span id="qhud-progress">0/0</span>)</span>
+          <span class="quest-hud-toggle-icon" id="qhud-toggle-icon">▾</span>
+        </button>
+        <div class="quest-hud-content" id="quest-hud-content">
+          <div class="qhud-next-target" id="qhud-next-target">
+            <div class="qhud-target-label">🎯 Další cíl</div>
+            <div class="qhud-target-name" id="qhud-next-name">--</div>
+            <div class="qhud-target-eta" id="qhud-next-eta">-- m · ~-- min</div>
+          </div>
+          <div class="qhud-stops-list" id="qhud-stops-list"></div>
+          <div class="qhud-eta-summary" id="qhud-eta-summary">
+            <div class="qhud-eta-row"><strong>🏁 Zbývá:</strong> <span id="qhud-total-dist">-- km</span></div>
+            <div class="qhud-eta-row"><strong>⏱ Zbývá chůze:</strong> <span id="qhud-total-time">~-- min</span></div>
+            <div class="qhud-eta-row qhud-arrival-highlight"><strong>🕒 V cíli kolem:</strong> <span id="qhud-eta-clock">--:--</span></div>
+          </div>
+        </div>
+      </div>
+
       <button type="button" id="zen-close-btn" class="zen-close-btn" hidden>✕ Zavřít celou mapu</button>
       <div id="zen-mini-compass" class="zen-mini-compass" hidden>🧭 <span id="zen-compass-text">-- m</span></div>
       <div class="walk-map-toolbar">
         <button class="button small" id="walk-center" title="Vycentrovat na moji polohu">◎ Moje poloha</button>
-        <button class="button small" id="walk-fog-toggle" aria-pressed="true" title="Přepnout krytí mlhy">Mlha: Průzkumná (65 %)</button>
+        <button class="button small" id="walk-fog-toggle" aria-pressed="true" title="Přepnout krytí mlhy">Mlha: KCD2 Pergamen</button>
         <button class="button small" id="walk-plain-map" aria-pressed="false" title="Zobrazit běžný mapový podklad">Běžná mapa</button>
         <button class="button small" id="walk-zen-toggle" aria-pressed="false" title="Čistá mapa bez okolních panelů">⛶ Čistá mapa</button>
       </div>
@@ -449,38 +496,86 @@ export function mountWalk(root, routes, config, actions = {}) {
 
     if (fogMode === 'none') {
       canvas.style.display = 'none';
+      canvas.classList.remove('kcd2-parchment-filter');
       return;
     }
     canvas.style.display = 'block';
 
-    const alpha = fogMode === 'full' ? 1.0 : 0.65;
-    ctx.fillStyle = `rgba(22, 51, 41, ${alpha})`;
-    ctx.fillRect(0, 0, size.x, size.y);
+    if (fogMode === 'full') {
+      canvas.classList.remove('kcd2-parchment-filter');
+      ctx.fillStyle = 'rgba(225, 210, 175, 1.0)';
+      ctx.fillRect(0, 0, size.x, size.y);
 
-    ctx.strokeStyle = `rgba(216, 233, 158, ${fogMode === 'full' ? 0.04 : 0.025})`;
-    ctx.lineWidth = 1;
-    for (let x = 0; x < size.x; x += 40) {
-      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, size.y); ctx.stroke();
-    }
-    for (let y = 0; y < size.y; y += 40) {
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(size.x, y); ctx.stroke();
+      // Medieval parchment texture & grid in dark brown ink
+      ctx.strokeStyle = 'rgba(92, 68, 40, 0.22)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < size.x; x += 50) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, size.y); ctx.stroke();
+      }
+      for (let y = 0; y < size.y; y += 50) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(size.x, y); ctx.stroke();
+      }
+    } else {
+      // Default: 'explore' -> KCD2 Kingdom Come 2 Illustrated Pergamen
+      canvas.classList.add('kcd2-parchment-filter');
+      ctx.fillStyle = 'rgba(228, 214, 183, 0.82)';
+      ctx.fillRect(0, 0, size.x, size.y);
+
+      // Medieval grid of meridians and parallels in brown ink
+      ctx.strokeStyle = 'rgba(92, 68, 40, 0.18)';
+      ctx.lineWidth = 1.2;
+      for (let x = 0; x < size.x; x += 55) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, size.y); ctx.stroke();
+      }
+      for (let y = 0; y < size.y; y += 55) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(size.x, y); ctx.stroke();
+      }
+
+      // Subtle diagonal hatching
+      ctx.strokeStyle = 'rgba(92, 68, 40, 0.08)';
+      ctx.lineWidth = 0.8;
+      for (let d = -size.y; d < size.x + size.y; d += 28) {
+        ctx.beginPath(); ctx.moveTo(d, 0); ctx.lineTo(d + size.y * 0.7, size.y); ctx.stroke();
+      }
+
+      // Compass rose accent lines in corner
+      ctx.strokeStyle = 'rgba(92, 68, 40, 0.15)';
+      ctx.beginPath();
+      ctx.arc(size.x - 70, 70, 45, 0, Math.PI * 2);
+      ctx.moveTo(size.x - 70, 20); ctx.lineTo(size.x - 70, 120);
+      ctx.moveTo(size.x - 120, 70); ctx.lineTo(size.x - 20, 70);
+      ctx.stroke();
     }
 
     ctx.globalCompositeOperation = 'destination-out';
     const standardRadius = 65;
+    const revealedSpots = [];
 
     for (const id of progress.cells) {
       const center = cellCenter(id);
       const cp = map.latLngToContainerPoint([center.lat, center.lng]);
       const radPx = metersToPx(center.lat, standardRadius);
       if (cp.x + radPx < 0 || cp.x - radPx > size.x || cp.y + radPx < 0 || cp.y - radPx > size.y) continue;
-      const g = ctx.createRadialGradient(cp.x, cp.y, radPx * 0.4, cp.x, cp.y, radPx);
+      revealedSpots.push({ x: cp.x, y: cp.y, r: radPx });
+
+      const g = ctx.createRadialGradient(cp.x, cp.y, radPx * 0.45, cp.x, cp.y, radPx);
       g.addColorStop(0, 'rgba(0,0,0,1)');
+      g.addColorStop(0.85, 'rgba(0,0,0,0.85)');
       g.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = g;
       ctx.beginPath();
       ctx.arc(cp.x, cp.y, radPx, 0, Math.PI * 2);
       ctx.fill();
+    }
+
+    // Ink ring border around uncovered areas
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = 'rgba(110, 78, 38, 0.45)';
+    ctx.lineWidth = 2.5;
+    for (const { x, y, r } of revealedSpots) {
+      ctx.beginPath();
+      ctx.arc(x, y, r - 1, 0, Math.PI * 2);
+      ctx.stroke();
     }
   }
 
@@ -519,9 +614,45 @@ export function mountWalk(root, routes, config, actions = {}) {
     return ids.map(id => all.find(p => p.id === id)).filter(Boolean);
   }
 
+  let currentDeviceHeading = null;
+  let targetBearing = 0;
+
+  function updateCompassRotation(heading) {
+    currentDeviceHeading = heading;
+    const dial = $('compass-dial');
+    const targetArrow = $('compass-target-arrow');
+    if (dial) {
+      dial.style.transform = `rotate(${-heading}deg)`;
+    }
+    if (targetArrow) {
+      targetArrow.style.transform = `rotate(${targetBearing - heading}deg)`;
+    }
+  }
+
+  function handleDeviceOrientation(event) {
+    if (disposed) return;
+    let heading = null;
+    if (event.webkitCompassHeading != null) {
+      heading = event.webkitCompassHeading;
+    } else if (event.alpha != null) {
+      heading = (360 - event.alpha) % 360;
+    }
+    if (heading != null && Number.isFinite(heading)) {
+      updateCompassRotation(heading);
+    }
+  }
+
+  window.addEventListener('deviceorientationabsolute', handleDeviceOrientation, true);
+  window.addEventListener('deviceorientation', handleDeviceOrientation, true);
+
+  function getCompanionSpeedKmH(mode) {
+    if (mode === 'stroller' || mode === 'family') return 3.2;
+    if (mode === 'dog') return 4.0;
+    return 4.2;
+  }
+
   function renderCompass(origin) {
     if (!origin) return;
-    const isCompassMode = stateObj.explorationMode === 'compass';
     const plannedPlaces = getPlannedPlaces();
 
     let targetPlace = null;
@@ -529,7 +660,6 @@ export function mountWalk(root, routes, config, actions = {}) {
     let targetIndex = 0;
 
     if (plannedPlaces.length > 0) {
-      // Find first unvisited planned place
       for (let i = 0; i < plannedPlaces.length; i++) {
         const p = plannedPlaces[i];
         if (!progress.discoveries.includes(p.id) && !progress.discoveries.includes(`catalog:${p.id}`)) {
@@ -542,7 +672,6 @@ export function mountWalk(root, routes, config, actions = {}) {
     }
 
     if (!targetPlace) {
-      // Fallback to nearest unvisited catalog stamp
       for (const p of catalogue) {
         if (!p.collectible || progress.discoveries.includes(p.id) || progress.discoveries.includes(`catalog:${p.id}`)) continue;
         const d = haversineMeters(origin, p) ?? Infinity;
@@ -554,8 +683,13 @@ export function mountWalk(root, routes, config, actions = {}) {
     }
 
     if (targetPlace && Number.isFinite(targetDist)) {
-      const angle = Math.atan2(targetPlace.lng - origin.lng, targetPlace.lat - origin.lat) * 180 / Math.PI;
-      const normalizedAngle = (angle + 360) % 360;
+      const dLng = (targetPlace.lng - origin.lng) * Math.PI / 180;
+      const lat1 = origin.lat * Math.PI / 180;
+      const lat2 = targetPlace.lat * Math.PI / 180;
+      const y = Math.sin(dLng) * Math.cos(lat2);
+      const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+      targetBearing = (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+
       const directions = [
         { name: 'sever', arrow: '↑' },
         { name: 'severovýchod', arrow: '↗' },
@@ -566,7 +700,7 @@ export function mountWalk(root, routes, config, actions = {}) {
         { name: 'západ', arrow: '←' },
         { name: 'severozápad', arrow: '↖' },
       ];
-      const dir = directions[Math.round(normalizedAngle / 45) % 8];
+      const dir = directions[Math.round(targetBearing / 45) % 8];
       const prefix = plannedPlaces.length > 0
         ? `Další cíl: ${targetIndex} z ${plannedPlaces.length}`
         : 'Nejbližší razítko';
@@ -575,21 +709,118 @@ export function mountWalk(root, routes, config, actions = {}) {
       if ($('zen-compass-text')) {
         $('zen-compass-text').textContent = `${dir.arrow} ${Math.round(targetDist)} m (${targetPlace.title.slice(0, 20)})`;
       }
+      if ($('compass-dist-badge')) {
+        $('compass-dist-badge').textContent = targetDist >= 1000 ? `${(targetDist / 1000).toFixed(1).replace('.', ',')} km` : `${Math.round(targetDist)} m`;
+      }
+
+      if (currentDeviceHeading == null) {
+        const targetArrow = $('compass-target-arrow');
+        if (targetArrow) targetArrow.style.transform = `rotate(${targetBearing}deg)`;
+      } else {
+        updateCompassRotation(currentDeviceHeading);
+      }
     } else {
       $('walk-compass').innerHTML = '🧭 <strong>Všechny cíle navštíveny!</strong> Výborně.';
       if ($('zen-compass-text')) $('zen-compass-text').textContent = '✓ Hotovo';
+      if ($('compass-dist-badge')) $('compass-dist-badge').textContent = 'Hotovo ✓';
     }
   }
 
-  function renderPlannedRouteOnMap() {
+  function renderQuestHud(origin) {
+    const hudPanel = $('quest-hud-panel');
+    if (!hudPanel) return;
+
+    const plannedPlaces = getPlannedPlaces();
+    if (plannedPlaces.length === 0) {
+      hudPanel.hidden = true;
+      return;
+    }
+    hudPanel.hidden = false;
+
+    const currentPos = origin || lastFix || plannedRoute.origin || { lat: 49.6033, lng: 13.8633 };
+    const speedKmH = getCompanionSpeedKmH(stateObj.companionMode);
+
+    let nextTarget = null;
+    let nextTargetDistM = Infinity;
+    let nextTargetIdx = -1;
+    let visitedCount = 0;
+
+    for (let i = 0; i < plannedPlaces.length; i++) {
+      const p = plannedPlaces[i];
+      const isVisited = progress.discoveries.includes(p.id) || progress.discoveries.includes(`catalog:${p.id}`);
+      if (isVisited) {
+        visitedCount++;
+      } else if (!nextTarget) {
+        nextTarget = p;
+        nextTargetIdx = i;
+        nextTargetDistM = haversineMeters(currentPos, p) ?? Infinity;
+      }
+    }
+
+    $('qhud-progress').textContent = `${visitedCount}/${plannedPlaces.length}`;
+
+    if (nextTarget) {
+      const nextTimeMin = Math.max(1, Math.round((nextTargetDistM / 1000) / speedKmH * 60));
+      const distStr = nextTargetDistM >= 1000
+        ? `${(nextTargetDistM / 1000).toFixed(1).replace('.', ',')} km`
+        : `${Math.round(nextTargetDistM)} m`;
+      $('qhud-next-name').textContent = nextTarget.title;
+      $('qhud-next-eta').textContent = `za ${distStr} · ~${nextTimeMin} min`;
+    } else {
+      $('qhud-next-name').textContent = 'Všechny cíle splněny! 🎉';
+      $('qhud-next-eta').textContent = 'Výprava dokončena!';
+    }
+
+    const stopsListEl = $('qhud-stops-list');
+    stopsListEl.innerHTML = plannedPlaces.map((p, idx) => {
+      const isVisited = progress.discoveries.includes(p.id) || progress.discoveries.includes(`catalog:${p.id}`);
+      const dist = haversineMeters(currentPos, p);
+      const distStr = dist != null
+        ? dist >= 1000 ? `${(dist / 1000).toFixed(1).replace('.', ',')} km` : `${Math.round(dist)} m`
+        : '';
+      const statusText = isVisited
+        ? '<span class="qhud-stop-status visited">✓ Navštíveno</span>'
+        : `<span class="qhud-stop-status unvisited">za ${distStr}</span>`;
+      return `
+        <div class="qhud-stop-row">
+          <span class="qhud-stop-title">${idx + 1}. ${e(p.title)}</span>
+          ${statusText}
+        </div>
+      `;
+    }).join('');
+
+    let remainingM = 0;
+    if (nextTarget) {
+      remainingM += nextTargetDistM;
+      for (let i = nextTargetIdx; i < plannedPlaces.length - 1; i++) {
+        const seg = haversineMeters(plannedPlaces[i], plannedPlaces[i + 1]);
+        if (seg != null) remainingM += seg;
+      }
+    }
+    const walkingRemainingM = Math.round(remainingM * 1.25);
+    const totalMin = Math.round((walkingRemainingM / 1000) / speedKmH * 60);
+
+    const etaDate = new Date(Date.now() + totalMin * 60000);
+    const hours = etaDate.getHours().toString().padStart(2, '0');
+    const mins = etaDate.getMinutes().toString().padStart(2, '0');
+
+    $('qhud-total-dist').textContent = walkingRemainingM >= 1000
+      ? `${(walkingRemainingM / 1000).toFixed(1).replace('.', ',')} km`
+      : `${walkingRemainingM} m`;
+    $('qhud-total-time').textContent = `~${totalMin} min`;
+    $('qhud-eta-clock').textContent = totalMin > 0 ? `${hours}:${mins}` : 'V cíli ✓';
+  }
+
+  async function renderPlannedRouteOnMap() {
     if (!map) return;
     plannedRouteLayer.clearLayers();
 
-    // 1. Radius Circle
-    const center = plannedRoute.origin || lastFix || { lat: 49.6033, lng: 13.8633 };
-    const radiusM = (plannedRoute.radiusKm || 3) * 1000;
+    const plannedPlaces = getPlannedPlaces();
+    const currentOrigin = lastFix || plannedRoute.origin || { lat: 49.6033, lng: 13.8633 };
 
-    radiusCircle = L.circle([center.lat, center.lng], {
+    // 1. Radius Circle
+    const radiusM = (plannedRoute.radiusKm || 10) * 1000;
+    radiusCircle = L.circle([currentOrigin.lat, currentOrigin.lng], {
       radius: radiusM,
       color: '#467253',
       weight: 1.5,
@@ -598,32 +829,81 @@ export function mountWalk(root, routes, config, actions = {}) {
       fillOpacity: 0.05,
     }).addTo(plannedRouteLayer);
 
-    // 2. Focus Polyline
-    const plannedPlaces = getPlannedPlaces();
-    if (plannedPlaces.length > 0) {
-      const latlngs = [];
-      if (plannedRoute.origin) latlngs.push([plannedRoute.origin.lat, plannedRoute.origin.lng]);
-      for (const p of plannedPlaces) latlngs.push([p.lat, p.lng]);
+    if (plannedPlaces.length === 0) {
+      return;
+    }
 
-      focusPolyline = L.polyline(latlngs, {
-        color: '#193e32',
-        weight: 3.5,
-        dashArray: '6, 8',
-        opacity: 0.85,
-      }).addTo(plannedRouteLayer);
+    const waypoints = [currentOrigin, ...plannedPlaces];
+    const geomResult = await fetchWalkingGeometry(waypoints);
+    const coords = geomResult?.coordinates;
 
-      // Beacon on next unvisited planned place
-      const nextTarget = plannedPlaces.find(p => !progress.discoveries.includes(p.id));
-      if (nextTarget) {
-        beaconMarker = L.marker([nextTarget.lat, nextTarget.lng], {
-          icon: L.divIcon({
-            className: 'beacon-pulse-icon',
-            html: '<div class="beacon-pulse"></div>',
-            iconSize: [28, 28],
-            iconAnchor: [14, 14],
-          }),
+    if (!coords || coords.length < 2) return;
+
+    // 2. Dual Game Trail ABOVE parchment fog on 'quest-route-pane' (z-index 520)
+    // 2a. Underlay line: dark brown-green border
+    L.polyline(coords, {
+      pane: 'quest-route-pane',
+      color: '#2c1d11',
+      weight: 7,
+      opacity: 0.75,
+      lineCap: 'round',
+      lineJoin: 'round',
+    }).addTo(plannedRouteLayer);
+
+    // 2b. Inner golden/amber trail
+    L.polyline(coords, {
+      pane: 'quest-route-pane',
+      color: '#f5b82e',
+      weight: 4,
+      dashArray: '10, 8',
+      opacity: 0.95,
+      lineCap: 'round',
+      lineJoin: 'round',
+    }).addTo(plannedRouteLayer);
+
+    // 2c. Visited section overlay
+    const unvisitedIdx = plannedPlaces.findIndex(p => !progress.discoveries.includes(p.id) && !progress.discoveries.includes(`catalog:${p.id}`));
+    if (unvisitedIdx > 0) {
+      const visitedWaypoints = [currentOrigin, ...plannedPlaces.slice(0, unvisitedIdx)];
+      if (visitedWaypoints.length >= 2) {
+        L.polyline(visitedWaypoints.map(p => [p.lat, p.lng]), {
+          pane: 'quest-route-pane',
+          color: '#5b8c38',
+          weight: 5,
+          opacity: 0.9,
+          lineCap: 'round',
         }).addTo(plannedRouteLayer);
       }
+    }
+
+    // 2d. Direction markers (➤) along route segments
+    for (let i = 0; i < coords.length - 1; i += Math.max(1, Math.floor(coords.length / 8))) {
+      const p1 = coords[i];
+      const p2 = coords[i + 1];
+      if (!p1 || !p2) continue;
+      const angle = (Math.atan2(p2[1] - p1[1], p2[0] - p1[0]) * 180 / Math.PI + 360) % 360;
+      L.marker([(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2], {
+        pane: 'quest-route-pane',
+        icon: L.divIcon({
+          className: 'route-dir-marker',
+          html: `<div style="transform:rotate(${angle}deg);color:#2c1d11;font-size:12px;font-weight:900;text-shadow:0 0 4px #f5b82e">➤</div>`,
+          iconSize: [16, 16],
+          iconAnchor: [8, 8],
+        }),
+      }).addTo(plannedRouteLayer);
+    }
+
+    // Beacon on next unvisited planned place
+    const nextTarget = plannedPlaces.find(p => !progress.discoveries.includes(p.id) && !progress.discoveries.includes(`catalog:${p.id}`));
+    if (nextTarget) {
+      beaconMarker = L.marker([nextTarget.lat, nextTarget.lng], {
+        icon: L.divIcon({
+          className: 'beacon-pulse-icon',
+          html: '<div class="beacon-pulse"></div>',
+          iconSize: [28, 28],
+          iconAnchor: [14, 14],
+        }),
+      }).addTo(plannedRouteLayer);
     }
   }
 
@@ -1090,6 +1370,87 @@ export function mountWalk(root, routes, config, actions = {}) {
     showPostcardModal(summary);
   }
 
+  let watchdogTimer = null;
+  let lastFixReceivedAt = 0;
+
+  function stopWatchdog() {
+    if (watchdogTimer) {
+      clearInterval(watchdogTimer);
+      watchdogTimer = null;
+    }
+  }
+
+  function startWatchdog() {
+    stopWatchdog();
+    watchdogTimer = setInterval(() => {
+      if (!active || disposed || demo) return;
+      if (Date.now() - lastFixReceivedAt > 14000) {
+        restartGpsWatch();
+      }
+    }, 10000);
+  }
+
+  function handleGpsFix(coords) {
+    if (disposed) return;
+    lastFixReceivedAt = Date.now();
+    if (!coords || !Number.isFinite(coords.lat) || !Number.isFinite(coords.lng) || coords.accuracy > 500) {
+      return;
+    }
+    const now = Date.now();
+    const fixTime = (coords.timestamp && Math.abs(now - coords.timestamp) < 12000) ? coords.timestamp : now;
+    const cleanFix = {
+      lat: coords.lat,
+      lng: coords.lng,
+      accuracy: Math.max(1, Number(coords.accuracy) || 10),
+      timestamp: fixTime,
+      speed: Number.isFinite(coords.speed) ? coords.speed : null,
+    };
+
+    // 1. Live player visual position update immediately on EVERY callback
+    lastFix = cleanFix;
+    if (map && player && accuracyRing) {
+      player.setLatLng([cleanFix.lat, cleanFix.lng]).setStyle({ opacity: 1, fillOpacity: 1 });
+      accuracyRing.setLatLng([cleanFix.lat, cleanFix.lng]).setRadius(cleanFix.accuracy);
+      if (follow) {
+        map.setView([cleanFix.lat, cleanFix.lng], Math.max(16, map.getZoom()), { animate: false });
+      }
+    }
+
+    // 2. Immediate compass, distances, and Quest HUD recalculation
+    renderCompass(cleanFix);
+    renderQuestHud(cleanFix);
+
+    // 3. Process through game engine when active or demo
+    if (active || demo) {
+      sample(cleanFix, fixTime);
+    }
+  }
+
+  function restartGpsWatch() {
+    if (watch !== null) {
+      navigator.geolocation.clearWatch(watch);
+      watch = null;
+    }
+    if (!navigator.geolocation || disposed || (!active && !starting)) return;
+
+    // Fast immediate fix
+    navigator.geolocation.getCurrentPosition(
+      p => handleGpsFix({ lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy, speed: p.coords.speed, timestamp: p.timestamp }),
+      err => { /* non-fatal, watchPosition runs concurrently */ },
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+    );
+
+    // Active continuous watch
+    watch = navigator.geolocation.watchPosition(
+      p => handleGpsFix({ lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy, speed: p.coords.speed, timestamp: p.timestamp }),
+      error => {
+        if (error.code === 1) pauseSession('Poloha není povolená. Povol ji v nastavení.');
+        else { anchor = null; status('GPS signál se zpožďuje… čekám na družice.'); }
+      },
+      { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 }
+    );
+  }
+
   function sample(fix, now = Date.now()) {
     if (disposed || (!active && !demo)) return;
     const result = acceptFix(progress, anchor, fix, now);
@@ -1097,14 +1458,7 @@ export function mountWalk(root, routes, config, actions = {}) {
 
     const validFix = result.anchor?.lastValidFix || (result.accepted ? fix : null);
     if (validFix) {
-      lastFix = validFix;
       memoryTrail = appendTrail(memoryTrail, validFix, now);
-
-      if (map) {
-        player.setLatLng([validFix.lat, validFix.lng]).setStyle({ opacity: 1, fillOpacity: 1 });
-        accuracyRing.setLatLng([validFix.lat, validFix.lng]).setRadius(validFix.accuracy);
-        if (follow) map.setView([validFix.lat, validFix.lng], Math.max(16, map.getZoom()), { animate: false });
-      }
 
       // Proximity check for GPS stamps using 2-sample rule (10s - 60s)
       const allPlaces = getAllAvailablePlaces();
@@ -1192,49 +1546,39 @@ export function mountWalk(root, routes, config, actions = {}) {
 
   async function start() {
     if (active || starting || demo || disposed) return;
-    if (!isSecureContext || !navigator.geolocation) { status('GPS vyžaduje HTTPS a podporovaný prohlížeč.'); return; }
-    if (!navigator.locks) { status('Prohlížeč nepodporuje bezpečný souběh. Použij aktuální Chrome nebo Safari.'); return; }
+    if (!isSecureContext || !navigator.geolocation) {
+      status('GPS vyžaduje HTTPS a podporovaný prohlížeč.');
+      return;
+    }
 
     starting = true; stats(); status('Spouštím GPS…');
-    try {
-      await navigator.locks.request('czekpoint-walk', { ifAvailable: true }, async lock => {
-        if (disposed || !starting) return;
-        if (!lock) { starting = false; stats(); status('Procházka už běží v jiné kartě.'); return; }
 
-        stateObj = loadState();
-        progress = { version: 1, cells: stateObj.cells, meters: stateObj.meters, discoveries: stateObj.discoveries };
+    stateObj = loadState();
+    progress = { version: 1, cells: stateObj.cells, meters: stateObj.meters, discoveries: stateObj.discoveries };
 
-        if (!currentExpedition || currentExpedition.state === 'ended') {
-          const select = $('select-goal');
-          let goal = DEFAULT_GOALS[0];
-          if (select?.value === 'cells-3') goal = DEFAULT_GOALS[1];
-          else if (select?.value === 'none') goal = DEFAULT_GOALS[2];
+    if (!currentExpedition || currentExpedition.state === 'ended') {
+      const select = $('select-goal');
+      let goal = DEFAULT_GOALS[0];
+      if (select?.value === 'cells-3') goal = DEFAULT_GOALS[1];
+      else if (select?.value === 'none') goal = DEFAULT_GOALS[2];
 
-          currentExpedition = createExpedition({ progress, goal });
-        } else if (currentExpedition.state === 'paused') {
-          currentExpedition = resumeExpedition(currentExpedition);
-        }
+      currentExpedition = createExpedition({ progress, goal });
+    } else if (currentExpedition.state === 'paused') {
+      currentExpedition = resumeExpedition(currentExpedition);
+    }
 
-        stateObj.activeExpedition = currentExpedition;
-        if (!demo) {
-          try { saveState(stateObj); } catch {}
-        }
+    stateObj.activeExpedition = currentExpedition;
+    if (!demo) {
+      try { saveState(stateObj); } catch {}
+    }
 
-        starting = false; active = true; anchor = null; follow = true; stats();
-        status('Čekám na GPS. Povol polohu a vyjdi na otevřené místo.');
-        const held = new Promise(resolve => { releaseLock = resolve; });
-        watch = navigator.geolocation.watchPosition(
-          p => sample({ lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy, speed: p.coords.speed, timestamp: p.timestamp }),
-          error => {
-            if (error.code === 1) pauseSession('Poloha není povolená. Povol ji v nastavení.');
-            else { anchor = null; status('GPS zatím není dostupná.'); }
-          },
-          { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 }
-        );
-        holdWake();
-        await held;
-      });
-    } catch (error) { pauseSession(error.message || 'GPS nelze spustit.'); }
+    starting = false; active = true; anchor = null; follow = true; stats();
+    status('Čekám na GPS. Povol polohu a vyjdi na otevřené místo.');
+
+    lastFixReceivedAt = Date.now();
+    restartGpsWatch();
+    startWatchdog();
+    holdWake();
   }
 
   if (L) {
@@ -1249,6 +1593,10 @@ export function mountWalk(root, routes, config, actions = {}) {
     fog = L.DomUtil.create('canvas', 'walk-fog', pane);
     fog.setAttribute('aria-hidden', 'true');
 
+    const routePane = map.createPane('quest-route-pane');
+    routePane.style.zIndex = '520';
+    routePane.style.pointerEvents = 'none';
+
     placesLayer.addTo(map);
     trailLayer.addTo(map);
     plannedRouteLayer.addTo(map);
@@ -1259,6 +1607,15 @@ export function mountWalk(root, routes, config, actions = {}) {
     map.on('move zoom resize', scheduleFog);
     map.on('dragstart', () => { follow = false; });
     map.on('moveend', () => { if (!lastFix) renderPlaces(); });
+
+    // Auto-load nearby places in 10 km radius around Rožmitál
+    loadAutoPlacesForArea(center, routes, config, aborter.signal).then(loaded => {
+      if (!disposed && Array.isArray(loaded) && loaded.length) {
+        nearby = loaded;
+        renderPlaces();
+        renderQuestHud(lastFix || plannedRoute.origin);
+      }
+    }).catch(() => {});
 
     // Map click handler for selecting start origin
     map.on('click', ev => {
@@ -1607,7 +1964,7 @@ export function mountWalk(root, routes, config, actions = {}) {
       fogMode = 'explore';
     }
     previousFogMode = fogMode;
-    $('walk-fog-toggle').textContent = fogMode === 'full' ? 'Mlha: Plná (100 %)' : 'Mlha: Průzkumná (65 %)';
+    $('walk-fog-toggle').textContent = fogMode === 'full' ? 'Mlha: 100 % pergamen' : 'Mlha: KCD2 Pergamen';
     $('walk-plain-map').setAttribute('aria-pressed', 'false');
     scheduleFog();
   });
@@ -1617,13 +1974,32 @@ export function mountWalk(root, routes, config, actions = {}) {
       previousFogMode = fogMode;
       fogMode = 'none';
       $('walk-plain-map').setAttribute('aria-pressed', 'true');
-      $('walk-fog-toggle').textContent = 'Mlha: Vypnutá';
+      $('walk-fog-toggle').textContent = 'Běžná mapa';
     } else {
       fogMode = previousFogMode || 'explore';
       $('walk-plain-map').setAttribute('aria-pressed', 'false');
-      $('walk-fog-toggle').textContent = fogMode === 'full' ? 'Mlha: Plná (100 %)' : 'Mlha: Průzkumná (65 %)';
+      $('walk-fog-toggle').textContent = fogMode === 'full' ? 'Mlha: 100 % pergamen' : 'Mlha: KCD2 Pergamen';
     }
     scheduleFog();
+  });
+
+  $('active-compass-widget')?.addEventListener('click', async () => {
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      try {
+        const perm = await DeviceOrientationEvent.requestPermission();
+        if (perm === 'granted') {
+          status('Kompas: Senzor natočení byl povolen.');
+        } else {
+          status('Kompas: Přístup k senzoru nebyl udělen.');
+        }
+      } catch (err) {
+        status('Kompas: ' + err.message);
+      }
+    }
+  });
+
+  $('quest-hud-toggle-btn')?.addEventListener('click', () => {
+    $('quest-hud-panel')?.classList.toggle('collapsed');
   });
 
   $('walk-center').addEventListener('click', () => {
@@ -1698,6 +2074,7 @@ export function mountWalk(root, routes, config, actions = {}) {
       saveAppState();
       renderPlannerBasketAndXray();
       renderPlaces();
+      renderQuestHud(lastFix || plannedRoute.origin);
       return;
     }
 
@@ -1710,6 +2087,7 @@ export function mountWalk(root, routes, config, actions = {}) {
       saveAppState();
       renderPlannerBasketAndXray();
       renderPlaces();
+      renderQuestHud(lastFix || plannedRoute.origin);
       return;
     }
 
@@ -1723,6 +2101,7 @@ export function mountWalk(root, routes, config, actions = {}) {
         saveAppState();
         renderPlannerBasketAndXray();
         renderPlaces();
+        renderQuestHud(lastFix || plannedRoute.origin);
         $('walk-radar-banner').hidden = true;
         playTick(stateObj.soundEnabled);
       }
@@ -1859,7 +2238,12 @@ export function mountWalk(root, routes, config, actions = {}) {
     }
   });
 
-  const visibility = () => { if (document.hidden && (active || starting)) pauseSession('Záznam byl pozastaven při skrytí aplikace.'); };
+  const visibility = () => {
+    if (!document.hidden && active && !disposed) {
+      restartGpsWatch();
+      holdWake();
+    }
+  };
   document.addEventListener('visibilitychange', visibility);
   const pagehide = () => pauseSession();
   window.addEventListener('pagehide', pagehide);
@@ -1884,10 +2268,13 @@ export function mountWalk(root, routes, config, actions = {}) {
 
   return () => {
     disposed = true;
+    stopWatchdog();
     pauseSession();
     aborter.abort();
     window.removeEventListener('keydown', onEscapeKey);
     document.removeEventListener('visibilitychange', visibility);
+    window.removeEventListener('deviceorientationabsolute', handleDeviceOrientation, true);
+    window.removeEventListener('deviceorientation', handleDeviceOrientation, true);
     window.removeEventListener('pagehide', pagehide);
     window.removeEventListener('storage', storageChanged);
     if (frame) cancelAnimationFrame(frame);
