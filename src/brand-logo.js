@@ -436,14 +436,14 @@ export function mountBrandLogo(targetElementOrSelector, options = {}) {
 /**
  * Pevné nasazení animovaného loga č. 100 přímo do hlavičky webu (.site-header .brand).
  * Nahradí statický obrázek kompletním inline SVG a spustí 6,5s klidný animační cyklus.
- * @param {string|HTMLElement} targetElementOrSelector
+ * @param {string|HTMLElement} targetSelector
  * @param {Object} options
  * @returns {Function} logo controller { dispose, trigger, next, isBusy, getIndex }
  */
-export function mountAnimatedBrandLogo(targetElementOrSelector, options = {}) {
-  const brandEl = typeof targetElementOrSelector === 'string'
-    ? document.querySelector(targetElementOrSelector)
-    : targetElementOrSelector;
+export function mountAnimatedBrandLogo(targetSelector = '.site-header .brand', options = {}) {
+  const brandEl = typeof targetSelector === 'string'
+    ? document.querySelector(targetSelector)
+    : targetSelector;
 
   if (!brandEl) return createNoopController();
 

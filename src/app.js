@@ -538,7 +538,7 @@ function renderAbout() {
     <section class="panel">${icon('pin')}<h2>Jedno GPS razítko místa (+30 b.).</h2><p>Razítko získáš osobní návštěvou na 10–60 sekund u ověřeného místa. Začátky okruhů razítka neudělují.</p></section>
     <section class="panel">${icon('lock')}<h2>Tvoje data a soukromí</h2><p>Všechna data o tvé chůzi, odkrývání mlhy, profil i navštívená místa jsou uložena výhradně v tvém zařízení. Žádná poloha se neposílá na externí servery.</p></section></div>
     <div class="about-foot">
-      <p class="small-note">Bez sledovacích reklam a bez analytických měřicích skriptů. Mapové podklady načítá OpenStreetMap; volitelné hledání míst odešle zaokrouhlenou oblast do Overpass API. Toto je verze v0.8.</p>
+      <p class="small-note">Bez sledovacích reklam a bez analytických měřicích skriptů. Mapové podklady načítá OpenStreetMap; volitelné hledání míst odešle zaokrouhlenou oblast do Overpass API. Toto je verze v0.9.</p>
       <div class="data-actions">
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
           <button type="button" class="button small" data-action="export-state">${icon('arrow')}Exportovat průzkum (JSON)</button>

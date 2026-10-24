@@ -498,6 +498,7 @@ export const routes = [
     hintAnchor: false,
     watchtower: false,
     hiddenUntilWatchtower: false,
+
     durationMinutes: null,
     distanceKm: 19,
     elevationM: null,

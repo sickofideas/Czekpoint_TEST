@@ -252,7 +252,7 @@ export function exportStateJson() {
   const exportPayload = {
     exportedAt: new Date().toISOString(),
     appName: 'czekpoint',
-    appVersion: '0.8.0',
+    appVersion: '0.9.0',
     schemaVersion: 2,
     data: {
       profile: state.profile,
