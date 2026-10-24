@@ -222,12 +222,23 @@ export function triggerBrandLogoAnimation(target, stateInput, options = {}) {
   return timeoutId;
 }
 
+function createNoopController() {
+  const noop = () => {};
+  noop.dispose = noop;
+  noop.trigger = () => false;
+  noop.next = () => false;
+  noop.isBusy = () => false;
+  noop.getIndex = () => 0;
+  return noop;
+}
+
 /**
  * Zapojí klidný animační cyklus a obsluhu interakcí (kliknutí / hover / klávesnice).
  * Každých 6,5 sekund přehraje jednu ze 7 animací s hladkým návratem do výchozího bodu.
+ * Vrácený kontrolér lze volat jak jako funkci `controller()`, tak přes `controller.dispose()`.
  * @param {HTMLElement|string} targetElementOrSelector
  * @param {Object} options
- * @returns {Object} { dispose, trigger, next, isBusy, getIndex }
+ * @returns {Function} logo controller { dispose, trigger, next, isBusy, getIndex }
  */
 export function mountBrandLogo(targetElementOrSelector, options = {}) {
   const container = typeof targetElementOrSelector === 'string'
@@ -235,18 +246,18 @@ export function mountBrandLogo(targetElementOrSelector, options = {}) {
     : targetElementOrSelector;
 
   if (!container) {
-    return {
-      dispose: () => {},
-      trigger: () => false,
-      next: () => false,
-      isBusy: () => false,
-      getIndex: () => 0,
-    };
+    return createNoopController();
   }
 
   // Pokud již byl kontejner dříve inicializován, bezpečně uklidíme staré posluchače
   if (container._brandLogoDisposer) {
-    try { container._brandLogoDisposer(); } catch {}
+    try {
+      if (typeof container._brandLogoDisposer === 'function') {
+        container._brandLogoDisposer();
+      } else if (typeof container._brandLogoDisposer.dispose === 'function') {
+        container._brandLogoDisposer.dispose();
+      }
+    } catch {}
   }
 
   const svg = container.tagName && container.tagName.toLowerCase() === 'svg'
@@ -254,13 +265,7 @@ export function mountBrandLogo(targetElementOrSelector, options = {}) {
     : container.querySelector('.czekpoint-logo-svg') || container.querySelector('svg');
 
   if (!svg) {
-    return {
-      dispose: () => {},
-      trigger: () => false,
-      next: () => false,
-      isBusy: () => false,
-      getIndex: () => 0,
-    };
+    return createNoopController();
   }
 
   const intervalMs = options.intervalMs || DEFAULT_CYCLE_MS;
@@ -396,51 +401,51 @@ export function mountBrandLogo(targetElementOrSelector, options = {}) {
     reducedMotionQuery.addEventListener('change', onReducedMotionChange);
   }
 
-  const result = {
-    dispose: () => {
-      isDisposed = true;
-      stopAutoCycle();
-      clearTimeout(activeTimer);
-      container.removeEventListener('click', onClick);
-      container.removeEventListener('keydown', onKeyDown);
-      if (triggerOnHover) {
-        container.removeEventListener('mouseenter', onMouseEnter);
-      }
-      if (typeof document !== 'undefined') {
-        document.removeEventListener('visibilitychange', onVisibilityChange);
-      }
-      if (reducedMotionQuery?.removeEventListener) {
-        reducedMotionQuery.removeEventListener('change', onReducedMotionChange);
-      }
-      LOGO_ANIM_STATES.forEach(s => svg.classList.remove(s.cls));
-      busy = false;
-      if (container._brandLogoDisposer === result.dispose) {
-        delete container._brandLogoDisposer;
-      }
-    },
-    trigger,
-    next,
-    isBusy: () => busy,
-    getIndex: () => currentIndex,
+  const dispose = () => {
+    isDisposed = true;
+    stopAutoCycle();
+    clearTimeout(activeTimer);
+    container.removeEventListener('click', onClick);
+    container.removeEventListener('keydown', onKeyDown);
+    if (triggerOnHover) {
+      container.removeEventListener('mouseenter', onMouseEnter);
+    }
+    if (typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    }
+    if (reducedMotionQuery?.removeEventListener) {
+      reducedMotionQuery.removeEventListener('change', onReducedMotionChange);
+    }
+    LOGO_ANIM_STATES.forEach(s => svg.classList.remove(s.cls));
+    busy = false;
+    if (container._brandLogoDisposer === dispose) {
+      delete container._brandLogoDisposer;
+    }
   };
 
-  container._brandLogoDisposer = result.dispose;
-  return result;
+  dispose.dispose = dispose;
+  dispose.trigger = trigger;
+  dispose.next = next;
+  dispose.isBusy = () => busy;
+  dispose.getIndex = () => currentIndex;
+
+  container._brandLogoDisposer = dispose;
+  return dispose;
 }
 
 /**
  * Pevné nasazení animovaného loga č. 100 přímo do hlavičky webu (.site-header .brand).
  * Nahradí statický obrázek kompletním inline SVG a spustí 6,5s klidný animační cyklus.
- * @param {string|HTMLElement} targetSelector
+ * @param {string|HTMLElement} targetElementOrSelector
  * @param {Object} options
- * @returns {Object} logo controller { dispose, trigger, next, isBusy, getIndex }
+ * @returns {Function} logo controller { dispose, trigger, next, isBusy, getIndex }
  */
-export function mountAnimatedBrandLogo(targetSelector = '.site-header .brand', options = {}) {
-  const brandEl = typeof targetSelector === 'string'
-    ? document.querySelector(targetSelector)
-    : targetSelector;
+export function mountAnimatedBrandLogo(targetElementOrSelector, options = {}) {
+  const brandEl = typeof targetElementOrSelector === 'string'
+    ? document.querySelector(targetElementOrSelector)
+    : targetElementOrSelector;
 
-  if (!brandEl) return null;
+  if (!brandEl) return createNoopController();
 
   // Najdeme stávající slot nebo obrázek
   let slot = brandEl.querySelector('.header-logo-slot');
@@ -455,8 +460,14 @@ export function mountAnimatedBrandLogo(targetSelector = '.site-header .brand', o
     }
   }
 
-  if (slot._brandLogoController?.dispose) {
-    try { slot._brandLogoController.dispose(); } catch {}
+  if (slot._brandLogoController) {
+    try {
+      if (typeof slot._brandLogoController === 'function') {
+        slot._brandLogoController();
+      } else if (typeof slot._brandLogoController.dispose === 'function') {
+        slot._brandLogoController.dispose();
+      }
+    } catch {}
     slot._brandLogoController = null;
   }
 
@@ -482,12 +493,20 @@ export function mountAnimatedBrandLogo(targetSelector = '.site-header .brand', o
 /**
  * Vloží do stránky plovoucí vrstvu živého ambientního pozadí (#ambient-bg).
  * Obsahuje jemné topografické vrstevnice, siluety smrků a rozcestníku a plující lesní jiskřičky.
- * @returns {Object} { dispose }
+ * @returns {Function} { dispose }
  */
 export function mountAmbientBackground() {
-  if (typeof document === 'undefined') return { dispose: () => {} };
+  if (typeof document === 'undefined') {
+    const noop = () => {};
+    noop.dispose = noop;
+    return noop;
+  }
   let bg = document.querySelector('#ambient-bg');
-  if (bg) return { dispose: () => bg.remove() };
+  if (bg) {
+    const removeBg = () => bg.remove();
+    removeBg.dispose = removeBg;
+    return removeBg;
+  }
 
   bg = document.createElement('div');
   bg.id = 'ambient-bg';
@@ -533,9 +552,9 @@ export function mountAmbientBackground() {
 
   document.body.prepend(bg);
 
-  return {
-    dispose: () => {
-      bg.remove();
-    },
+  const dispose = () => {
+    bg.remove();
   };
+  dispose.dispose = dispose;
+  return dispose;
 }

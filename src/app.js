@@ -24,6 +24,15 @@ import { renderBrandLogoHtml, mountBrandLogo, mountAnimatedBrandLogo, mountAmbie
 let disposeWalk = null;
 let disposeBrandLogo = null;
 
+function cleanupBrandLogo() {
+  if (typeof disposeBrandLogo === 'function') {
+    try { disposeBrandLogo(); } catch {}
+  } else if (typeof disposeBrandLogo?.dispose === 'function') {
+    try { disposeBrandLogo.dispose(); } catch {}
+  }
+  disposeBrandLogo = null;
+}
+
 const main = document.querySelector('#main');
 const reportDialog = document.querySelector('#report-dialog');
 const confirmDialog = document.querySelector('#confirm-dialog');
@@ -133,7 +142,7 @@ function renderExplore() {
   document.querySelector('#stroller-filter').addEventListener('change', event => { state.filters.strollerOnly = event.target.checked; renderExploreResults(); });
   document.querySelector('#saved-filter').addEventListener('change', event => { state.filters.savedOnly = event.target.checked; renderExploreResults(); });
   renderExploreResults();
-  disposeBrandLogo?.();
+  cleanupBrandLogo();
   disposeBrandLogo = mountBrandLogo('#hero-brand-logo');
 }
 
@@ -518,7 +527,7 @@ function renderPassport() {
   applyStaggerAnimation('.relics-grid', '.relic-item');
   applyStaggerAnimation('.trophy-grid', '.trophy');
   applyStaggerAnimation('.route-grid', '.route-card');
-  disposeBrandLogo?.();
+  cleanupBrandLogo();
   disposeBrandLogo = mountBrandLogo('#passport-brand-logo');
 }
 
@@ -548,7 +557,7 @@ function renderNotFound() {
 
 async function renderPage({ focus = false } = {}) {
   disposeWalk?.(); disposeWalk = null;
-  disposeBrandLogo?.(); disposeBrandLogo = null;
+  cleanupBrandLogo();
   main.classList.remove('page-enter');
   void main.offsetWidth;
   main.classList.add('page-enter');
