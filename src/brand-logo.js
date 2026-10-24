@@ -28,9 +28,11 @@ export function renderBrandLogoSvg(options = {}) {
     clipId = 'brand-banner-clip',
     ariaLabel = 'Czekpoint — osobní atlas procházek',
     role = 'img',
+    width = 400,
+    height = 390,
   } = options;
 
-  return `<svg id="${id}" class="${className}" viewBox="0 0 400 390" xmlns="http://www.w3.org/2000/svg" role="${role}" aria-label="${ariaLabel}">
+  return `<svg id="${id}" class="${className}" viewBox="0 0 400 390" width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg" role="${role}" aria-label="${ariaLabel}">
   <defs>
     <clipPath id="${clipId}">
       <rect x="44" y="294" width="312" height="58" rx="14"/>
@@ -203,7 +205,7 @@ export function triggerBrandLogoAnimation(target, stateInput, options = {}) {
   if (!stateObj?.cls) return false;
 
   LOGO_ANIM_STATES.forEach(s => svg.classList.remove(s.cls));
-  void svg.offsetWidth; // Vynucení reflow pro restart animace
+  void (svg.getBoundingClientRect?.() || svg.offsetWidth); // Vynucení reflow pro restart animace
   svg.classList.add(stateObj.cls);
 
   if (typeof options.onStart === 'function') {
@@ -242,6 +244,11 @@ export function mountBrandLogo(targetElementOrSelector, options = {}) {
     };
   }
 
+  // Pokud již byl kontejner dříve inicializován, bezpečně uklidíme staré posluchače
+  if (container._brandLogoDisposer) {
+    try { container._brandLogoDisposer(); } catch {}
+  }
+
   const svg = container.tagName && container.tagName.toLowerCase() === 'svg'
     ? container
     : container.querySelector('.czekpoint-logo-svg') || container.querySelector('svg');
@@ -275,12 +282,12 @@ export function mountBrandLogo(targetElementOrSelector, options = {}) {
     return Boolean(reducedMotionQuery?.matches);
   }
 
-  function playState(stateObj) {
-    if (busy || isDisposed || prefersReducedMotion()) return false;
+  function playState(stateObj, force = false) {
+    if ((busy && !force) || isDisposed || prefersReducedMotion()) return false;
     busy = true;
 
     LOGO_ANIM_STATES.forEach(s => svg.classList.remove(s.cls));
-    void svg.offsetWidth; // reset animace
+    void (svg.getBoundingClientRect?.() || svg.offsetWidth); // reset animace
     svg.classList.add(stateObj.cls);
 
     if (typeof onStateChange === 'function') {
@@ -300,10 +307,10 @@ export function mountBrandLogo(targetElementOrSelector, options = {}) {
     return true;
   }
 
-  function next() {
-    if (busy || isDisposed || prefersReducedMotion()) return false;
+  function next(force = false) {
+    if ((busy && !force) || isDisposed || prefersReducedMotion()) return false;
     const stateObj = LOGO_ANIM_STATES[currentIndex];
-    const played = playState(stateObj);
+    const played = playState(stateObj, force);
     if (played) {
       currentIndex = (currentIndex + 1) % LOGO_ANIM_STATES.length;
     }
@@ -343,12 +350,12 @@ export function mountBrandLogo(targetElementOrSelector, options = {}) {
 
   const onClick = (e) => {
     // Pokud je logo odkaz, neblokujeme navigaci při kliknutí, ale spustíme animaci
-    next();
+    next(true);
   };
 
   const onKeyDown = (event) => {
     if (event.key === 'Enter' || event.key === ' ') {
-      next();
+      next(true);
     }
   };
 
@@ -389,7 +396,7 @@ export function mountBrandLogo(targetElementOrSelector, options = {}) {
     reducedMotionQuery.addEventListener('change', onReducedMotionChange);
   }
 
-  return {
+  const result = {
     dispose: () => {
       isDisposed = true;
       stopAutoCycle();
@@ -407,12 +414,18 @@ export function mountBrandLogo(targetElementOrSelector, options = {}) {
       }
       LOGO_ANIM_STATES.forEach(s => svg.classList.remove(s.cls));
       busy = false;
+      if (container._brandLogoDisposer === result.dispose) {
+        delete container._brandLogoDisposer;
+      }
     },
     trigger,
     next,
     isBusy: () => busy,
     getIndex: () => currentIndex,
   };
+
+  container._brandLogoDisposer = result.dispose;
+  return result;
 }
 
 /**
@@ -442,19 +455,28 @@ export function mountAnimatedBrandLogo(targetSelector = '.site-header .brand', o
     }
   }
 
+  if (slot._brandLogoController?.dispose) {
+    try { slot._brandLogoController.dispose(); } catch {}
+    slot._brandLogoController = null;
+  }
+
   // Vložíme inline SVG loga č. 100
   slot.innerHTML = renderBrandLogoSvg({
     id: 'header-brand-logo-svg',
     className: 'czekpoint-logo-svg header-logo-svg',
     clipId: 'header-brand-banner-clip',
     ariaLabel: 'Czekpoint — logo',
+    width: options.width || 64,
+    height: options.height || 64,
   });
 
-  return mountBrandLogo(slot, {
+  const controller = mountBrandLogo(slot, {
     intervalMs: options.intervalMs || DEFAULT_CYCLE_MS,
     durationMs: options.durationMs || DEFAULT_DURATION_MS,
     triggerOnHover: options.triggerOnHover !== false,
   });
+  slot._brandLogoController = controller;
+  return controller;
 }
 
 /**
