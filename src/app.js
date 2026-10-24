@@ -14,11 +14,11 @@ import {
 } from './walk-store.js';
 import { ALLOWED_AVATARS, avatarUrl } from './avatars.js';
 import { generatePostcardDataUrl, generatePostcardBlob } from './postcard.js';
-import { explorerRank, chapterStatus, totalScore } from './walk-engine.js';
+import { explorerRank, chapterStatus, totalScore, trophies } from './walk-engine.js';
 import { CHAPTERS, COLLECTIONS, RELICS } from './data.js';
 import { renderWalkingStickHtml } from './walking-stick.js';
 import { renderPilgrimsSection, renderSummitBook } from './pilgrims.js';
-import { playTick, playHammer, triggerHaptic } from './fx.js';
+import { playTick, playHammer, triggerHaptic, applyStaggerAnimation } from './fx.js';
 
 let disposeWalk = null;
 
@@ -39,6 +39,7 @@ const state = {
   position: null,
   view: 'explore',
   filters: { search: '', kind: 'all', maxDistance: null, strollerOnly: false, savedOnly: false },
+  passportSection: 'stick',
   passportTab: 'visited',
   renderId: 0,
   toastTimer: null,
@@ -136,7 +137,7 @@ function renderExploreResults() {
   const grid = document.querySelector('#route-grid');
   if (!grid) return;
   let routes = filterRoutes(state.routes, { ...state.filters, savedIds: state.saved });
-  if (state.position) routes = [...routes].sort((a, b) => (a.location ? haversineMeters(state.position, a.location) : Infinity) - (b.location ? haversineMeters(state.position, b.location) : Infinity));
+  if (state.position) routes = [...routes].sort((a, b) => (a.location ? haversineMeters(state.position, a.location) : Infinity) - (b.location ? haversineMeters(state.position, a.location) : Infinity));
   document.querySelector('#results-info').textContent = `${routes.length} z ${state.routes.length} výletů${state.position ? ' · seřazeno podle vzdušné vzdálenosti ke známým bodům' : ''}${state.filters.maxDistance ? ' · trasy bez známé délky jsou skryté' : ''}`;
   grid.innerHTML = routes.length ? routes.map(route => renderCard(route)).join('') : `<div class="empty-state">${icon('search')}<h3>Tady je zatím ticho.</h3><p>Tomuto výběru žádný výlet neodpovídá. Zkus méně filtrů nebo jiné místo.</p><button type="button" class="button" data-action="reset-filters">Zobrazit všechny výlety</button></div>`;
 }
@@ -265,6 +266,7 @@ function renderReports(route, reports) {
 }
 
 function renderPassport() {
+  state.passportSection = state.passportSection || 'stick';
   const visitedRoutes = state.routes.filter(route => visitFor(route.id));
   const savedRoutes = state.routes.filter(route => isSaved(route.id));
   const routes = state.passportTab === 'visited' ? visitedRoutes : savedRoutes;
@@ -275,6 +277,202 @@ function renderPassport() {
   const rank = explorerRank(totalPts);
   const cStatus = chapterStatus(CHAPTERS, state.routes, stateObj.discoveries);
   const expeditions = stateObj.expeditionHistory || [];
+
+  let sectionContent = '';
+
+  if (state.passportSection === 'stick') {
+    // Tab 1: 🦯 Moje hůl a profil
+    sectionContent = `
+      <div class="passport-rank-card">
+        <div>
+          <div class="eyebrow" style="color:#d8e99e;margin-bottom:6px">Hodnost průzkumníka</div>
+          <h2 style="color:#fff;margin:0 0 6px">Úroveň ${rank.level} · ${rank.title}</h2>
+          <p style="margin:0;font-size:13px;opacity:.85">Dosah odkrývání mlhy: 65 m · Dosah odhalení: ${rank.revealDistanceM} m</p>
+        </div>
+        <div style="text-align:right">
+          <strong>${totalPts} b.</strong>
+          <span style="display:block;font-size:11px;opacity:.8">celkové skóre</span>
+        </div>
+      </div>
+
+      <section class="passport-section">
+        <div class="section-heading">
+          <div>
+            <h2>Můj avatar (12 živých poutníků)</h2>
+            <p>Vyber si svého avatara pro výpravy a zápisy na vrcholech</p>
+          </div>
+        </div>
+        <div class="avatar-grid" role="radiogroup" aria-label="Výběr avatara">
+          ${ALLOWED_AVATARS.map(a => {
+            const isSelected = a.id === currentAvatarId;
+            return `
+              <button type="button" class="avatar-card ${isSelected ? 'selected' : ''}" data-action="select-avatar" data-avatar-id="${e(a.id)}" aria-pressed="${isSelected}">
+                <img src="${avatarUrl(a.id)}" alt="${e(a.name)}" width="44" height="44">
+                <span>${e(a.name)}</span>
+                ${isSelected ? '<span class="avatar-check">✓ Vybráno</span>' : ''}
+              </button>
+            `;
+          }).join('')}
+        </div>
+      </section>
+
+      <section class="passport-section" id="passport-stick-section">
+        ${renderWalkingStickHtml(stateObj)}
+      </section>
+
+      <section class="passport-section" id="passport-pilgrims-section">
+        ${renderPilgrimsSection(stateObj, state.position)}
+      </section>
+    `;
+  } else if (state.passportSection === 'postcards') {
+    // Tab 2: 🖼️ Pohlednice a deník
+    sectionContent = `
+      <section class="passport-section">
+        <div class="section-heading">
+          <div>
+            <h2>Moje pohlednice z dokončených výprav</h2>
+            <p>Ilustrované vzpomínky sestavené z tvých dokončených výprav.</p>
+          </div>
+        </div>
+        ${expeditions.length ? `
+          <div class="postcard-grid">
+            ${expeditions.map(exp => {
+              const dataUrl = generatePostcardDataUrl(exp);
+              const dist = exp.distanceMeters >= 1000 ? (exp.distanceMeters / 1000).toFixed(1).replace('.', ',') + ' km' : Math.round(exp.distanceMeters) + ' m';
+              return `
+                <div class="postcard-card">
+                  <img src="${dataUrl}" alt="Pohlednice z výpravy" loading="lazy">
+                  <div class="postcard-card-stats">
+                    <span>👣 ${dist}</span>
+                    <span>🗺️ +${exp.newCellsCount} dílků</span>
+                    <span>⭐ +${exp.newStampsCount} razítek</span>
+                  </div>
+                  <div class="postcard-actions">
+                    <button type="button" class="button small primary" data-action="download-postcard" data-exp-id="${e(exp.id)}">Stáhnout pohlednici (PNG)</button>
+                    <button type="button" class="button small" data-action="share-postcard" data-exp-id="${e(exp.id)}">Sdílet</button>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        ` : `
+          <div class="empty-state" style="padding:24px 12px;text-align:center">
+            <p class="small-note">Zatím nemáš žádnou pohlednici. Vydej se na procházku, ukonči výpravu a vytvoř svou první ilustrovanou vzpomínku!</p>
+            <a class="button small" href="#/prochazka">Vyrazit na procházku s GPS</a>
+          </div>
+        `}
+      </section>
+
+      <section class="passport-section">
+        <div class="section-heading">
+          <div>
+            <h2>Můj osobní výletový deník</h2>
+            <p>Zaznamenané návštěvy a uložené výlety na později.</p>
+          </div>
+        </div>
+        <div class="passport-tabs" role="group" aria-label="Obsah deníku">
+          <button class="chip ${state.passportTab === 'visited' ? 'active' : ''}" data-action="passport-tab" data-tab="visited" aria-pressed="${state.passportTab === 'visited'}">${icon('check')}Moje návštěvy (${visitedRoutes.length})</button>
+          <button class="chip ${state.passportTab === 'saved' ? 'active' : ''}" data-action="passport-tab" data-tab="saved" aria-pressed="${state.passportTab === 'saved'}">${icon('heart')}Na později (${savedRoutes.length})</button>
+        </div>
+        <div class="route-grid">${routes.length ? routes.map(route => renderCard(route, true)).join('') : `<div class="empty-state">${icon(state.passportTab === 'visited' ? 'book' : 'heart')}<h3>${state.passportTab === 'visited' ? 'První stránka zatím čeká.' : 'Kam vyrazíš příště?'}</h3><p>${state.passportTab === 'visited' ? 'Na detailu výletu klepni po návštěvě na „Byl/a jsem tady“. Tvoje sbírka začne prvním místem.' : 'Srdíčkem si ulož výlety, které tě zaujmou. Najdeš je tady, až bude chuť vyrazit.'}</p><a class="button primary" href="#/">Objevit výlety ${icon('arrow')}</a></div>`}</div>
+      </section>
+    `;
+  } else {
+    // Tab 3: 🏆 Sbírka a kapitoly
+    const earnedTrophies = trophies({ version: 1, cells: stateObj.cells, meters: stateObj.meters, discoveries: stateObj.discoveries });
+    sectionContent = `
+      <section class="passport-section">
+        <div class="section-heading">
+          <div>
+            <h2>Kapitoly Rožmitálska</h2>
+            <p>Ověřené zastávky se započítávají po získání trvalého GPS razítka v terénu.</p>
+          </div>
+        </div>
+        <div class="seals-grid">
+          ${Object.values(cStatus).map(c => `
+            <div class="seal-item ${c.unlocked ? 'unlocked' : ''}">
+              <span class="seal-icon">${c.unlocked ? '🏆' : '📖'}</span>
+              <strong>${e(c.sealTitle)}</strong>
+              <span class="muted">${e(c.title)}</span>
+              <small style="font-weight:700">${c.completed}/${c.total} ověřených zastávek</small>
+              ${c.unlocked ? '<span style="color:#4a6828;font-weight:700">✓ Kapitola dokončena!</span>' : '<span class="muted">Získej chybějící zastávky</span>'}
+            </div>
+          `).join('')}
+        </div>
+      </section>
+
+      <section class="passport-section">
+        <div class="section-heading">
+          <div>
+            <h2>Tematické série zastávek</h2>
+            <p>Navštiv a prozkoumej místa v tematických sériích Rožmitálska.</p>
+          </div>
+        </div>
+        <div class="collections-grid">
+          ${Object.values(COLLECTIONS).map(col => {
+            const totalItems = col.routeIds.length;
+            const doneItems = col.routeIds.filter(id => stateObj.discoveries.includes(id) || stateObj.discoveries.includes(`catalog:${id}`)).length;
+            const isDone = totalItems > 0 && doneItems === totalItems;
+            return `
+              <div class="collection-item ${isDone ? 'completed' : ''}">
+                <div style="display:flex;justify-content:space-between;align-items:start">
+                  <strong>${e(col.title)}</strong>
+                  <span style="font-weight:700;color:${isDone ? '#4a6828' : '#73836d'}">${isDone ? '✓ Splněno' : `${doneItems}/${totalItems}`}</span>
+                </div>
+                <small>${doneItems}/${totalItems} GPS razítek</small>
+                <ul class="bullet-list" style="margin:4px 0;font-size:11px">
+                  ${col.routeIds.map(id => {
+                    const r = state.routes.find(x => x.id === id);
+                    const hasStamp = stateObj.discoveries.includes(id) || stateObj.discoveries.includes(`catalog:${id}`);
+                    return `<li>${hasStamp ? '✓' : '◇'} ${e(r?.title || id)}</li>`;
+                  }).join('')}
+                </ul>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </section>
+
+      <section class="passport-section">
+        <div class="section-heading">
+          <div>
+            <h2>Sběratelská vitrína rožmitálských relikvií</h2>
+            <p>Relikvie se odemykají za každých 6 nově odkrytých dílků v mlze.</p>
+          </div>
+        </div>
+        <div class="relics-grid">
+          ${RELICS.map((relic, i) => {
+            const isUnlocked = Math.floor(stateObj.cells.length / 6) > i;
+            return `
+              <div class="relic-item ${isUnlocked ? 'unlocked' : 'locked'}">
+                <span style="font-size:24px">${isUnlocked ? '✨' : '❓'}</span>
+                <strong>${isUnlocked ? e(relic.title) : 'Tajemná relikvie'}</strong>
+                <p style="margin:0;font-size:11px;color:var(--muted)">${isUnlocked ? e(relic.lore) : `Odemkne se po ${(i + 1) * 6} odkrytých dílcích.`}</p>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </section>
+
+      <section class="passport-section">
+        <div class="section-heading">
+          <div>
+            <h2>Získané trofeje</h2>
+            <p>Odměny za vytrvalost a objevování neznámých zákoutí.</p>
+          </div>
+        </div>
+        <div class="trophy-grid">
+          ${earnedTrophies.map(t => `
+            <div class="trophy ${t.earned ? 'earned' : ''}">
+              <span>${t.earned ? '✦' : '◇'}</span>
+              <strong>${e(t.title)}</strong>
+              <small>${t.earned ? 'Získáno' : e(t.goal)}</small>
+            </div>
+          `).join('')}
+        </div>
+      </section>
+    `;
+  }
 
   main.innerHTML = `
     <section class="passport-header">
@@ -289,163 +487,32 @@ function renderPassport() {
       </div>
     </section>
 
-    <section class="passport-section">
-      <div class="section-heading">
-        <div>
-          <h2>Můj avatar</h2>
-          <p>Uloženo v tomto zařízení</p>
-        </div>
-      </div>
-      <div class="avatar-grid" role="radiogroup" aria-label="Výběr avatara">
-        ${ALLOWED_AVATARS.map(a => {
-          const isSelected = a.id === currentAvatarId;
-          return `
-            <button type="button" class="avatar-card ${isSelected ? 'selected' : ''}" data-action="select-avatar" data-avatar-id="${e(a.id)}" aria-pressed="${isSelected}">
-              <img src="${avatarUrl(a.id)}" alt="${e(a.name)}" width="44" height="44">
-              <span>${e(a.name)}</span>
-              ${isSelected ? '<span class="avatar-check">✓ Vybráno</span>' : ''}
-            </button>
-          `;
-        }).join('')}
-      </div>
-    </section>
-
-    <section class="passport-section" id="passport-stick-section">
-      ${renderWalkingStickHtml(stateObj)}
-    </section>
-
-    <section class="passport-section" id="passport-pilgrims-section">
-      ${renderPilgrimsSection(stateObj, state.position)}
-    </section>
-
-    <div class="passport-rank-card">
-      <div>
-        <div class="eyebrow" style="color:#d8e99e;margin-bottom:6px">Hodnost průzkumníka</div>
-        <h2 style="color:#fff;margin:0 0 6px">Úroveň ${rank.level} · ${rank.title}</h2>
-        <p style="margin:0;font-size:13px;opacity:.85">Dosah odkrývání mlhy: 65 m · Dosah odhalení: ${rank.revealDistanceM} m</p>
-      </div>
-      <div style="text-align:right">
-        <strong>${totalPts} b.</strong>
-        <span style="display:block;font-size:11px;opacity:.8">celkové skóre</span>
-      </div>
+    <!-- 3 Big Clean Passport Tabs -->
+    <div class="passport-section-tabs" role="tablist" aria-label="Sekce pasu">
+      <button type="button" class="passport-section-tab ${state.passportSection === 'stick' ? 'active' : ''}" data-action="passport-section" data-section="stick" role="tab" aria-selected="${state.passportSection === 'stick'}">
+        🦯 Moje hůl a profil
+      </button>
+      <button type="button" class="passport-section-tab ${state.passportSection === 'postcards' ? 'active' : ''}" data-action="passport-section" data-section="postcards" role="tab" aria-selected="${state.passportSection === 'postcards'}">
+        🖼️ Pohlednice a deník
+      </button>
+      <button type="button" class="passport-section-tab ${state.passportSection === 'collections' ? 'active' : ''}" data-action="passport-section" data-section="collections" role="tab" aria-selected="${state.passportSection === 'collections'}">
+        🏆 Sbírka a kapitoly
+      </button>
     </div>
 
-    <section class="passport-section">
-      <div class="section-heading">
-        <div>
-          <h2>Moje pohlednice a kronika výprav</h2>
-          <p>Ilustrované vzpomínky sestavené z tvých dokončených výprav.</p>
-        </div>
-      </div>
-      ${expeditions.length ? `
-        <div class="postcard-grid">
-          ${expeditions.map(exp => {
-            const dataUrl = generatePostcardDataUrl(exp);
-            const dist = exp.distanceMeters >= 1000 ? (exp.distanceMeters / 1000).toFixed(1).replace('.', ',') + ' km' : Math.round(exp.distanceMeters) + ' m';
-            return `
-              <div class="postcard-card">
-                <img src="${dataUrl}" alt="Pohlednice z výpravy" loading="lazy">
-                <div class="postcard-card-stats">
-                  <span>👣 ${dist}</span>
-                  <span>🗺️ +${exp.newCellsCount} dílků</span>
-                  <span>⭐ +${exp.newStampsCount} razítek</span>
-                </div>
-                <div class="postcard-actions">
-                  <button type="button" class="button small primary" data-action="download-postcard" data-exp-id="${e(exp.id)}">Stáhnout pohlednici (PNG)</button>
-                  <button type="button" class="button small" data-action="share-postcard" data-exp-id="${e(exp.id)}">Sdílet</button>
-                </div>
-              </div>
-            `;
-          }).join('')}
-        </div>
-      ` : `
-        <div class="empty-state" style="padding:24px 12px;text-align:center">
-          <p class="small-note">Zatím nemáš žádnou pohlednici. Vydej se na procházku, ukonči výpravu a vytvoř svou první ilustrovanou vzpomínku!</p>
-          <a class="button small" href="#/prochazka">Vyrazit s GPS na mapu</a>
-        </div>
-      `}
-    </section>
+    ${sectionContent}
 
-    <section class="passport-section">
-      <div class="section-heading">
-        <div>
-          <h2>Kapitoly Rožmitálska</h2>
-          <p>Ověřené zastávky se započítávají po získání trvalého GPS razítka v terénu.</p>
-        </div>
-      </div>
-      <div class="seals-grid">
-        ${Object.values(cStatus).map(c => `
-          <div class="seal-item ${c.unlocked ? 'unlocked' : ''}">
-            <span class="seal-icon">${c.unlocked ? '🏆' : '📖'}</span>
-            <strong>${e(c.sealTitle)}</strong>
-            <span class="muted">${e(c.title)}</span>
-            <small style="font-weight:700">${c.completed}/${c.total} ověřených zastávek</small>
-            ${c.unlocked ? '<span style="color:#4a6828;font-weight:700">✓ Kapitola dokončena!</span>' : '<span class="muted">Získej chybějící zastávky</span>'}
-          </div>
-        `).join('')}
-      </div>
-    </section>
-
-    <section class="passport-section">
-      <div class="section-heading">
-        <div>
-          <h2>Tematické série zastávek</h2>
-          <p>Navštiv a prozkoumej místa v tematických sériích Rožmitálska.</p>
-        </div>
-      </div>
-      <div class="collections-grid">
-        ${Object.values(COLLECTIONS).map(col => {
-          const totalItems = col.routeIds.length;
-          const doneItems = col.routeIds.filter(id => stateObj.discoveries.includes(id) || stateObj.discoveries.includes(`catalog:${id}`)).length;
-          const isDone = totalItems > 0 && doneItems === totalItems;
-          return `
-            <div class="collection-item ${isDone ? 'completed' : ''}">
-              <div style="display:flex;justify-content:space-between;align-items:start">
-                <strong>${e(col.title)}</strong>
-                <span style="font-weight:700;color:${isDone ? '#4a6828' : '#73836d'}">${isDone ? '✓ Splněno' : `${doneItems}/${totalItems}`}</span>
-              </div>
-              <small>${doneItems}/${totalItems} GPS razítek</small>
-              <ul class="bullet-list" style="margin:4px 0;font-size:11px">
-                ${col.routeIds.map(id => {
-                  const r = state.routes.find(x => x.id === id);
-                  const hasStamp = stateObj.discoveries.includes(id) || stateObj.discoveries.includes(`catalog:${id}`);
-                  return `<li>${hasStamp ? '✓' : '◇'} ${e(r?.title || id)}</li>`;
-                }).join('')}
-              </ul>
-            </div>
-          `;
-        }).join('')}
-      </div>
-    </section>
-
-    <section class="passport-section">
-      <div class="section-heading">
-        <div>
-          <h2>Sběratelská vitrína rožmitálských relikvií</h2>
-          <p>Relikvie se odemykají za každých 6 nově odkrytých dílků v mlze.</p>
-        </div>
-      </div>
-      <div class="relics-grid">
-        ${RELICS.map((relic, i) => {
-          const isUnlocked = Math.floor(stateObj.cells.length / 6) > i;
-          return `
-            <div class="relic-item ${isUnlocked ? 'unlocked' : 'locked'}">
-              <span style="font-size:24px">${isUnlocked ? '✨' : '❓'}</span>
-              <strong>${isUnlocked ? e(relic.title) : 'Tajemná relikvie'}</strong>
-              <p style="margin:0;font-size:11px;color:var(--muted)">${isUnlocked ? e(relic.lore) : `Odemkne se po ${(i + 1) * 6} odkrytých dílcích.`}</p>
-            </div>
-          `;
-        }).join('')}
-      </div>
-    </section>
-
-    <div class="passport-tabs" role="group" aria-label="Obsah pasu">
-      <button class="chip ${state.passportTab === 'visited' ? 'active' : ''}" data-action="passport-tab" data-tab="visited" aria-pressed="${state.passportTab === 'visited'}">${icon('check')}Moje návštěvy</button>
-      <button class="chip ${state.passportTab === 'saved' ? 'active' : ''}" data-action="passport-tab" data-tab="saved" aria-pressed="${state.passportTab === 'saved'}">${icon('heart')}Na později</button>
-    </div>
-    <div class="route-grid">${routes.length ? routes.map(route => renderCard(route, true)).join('') : `<div class="empty-state">${icon(state.passportTab === 'visited' ? 'book' : 'heart')}<h3>${state.passportTab === 'visited' ? 'První stránka zatím čeká.' : 'Kam vyrazíš příště?'}</h3><p>${state.passportTab === 'visited' ? 'Na detailu výletu klepni po návštěvě na „Byl/a jsem tady“. Tvoje sbírka začne prvním místem.' : 'Srdíčkem si ulož výlety, které tě zaujmou. Najdeš je tady, až bude chuť vyrazit.'}</p><a class="button primary" href="#/">Objevit výlety ${icon('arrow')}</a></div>`}</div>
-    <aside class="info-strip">${icon('lock')}<div><strong>Tvůj pas zůstává v tomto prohlížeči.</strong><p>Návštěvy jsou tvoje vlastní záznamy. Vymazání dat prohlížeče smaže i pas.</p></div></aside>
+    <aside class="info-strip" style="margin-top:24px">${icon('lock')}<div><strong>Tvůj pas zůstává v tomto prohlížeči.</strong><p>Návštěvy jsou tvoje vlastní záznamy. Vymazání dat prohlížeče smaže i pas.</p></div></aside>
   `;
+
+  // Apply stagger animations to visible grids
+  applyStaggerAnimation('.avatar-grid', '.avatar-card');
+  applyStaggerAnimation('.postcard-grid', '.postcard-card');
+  applyStaggerAnimation('.seals-grid', '.seal-item');
+  applyStaggerAnimation('.collections-grid', '.collection-item');
+  applyStaggerAnimation('.relics-grid', '.relic-item');
+  applyStaggerAnimation('.trophy-grid', '.trophy');
+  applyStaggerAnimation('.route-grid', '.route-card');
 }
 
 function renderAbout() {
@@ -587,7 +654,18 @@ document.addEventListener('click', async event => {
       state.filters = { search: '', kind: 'all', maxDistance: null, strollerOnly: false, savedOnly: false };
       renderExplore(); document.querySelector('#search-input')?.focus(); return;
     }
-    if (action === 'passport-tab') { state.passportTab = button.dataset.tab; renderPassport(); return; }
+    if (action === 'passport-section') {
+      state.passportSection = button.dataset.section;
+      playTick();
+      renderPassport();
+      return;
+    }
+    if (action === 'passport-tab') {
+      state.passportTab = button.dataset.tab;
+      playTick();
+      renderPassport();
+      return;
+    }
     if (action === 'reload') { await renderPage(); return; }
     if (action === 'save' && route) {
       button.disabled = true; await state.repo.toggleSaved(id); await refreshPersonal();
@@ -626,8 +704,11 @@ document.addEventListener('click', async event => {
       const avatarId = button.dataset.avatarId;
       setProfileAvatar(avatarId);
       const chosen = ALLOWED_AVATARS.find(a => a.id === avatarId);
+      button.querySelector('img')?.classList.add('avatar-pop');
+      playTick();
+      triggerHaptic(40);
       toast(`Avatar změněn: ${chosen ? chosen.name : avatarId}. Uloženo v tomto zařízení.`);
-      renderPassport();
+      setTimeout(() => renderPassport(), 180);
       return;
     }
     if (action === 'download-postcard') {

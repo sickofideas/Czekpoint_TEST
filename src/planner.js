@@ -7,7 +7,7 @@ export const START_PRESETS = Object.freeze([
   { id: 'stary-rozmital', label: 'Starý Rožmitál', lat: 49.6082, lng: 13.8507 },
 ]);
 
-export const PLANNER_RADII = Object.freeze([1, 3, 5, 10]);
+export const PLANNER_RADII = Object.freeze([2, 5, 10]);
 
 export const PLANNER_CATEGORIES = Object.freeze([
   {
@@ -179,6 +179,91 @@ export function analyzePlannedRoute(origin, orderedPlaces, companionMode = 'solo
 }
 
 /**
+ * Smart automatic trip suggestion on 1 click.
+ * Filters places in radius, respects stroller / dog restrictions, prioritizes unvisited places,
+ * picks optimal 3-6 stops matching targetKm, orders them logically into a circuit.
+ */
+export function autoSuggestTrip({
+  origin = START_PRESETS[0],
+  targetKm = 5,
+  companionMode = 'solo',
+  availablePlaces = [],
+  discoveries = [],
+} = {}) {
+  const center = origin && Number.isFinite(origin.lat) && Number.isFinite(origin.lng)
+    ? origin
+    : START_PRESETS[0];
+
+  const target = Number(targetKm) > 0 ? Number(targetKm) : 5;
+  const isStroller = companionMode === 'stroller';
+  const isDog = companionMode === 'dog';
+  const visitedSet = new Set(Array.isArray(discoveries) ? discoveries : []);
+
+  // Filter valid candidate places
+  let candidates = (availablePlaces || []).filter(p => {
+    if (!p || !Number.isFinite(p.lat) || !Number.isFinite(p.lng)) return false;
+    if (p.pointKind === 'route-start') return false; // Route starting points are not stops
+    if (isStroller && p.access?.stroller === 'no') return false;
+    if (isDog && p.access?.dog === 'no') return false;
+    return true;
+  });
+
+  // Calculate distances from origin
+  candidates = candidates.map(p => {
+    const dist = haversineMeters(center, p) ?? 0;
+    const isVisited = visitedSet.has(p.id) || visitedSet.has(`catalog:${p.id}`);
+    return { ...p, _dist: dist, _visited: isVisited };
+  });
+
+  // Determine search radius based on targetKm
+  let maxRadiusM = 12000;
+  let targetCount = 4;
+  if (target <= 2.5) {
+    maxRadiusM = 3500;
+    targetCount = 3;
+  } else if (target <= 6) {
+    maxRadiusM = 7500;
+    targetCount = 4;
+  } else {
+    maxRadiusM = 12000;
+    targetCount = 6;
+  }
+
+  // Filter within radius (fallback to all if too few)
+  let inRadius = candidates.filter(p => p._dist <= maxRadiusM);
+  if (inRadius.length < 3) inRadius = candidates;
+
+  // Score candidate places: prioritize unvisited, then category interest, then distance match
+  inRadius.sort((a, b) => {
+    if (a._visited !== b._visited) return a._visited ? 1 : -1; // Unvisited first!
+    // Group diversity / interest
+    const aIsKey = a.collectible || a.kind === 'culture' || a.kind === 'view';
+    const bIsKey = b.collectible || b.kind === 'culture' || b.kind === 'view';
+    if (aIsKey !== bIsKey) return aIsKey ? -1 : 1;
+    return a._dist - b._dist;
+  });
+
+  // Pick top stops (3 to 6 places)
+  const pickedCount = Math.min(inRadius.length, Math.max(3, Math.min(6, targetCount)));
+  const selectedPlaces = inRadius.slice(0, pickedCount).map(p => {
+    const copy = { ...p };
+    delete copy._dist;
+    delete copy._visited;
+    return copy;
+  });
+
+  // Optimize circuit order
+  const ordered = optimizeRouteOrder(center, selectedPlaces);
+  const analysis = analyzePlannedRoute(center, ordered, companionMode);
+
+  return {
+    places: ordered,
+    selectedPlaceIds: ordered.map(p => p.id),
+    analysis,
+  };
+}
+
+/**
  * Fetches elevation profile from open-meteo API with 4s timeout.
  * Coordinates are rounded to 3 decimal places.
  * Fails safely returning { elevationGainM: null } when offline or on error.
@@ -256,7 +341,7 @@ export function encodeRouteShareCode(plan) {
     o: plan.origin && Number.isFinite(plan.origin.lat) && Number.isFinite(plan.origin.lng)
       ? [Number(plan.origin.lat.toFixed(4)), Number(plan.origin.lng.toFixed(4))]
       : null,
-    r: Number(plan.radiusKm) || 3,
+    r: Number(plan.radiusKm) || 10,
     c: Array.isArray(plan.categories) ? plan.categories.filter(c => typeof c === 'string').slice(0, 10) : [],
     p: Array.isArray(plan.selectedPlaceIds) ? plan.selectedPlaceIds.filter(p => typeof p === 'string').slice(0, 10) : [],
     m: COMPANION_MODES.includes(plan.companionMode) ? plan.companionMode : 'solo',
@@ -312,7 +397,7 @@ export function decodeRouteShareCode(code) {
 
   return {
     origin,
-    radiusKm: [1, 3, 5, 10].includes(Number(parsed.r)) ? Number(parsed.r) : 3,
+    radiusKm: [1, 2, 3, 5, 10].includes(Number(parsed.r)) ? Number(parsed.r) : 10,
     categories: Array.isArray(parsed.c) ? parsed.c.filter(c => typeof c === 'string') : [],
     selectedPlaceIds: parsed.p.slice(0, 10),
     companionMode: parsed.m,

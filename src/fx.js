@@ -195,3 +195,26 @@ export function animateValue(element, targetNumber, durationMs = 380, formatFn =
 
   requestAnimationFrame(update);
 }
+
+/**
+ * Applies smooth staggered animation to grid items (0 to 12 items).
+ * Respects prefers-reduced-motion.
+ */
+export function applyStaggerAnimation(containerOrSelector, itemSelector = ':scope > *') {
+  if (typeof document === 'undefined') return;
+  if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) return;
+
+  const container = typeof containerOrSelector === 'string'
+    ? document.querySelector(containerOrSelector)
+    : containerOrSelector;
+  if (!container) return;
+
+  const items = container.querySelectorAll(itemSelector);
+  items.forEach((item, index) => {
+    const stagger = Math.min(index, 12);
+    item.style.setProperty('--stagger-i', stagger.toString());
+    item.classList.remove('tile-animate-in');
+    void item.offsetWidth; // Trigger reflow for re-animation
+    item.classList.add('tile-animate-in');
+  });
+}

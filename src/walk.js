@@ -35,6 +35,7 @@ import {
 } from './expedition-engine.js';
 import { renderPostcard, generatePostcardBlob, generatePostcardDataUrl } from './postcard.js';
 import { fetchNearby } from './nearby.js';
+import { loadAutoPlacesForArea } from './auto-places.js';
 import { haversineMeters } from './domain.js';
 import { escapeHtml as e, number } from './ui.js';
 import { CHAPTERS, COLLECTIONS, RELICS } from './data.js';
@@ -45,6 +46,7 @@ import {
   COMPANION_STYLES,
   optimizeRouteOrder,
   analyzePlannedRoute,
+  autoSuggestTrip,
   fetchElevationProfile,
   encodeRouteShareCode,
   decodeRouteShareCode,
@@ -67,6 +69,7 @@ import {
   playStampChord,
   animateValue,
   triggerHaptic,
+  applyStaggerAnimation,
 } from './fx.js';
 
 export function mountWalk(root, routes, config, actions = {}) {
@@ -117,7 +120,7 @@ export function mountWalk(root, routes, config, actions = {}) {
   // Active planned route
   let plannedRoute = stateObj.plannedRoute || {
     origin: START_PRESETS[0],
-    radiusKm: 3,
+    radiusKm: 10,
     categories: PLANNER_CATEGORIES.map(c => c.id),
     selectedPlaceIds: [],
     companionMode: stateObj.companionMode || 'solo',
@@ -149,7 +152,62 @@ export function mountWalk(root, routes, config, actions = {}) {
         <h1 tabindex="-1">Tvoje mapa dobrodružství.</h1>
         <p>Osobní atlas, chytrý plánovač výprav, virtuální hůl se štítky a poutníci v revíru.</p>
       </div>
-      <span class="walk-tag">PILOT · v0.6</span>
+      <span class="walk-tag">PILOT · v0.7</span>
+    </section>
+
+    <!-- 1-Click Intent Guidance (3 Big Cards) -->
+    <section class="intent-cards-grid" aria-label="Výběr záměru procházky">
+      <article class="intent-card" id="intent-card-free">
+        <div class="intent-card-header">
+          <span class="intent-card-icon">🥾</span>
+          <div>
+            <h2 class="intent-card-title">Prostě jdu ven</h2>
+            <p class="intent-card-desc">Volná procházka. Radar tě zvukem a vibrací upozorní na místa do 150 m.</p>
+          </div>
+        </div>
+        <div class="intent-card-actions">
+          <button type="button" class="button primary" id="btn-intent-free" style="min-height:48px;font-weight:700">Vyrazit hned (Radar)</button>
+        </div>
+      </article>
+
+      <article class="intent-card primary" id="intent-card-auto">
+        <div class="intent-card-header">
+          <span class="intent-card-icon">✨</span>
+          <div>
+            <h2 class="intent-card-title">Navrhni mi výlet automaticky</h2>
+            <p class="intent-card-desc">Chytrý okruh podle zvolené délky a parťáka na 1 kliknutí.</p>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="intent-length-pills" id="intent-length-pills" role="radiogroup" aria-label="Délka výletu">
+            <button type="button" class="intent-length-pill" data-target-km="2">Krátký (~2 km)</button>
+            <button type="button" class="intent-length-pill active" data-target-km="5">Střední (~5 km)</button>
+            <button type="button" class="intent-length-pill" data-target-km="10">Delší (do 10 km)</button>
+          </div>
+          <select id="intent-companion-select" class="intent-companion-select" aria-label="S kým jdeš">
+            <option value="solo">🥾 Sólo poutník</option>
+            <option value="dog">🐕 Se psem</option>
+            <option value="stroller">👶 S kočárkem</option>
+            <option value="family">👨‍👩‍👧 Rodina / Skupina</option>
+          </select>
+        </div>
+        <div class="intent-card-actions">
+          <button type="button" class="button lime" id="btn-intent-auto" style="min-height:48px;font-weight:700">✨ Navrhnout výlet</button>
+        </div>
+      </article>
+
+      <article class="intent-card" id="intent-card-custom">
+        <div class="intent-card-header">
+          <span class="intent-card-icon">🎯</span>
+          <div>
+            <h2 class="intent-card-title">Vyberu si místa sám</h2>
+            <p class="intent-card-desc">Sestav si vlastní okruh ze zajímavostí, vyhlídek a studánek v okolí.</p>
+          </div>
+        </div>
+        <div class="intent-card-actions">
+          <button type="button" class="button" id="btn-intent-custom" style="min-height:48px">Otevřít výběr míst</button>
+        </div>
+      </article>
     </section>
 
     <div class="walk-stats" id="walk-stats-panel" aria-label="Celkový průzkum">
@@ -180,8 +238,10 @@ export function mountWalk(root, routes, config, actions = {}) {
 
     <div class="walk-compass-bar" id="walk-compass" role="status">🧭 Čekám na polohu pro určení směru k cíli…</div>
 
+    <!-- Map Wrap with unmissable Close Fullscreen Button -->
     <div class="walk-map-wrap" id="walk-map-wrap">
       <div id="walk-map" aria-label="Interaktivní mapa průzkumu"></div>
+      <button type="button" id="zen-close-btn" class="zen-close-btn" hidden>✕ Zavřít celou mapu</button>
       <div id="zen-mini-compass" class="zen-mini-compass" hidden>🧭 <span id="zen-compass-text">-- m</span></div>
       <div class="walk-map-toolbar">
         <button class="button small" id="walk-center" title="Vycentrovat na moji polohu">◎ Moje poloha</button>
@@ -193,19 +253,40 @@ export function mountWalk(root, routes, config, actions = {}) {
     <div class="trail-note" id="trail-info">Stopa za poslední hodinu: 0 bodů (automaticky mizí po 60 min, pouze v paměti relace)</div>
     <p id="tile-status" class="small-note" role="status"></p>
 
-    <!-- Bottom Sheet -->
+    <!-- Primary Walk Control Bar directly under the map -->
+    <div class="primary-walk-bar" id="primary-walk-bar">
+      <div id="expedition-buttons" class="primary-walk-buttons">
+        <button id="walk-start" class="button primary main-start-btn">▶ Vyrazit na procházku</button>
+        <button id="walk-stop" class="button" disabled>Ⅱ Pozastavit</button>
+        <button id="walk-end" class="button danger" disabled>⏹ Ukončit výpravu</button>
+        <button id="walk-demo" class="button">Ukázka bez GPS</button>
+        <button id="walk-step" class="button lime" hidden>Další krok ukázky</button>
+      </div>
+
+      <div class="walk-status-panel" style="margin-bottom:0">
+        <strong id="walk-status" role="status" aria-live="polite">${e(storageError || 'Připraveno. Zvol záměr a vyraz na procházku.')}</strong>
+        <span id="walk-session">V této výpravě: 0 m · 0 nových dílků · 0 razítek</span>
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+          <label><input type="checkbox" id="walk-awake" checked> Držet displej zapnutý</label>
+          <label><input type="checkbox" id="walk-sound" ${stateObj.soundEnabled !== false ? 'checked' : ''}> 🔊 Zvukové efekty</label>
+        </div>
+        <span id="wake-status" class="small-note">Displej: zámek není aktivní.</span>
+      </div>
+    </div>
+
+    <!-- Bottom Sheet (3 Clear Tabs) -->
     <div class="bottom-sheet" id="walk-bottom-sheet">
       <div class="bottom-sheet-bar">
         <div class="sheet-tabs" role="tablist">
-          <button class="sheet-tab active" data-sheet-tab="planner" role="tab" id="sheet-tab-btn-planner">🧭 Plánovač a filtry</button>
-          <button class="sheet-tab" data-tab="expedition" data-sheet-tab="expedition" role="tab" id="sheet-tab-btn-expedition">🎒 Aktivní výprava</button>
-          <button class="sheet-tab" data-sheet-tab="stick" role="tab" id="sheet-tab-btn-stick">🦯 Moje hůl a okolí</button>
+          <button class="sheet-tab active" data-sheet-tab="planner" role="tab" id="sheet-tab-btn-planner">🧭 1. Plán a místa v okolí</button>
+          <button class="sheet-tab" data-tab="expedition" data-sheet-tab="expedition" role="tab" id="sheet-tab-btn-expedition">🎒 2. Parťák a herní režim</button>
+          <button class="sheet-tab" data-sheet-tab="stick" role="tab" id="sheet-tab-btn-stick">🦯 3. Moje hůl a revír</button>
         </div>
         <button class="button small ghost sheet-toggle-btn" id="sheet-toggle-btn" title="Sbalit / rozbalit šuplík">⬇ Sbalit</button>
       </div>
 
       <div class="sheet-body" id="sheet-body">
-        <!-- Tab 1: Plánovač a filtry -->
+        <!-- Tab 1: Plán a místa v okolí -->
         <div class="sheet-tab-panel active" id="sheet-panel-planner">
           <div class="planner-controls-grid">
             <div class="planner-box">
@@ -265,9 +346,22 @@ export function mountWalk(root, routes, config, actions = {}) {
             <button class="button small" id="btn-share-route-code">📤 Sdílet kód trasy</button>
             <button class="button small" id="btn-import-route-code">📥 Načíst kód trasy</button>
           </div>
+
+          <!-- Místa a orientační body v dosahu -->
+          <div class="planner-box" style="margin-top:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+              <span class="eyebrow">5. Místa a orientační body v dosahu (10 km)</span>
+              <button class="button small" id="walk-nearby">Aktualizovat z OSM</button>
+            </div>
+            <p class="small-note" style="margin:4px 0">Přiblížením do 60 m na 10–60 s získáš jedno trvalé GPS razítko místa (+30 b.).</p>
+            <div id="nearby-status" role="status"></div>
+            <p id="nearby-origin" class="small-note"></p>
+            <div id="walk-places"></div>
+            <p class="small-note">Zdroj: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> a ověřené body Rožmitálu.</p>
+          </div>
         </div>
 
-        <!-- Tab 2: Aktivní výprava -->
+        <!-- Tab 2: Parťák a herní režim -->
         <div class="sheet-tab-panel" id="sheet-panel-expedition" hidden>
           <div class="expedition-tab-content">
             <div class="companion-selector-box">
@@ -296,30 +390,10 @@ export function mountWalk(root, routes, config, actions = {}) {
                   : 'Trasa zobrazuje vybraná místa spojená linkou na mapě.'}
               </p>
             </div>
-
-            <div class="walk-controls">
-              <div id="expedition-buttons" style="display:flex;flex-wrap:wrap;gap:9px;width:100%">
-                <button id="walk-start" class="button primary">▶ Vyrazit s GPS</button>
-                <button id="walk-stop" class="button" disabled>Ⅱ Pozastavit</button>
-                <button id="walk-end" class="button danger" disabled>⏹ Ukončit výpravu</button>
-                <button id="walk-demo" class="button">Ukázka bez GPS</button>
-                <button id="walk-step" class="button lime" hidden>Další krok ukázky</button>
-              </div>
-            </div>
-
-            <div class="walk-status-panel">
-              <strong id="walk-status" role="status" aria-live="polite">${e(storageError || 'Připraveno. Zvol cíl a vyraž s GPS.')}</strong>
-              <span id="walk-session">V této výpravě: 0 m · 0 nových dílků · 0 razítek</span>
-              <div style="display:flex;gap:16px;flex-wrap:wrap">
-                <label><input type="checkbox" id="walk-awake" checked> Držet displej zapnutý</label>
-                <label><input type="checkbox" id="walk-sound" ${stateObj.soundEnabled !== false ? 'checked' : ''}> 🔊 Zvukové efekty</label>
-              </div>
-              <span id="wake-status" class="small-note">Displej: zámek není aktivní.</span>
-            </div>
           </div>
         </div>
 
-        <!-- Tab 3: Moje hůl a okolí -->
+        <!-- Tab 3: Moje hůl a revír -->
         <div class="sheet-tab-panel" id="sheet-panel-stick" hidden>
           <div id="sheet-stick-container"></div>
           <div id="sheet-pilgrims-container" style="margin-top:14px"></div>
@@ -327,41 +401,10 @@ export function mountWalk(root, routes, config, actions = {}) {
       </div>
     </div>
 
-    <!-- Kapitoly a relikvie -->
-    <div class="sectors-overview">
-      <div class="section-heading">
-        <div>
-          <h2>Kapitoly Rožmitálska</h2>
-          <p>Sbírej GPS razítka ověřených zastávek. Získáním všech zastávek splníš celou kapitolu.</p>
-        </div>
-      </div>
-      <div class="sector-list" id="sector-list"></div>
-    </div>
-
-    <div class="walk-columns">
-      <section class="panel">
-        <h2>Rožmitálské relikvie a mystery nálezy</h2>
-        <p id="walk-mystery"></p>
-        <div id="walk-collection" class="mystery-collection"></div>
-        <div id="walk-trophies" class="trophy-grid"></div>
-        <p class="small-note">Relikvie se odemykají za každých 6 nově odkrytých dílků mapy. Zrcadlí bohatou historii Rožmitálska.</p>
-      </section>
-
-      <section class="panel">
-        <h2>Místa a orientační body v dosahu</h2>
-        <p>Přiblížením do 60 m na 10–60 s získáš jedno trvalé GPS razítko místa (+30 b.).</p>
-        <button class="button" id="walk-nearby">Najít místa v okolí (OSM)</button>
-        <div id="nearby-status" role="status"></div>
-        <p id="nearby-origin" class="small-note"></p>
-        <div id="walk-places"></div>
-        <p class="small-note">Zdroj: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> a ověřené body Rožmitálu.</p>
-      </section>
-    </div>
-
     <div id="session-summary-container"></div>
 
     <details class="walk-help">
-      <summary>Pravidla průzkumu, 3 režimy mapy a záloha dat v0.6</summary>
+      <summary>Pravidla průzkumu, 3 režimy mapy a záloha dat v0.7</summary>
       <p><strong>3 režimy mapy:</strong> Průzkumná mlha (výchozí, alpha 0.65) zachovává orientaci a rozlišuje navštívená místa. Plná mlha (alpha 1.0) zakrývá terén neprozkoumaných oblastí. Běžná mapa okamžitě ukáže celý mapový podklad bez vlivu na body.</p>
       <p><strong>3 herní režimy:</strong> Kompas (čistý směr k dalšímu cíli), Trasa (zvýrazněná naplánovaná linka) a Radar (akustické/haptické varování na místa do 150 m).</p>
       <p><strong>Virtuální turistická hůl:</strong> Každá dokončená výprava vytvoří unikátní plechový štítek, který si můžeš přibít na hůl.</p>
@@ -724,7 +767,8 @@ export function mountWalk(root, routes, config, actions = {}) {
         icon: L.divIcon({
           className: `mystery-pin ${pinClass}`,
           html: pinContent,
-          iconSize: [32, 32],
+          iconSize: [42, 42],
+          iconAnchor: [21, 21],
         }),
         title: p.title,
       });
@@ -797,6 +841,7 @@ export function mountWalk(root, routes, config, actions = {}) {
     animateValue($('walk-cells'), progress.cells.length);
     animateValue($('walk-distance'), progress.meters / 1000, 380, n => number(n));
     animateValue($('walk-relics'), progress.discoveries.length);
+
     const gainedM = currentExpedition ? Math.max(0, progress.meters - currentExpedition.startMeters) : 0;
     const gainedC = currentExpedition ? Math.max(0, progress.cells.length - currentExpedition.startCells) : 0;
     const gainedS = currentExpedition ? Math.max(0, progress.discoveries.length - currentExpedition.startDiscoveries) : 0;
@@ -810,30 +855,38 @@ export function mountWalk(root, routes, config, actions = {}) {
     renderExpeditionGoalUI();
 
     const cStatus = chapterStatus(CHAPTERS, routes, progress.discoveries);
-    $('sector-list').innerHTML = Object.values(cStatus).map(c => `
-      <div class="sector-card ${c.unlocked ? 'unlocked' : ''}">
-        <strong>${e(c.title)}</strong>
-        <span>Razítka: ${c.completed}/${c.total} zastávek</span>
-        <span class="sector-seal">${c.unlocked ? `🏆 ${e(c.sealTitle)} splněna!` : `📖 ${e(c.sealTitle)}`}</span>
-      </div>
-    `).join('');
+    if ($('sector-list')) {
+      $('sector-list').innerHTML = Object.values(cStatus).map(c => `
+        <div class="sector-card ${c.unlocked ? 'unlocked' : ''}">
+          <strong>${e(c.title)}</strong>
+          <span>Razítka: ${c.completed}/${c.total} zastávek</span>
+          <span class="sector-seal">${c.unlocked ? `🏆 ${e(c.sealTitle)} splněna!` : `📖 ${e(c.sealTitle)}`}</span>
+        </div>
+      `).join('');
+    }
 
     const remaining = 6 - (progress.cells.length % 6);
-    $('walk-mystery').textContent = `Ještě ${remaining} nových dílků do dalšího fragmentu atlasu.`;
+    if ($('walk-mystery')) {
+      $('walk-mystery').textContent = `Ještě ${remaining} nových dílků do dalšího fragmentu atlasu.`;
+    }
     const relicsFound = Math.floor(progress.cells.length / 6);
-    $('walk-collection').innerHTML = RELICS.map((relic, i) => `
-      <span class="fragment ${relicsFound > i ? 'found' : ''}" title="${relicsFound > i ? e(relic.lore) : 'Zatím neobjeveno'}">
-        ${relicsFound > i ? `✧ ${e(relic.title)}` : '? Neznámá relikvie'}
-      </span>
-    `).join('');
+    if ($('walk-collection')) {
+      $('walk-collection').innerHTML = RELICS.map((relic, i) => `
+        <span class="fragment ${relicsFound > i ? 'found' : ''}" title="${relicsFound > i ? e(relic.lore) : 'Zatím neobjeveno'}">
+          ${relicsFound > i ? `✧ ${e(relic.title)}` : '? Neznámá relikvie'}
+        </span>
+      `).join('');
+    }
 
-    $('walk-trophies').innerHTML = trophies(progress).map(t => `
-      <div class="trophy ${t.earned ? 'earned' : ''}">
-        <span>${t.earned ? '✦' : '◇'}</span>
-        <strong>${e(t.title)}</strong>
-        <small>${t.earned ? 'Získáno' : e(t.goal)}</small>
-      </div>
-    `).join('');
+    if ($('walk-trophies')) {
+      $('walk-trophies').innerHTML = trophies(progress).map(t => `
+        <div class="trophy ${t.earned ? 'earned' : ''}">
+          <span>${t.earned ? '✦' : '◇'}</span>
+          <strong>${e(t.title)}</strong>
+          <small>${t.earned ? 'Získáno' : e(t.goal)}</small>
+        </div>
+      `).join('');
+    }
 
     // Button states
     const hasExpedition = Boolean(currentExpedition && currentExpedition.state !== 'ended');
@@ -1222,6 +1275,7 @@ export function mountWalk(root, routes, config, actions = {}) {
         playTick(stateObj.soundEnabled);
         saveAppState();
         renderPlaces();
+        refreshAutoPlaces();
         status('Startovní bod nastaven kliknutím do mapy.');
       }
     });
@@ -1262,18 +1316,123 @@ export function mountWalk(root, routes, config, actions = {}) {
     playTick(stateObj.soundEnabled);
   });
 
-  // Zen mode toggle
-  $('walk-zen-toggle').addEventListener('click', () => {
-    zenMode = !zenMode;
+  // Zen mode handler with unmissable Close button & Escape key
+  function updateZenMode() {
     $('walk-map-wrap').classList.toggle('zen-mode', zenMode);
+    $('zen-close-btn').hidden = !zenMode;
     $('zen-mini-compass').hidden = !zenMode;
     $('walk-zen-toggle').setAttribute('aria-pressed', String(zenMode));
     $('walk-zen-toggle').textContent = zenMode ? '⛶ Ukončit čistou mapu' : '⛶ Čistá mapa';
     $('walk-stats-panel').hidden = zenMode;
     $('walk-bottom-sheet').hidden = zenMode;
+    $('primary-walk-bar').hidden = zenMode;
     if (map) setTimeout(() => map.invalidateSize(), 200);
+  }
+
+  $('walk-zen-toggle').addEventListener('click', () => {
+    zenMode = !zenMode;
+    updateZenMode();
     playTick(stateObj.soundEnabled);
   });
+
+  $('zen-close-btn').addEventListener('click', () => {
+    zenMode = false;
+    updateZenMode();
+    playTick(stateObj.soundEnabled);
+  });
+
+  const onEscapeKey = (ev) => {
+    if (ev.key === 'Escape' && zenMode) {
+      zenMode = false;
+      updateZenMode();
+      playTick(stateObj.soundEnabled);
+    }
+  };
+  window.addEventListener('keydown', onEscapeKey);
+
+  // 1-Click Intent Guidance Handlers
+  let selectedTargetKm = 5;
+  root.querySelectorAll('[data-target-km]').forEach(pill => {
+    pill.addEventListener('click', () => {
+      selectedTargetKm = Number(pill.dataset.targetKm) || 5;
+      root.querySelectorAll('[data-target-km]').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      playTick(stateObj.soundEnabled);
+    });
+  });
+
+  $('btn-intent-free')?.addEventListener('click', () => {
+    stateObj.explorationMode = 'radar';
+    plannedRoute.explorationMode = 'radar';
+    saveAppState();
+    root.querySelectorAll('[data-mode]').forEach(b => {
+      b.classList.toggle('primary', b.dataset.mode === 'radar');
+    });
+    $('exploration-mode-desc').textContent = 'Radar tě upozorní zvukem/haptikou při přiblížení pod 150 m k neplánovanému místu.';
+    playRadar(stateObj.soundEnabled);
+    start();
+    status('Spuštěna volná procházka s radarem.');
+  });
+
+  $('btn-intent-auto')?.addEventListener('click', () => {
+    const comp = $('intent-companion-select')?.value || 'solo';
+    stateObj.companionMode = comp;
+    plannedRoute.companionMode = comp;
+    stateObj.explorationMode = 'focus';
+    plannedRoute.explorationMode = 'focus';
+
+    root.querySelectorAll('.companion-btn').forEach(b => {
+      b.classList.toggle('primary', b.dataset.companion === comp);
+    });
+    root.querySelectorAll('[data-mode]').forEach(b => {
+      b.classList.toggle('primary', b.dataset.mode === 'focus');
+    });
+    $('exploration-mode-desc').textContent = 'Trasa zobrazuje vybraná místa spojená linkou na mapě.';
+
+    const trip = autoSuggestTrip({
+      origin: plannedRoute.origin,
+      targetKm: selectedTargetKm,
+      companionMode: comp,
+      availablePlaces: getAllAvailablePlaces(),
+      discoveries: progress.discoveries,
+    });
+
+    plannedRoute.selectedPlaceIds = trip.selectedPlaceIds;
+    saveAppState();
+    stats();
+    playStampChord(stateObj.soundEnabled);
+    const kmEst = (trip.analysis.estimatedWalkDistanceM / 1000).toFixed(1).replace('.', ',');
+    status(`Navržen automatický výlet: ${trip.selectedPlaceIds.length} míst (~${kmEst} km, ~${trip.analysis.estimatedMinutes} min).`);
+    renderPlannedRouteOnMap();
+    renderPlannerBasketAndXray();
+    applyStaggerAnimation('#planner-basket-list', '.basket-item');
+  });
+
+  $('btn-intent-custom')?.addEventListener('click', () => {
+    sheetCollapsed = false;
+    $('walk-bottom-sheet').classList.remove('collapsed');
+    $('sheet-toggle-btn').textContent = '⬇ Sbalit';
+    activeTab = 'planner';
+    sheetTabs.forEach(t => t.classList.toggle('active', t.dataset.sheetTab === 'planner'));
+    $('sheet-panel-planner').hidden = false;
+    $('sheet-panel-expedition').hidden = true;
+    $('sheet-panel-stick').hidden = true;
+    playTick(stateObj.soundEnabled);
+    $('walk-bottom-sheet').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  // Background Auto-Places Engine for ČR / Europe
+  async function refreshAutoPlaces() {
+    const originPos = plannedRoute.origin || lastFix || { lat: 49.6033, lng: 13.8633 };
+    try {
+      const autoPlaces = await loadAutoPlacesForArea(originPos, routes, config, aborter.signal);
+      if (!disposed && Array.isArray(autoPlaces) && autoPlaces.length > 0) {
+        nearby = autoPlaces;
+        renderPlaces();
+      }
+    } catch {}
+  }
+  refreshAutoPlaces();
 
   // Start point selection
   $('btn-origin-gps').addEventListener('click', () => {
@@ -1283,6 +1442,7 @@ export function mountWalk(root, routes, config, actions = {}) {
       playTick(stateObj.soundEnabled);
       saveAppState();
       renderPlaces();
+      refreshAutoPlaces();
     } else {
       status('Nejdříve spusť GPS nebo ukázku.');
     }
@@ -1303,6 +1463,7 @@ export function mountWalk(root, routes, config, actions = {}) {
     playTick(stateObj.soundEnabled);
     saveAppState();
     renderPlaces();
+    refreshAutoPlaces();
   });
 
   $('btn-origin-nadrazi').addEventListener('click', () => {
@@ -1311,6 +1472,7 @@ export function mountWalk(root, routes, config, actions = {}) {
     playTick(stateObj.soundEnabled);
     saveAppState();
     renderPlaces();
+    refreshAutoPlaces();
   });
 
   $('btn-origin-stary').addEventListener('click', () => {
@@ -1319,6 +1481,7 @@ export function mountWalk(root, routes, config, actions = {}) {
     playTick(stateObj.soundEnabled);
     saveAppState();
     renderPlaces();
+    refreshAutoPlaces();
   });
 
   // Radius buttons
@@ -1723,6 +1886,7 @@ export function mountWalk(root, routes, config, actions = {}) {
     disposed = true;
     pauseSession();
     aborter.abort();
+    window.removeEventListener('keydown', onEscapeKey);
     document.removeEventListener('visibilitychange', visibility);
     window.removeEventListener('pagehide', pagehide);
     window.removeEventListener('storage', storageChanged);

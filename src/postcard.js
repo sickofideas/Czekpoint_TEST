@@ -388,7 +388,7 @@ export function renderPostcard(canvas, rawMetadata) {
   ctx.textAlign = 'center';
   ctx.fillText('CZEKPOINT', 0, -22);
   ctx.font = 'bold 18px Georgia, serif';
-  ctx.fillText('PILOT · v0.6', 0, 4);
+  ctx.fillText('PILOT · v0.7', 0, 4);
   ctx.font = '12px sans-serif';
   ctx.fillText('OVĚŘENO GPS', 0, 24);
   ctx.restore();
