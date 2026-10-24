@@ -19,7 +19,7 @@ import { CHAPTERS, COLLECTIONS, RELICS } from './data.js';
 import { renderWalkingStickHtml } from './walking-stick.js';
 import { renderPilgrimsSection, renderSummitBook } from './pilgrims.js';
 import { playTick, playHammer, triggerHaptic, applyStaggerAnimation } from './fx.js';
-import { renderBrandLogoHtml, mountBrandLogo } from './brand-logo.js';
+import { renderBrandLogoHtml, mountBrandLogo, mountAnimatedBrandLogo, mountAmbientBackground } from './brand-logo.js';
 
 let disposeWalk = null;
 let disposeBrandLogo = null;
@@ -485,6 +485,7 @@ function renderPassport() {
         <h1 tabindex="-1">Můj výletový pas.</h1>
         <p>Sbírka navštívených míst, kapitol a relikvií z Rožmitálska.</p>
       </div>
+      <div class="passport-brand-banner">${renderBrandLogoHtml({ id: 'passport-brand-logo', className: 'logo-stage passport-banner-logo' })}</div>
       <div class="passport-stats">
         <div class="passport-stat"><strong>${visitedRoutes.length}</strong><span>navštívených míst</span></div>
         <div class="passport-stat"><strong>${stateObj.discoveries.length}</strong><span>GPS razítek</span></div>
@@ -517,6 +518,8 @@ function renderPassport() {
   applyStaggerAnimation('.relics-grid', '.relic-item');
   applyStaggerAnimation('.trophy-grid', '.trophy');
   applyStaggerAnimation('.route-grid', '.route-card');
+  disposeBrandLogo?.();
+  disposeBrandLogo = mountBrandLogo('#passport-brand-logo');
 }
 
 function renderAbout() {
@@ -526,7 +529,7 @@ function renderAbout() {
     <section class="panel">${icon('pin')}<h2>Jedno GPS razítko místa (+30 b.).</h2><p>Razítko získáš osobní návštěvou na 10–60 sekund u ověřeného místa. Začátky okruhů razítka neudělují.</p></section>
     <section class="panel">${icon('lock')}<h2>Tvoje data a soukromí</h2><p>Všechna data o tvé chůzi, odkrývání mlhy, profil i navštívená místa jsou uložena výhradně v tvém zařízení. Žádná poloha se neposílá na externí servery.</p></section></div>
     <div class="about-foot">
-      <p class="small-note">Bez sledovacích reklam a bez analytických měřicích skriptů. Mapové podklady načítá OpenStreetMap; volitelné hledání míst odešle zaokrouhlenou oblast do Overpass API. Toto je verze v0.7.</p>
+      <p class="small-note">Bez sledovacích reklam a bez analytických měřicích skriptů. Mapové podklady načítá OpenStreetMap; volitelné hledání míst odešle zaokrouhlenou oblast do Overpass API. Toto je verze v0.8.</p>
       <div class="data-actions">
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
           <button type="button" class="button small" data-action="export-state">${icon('arrow')}Exportovat průzkum (JSON)</button>
@@ -823,6 +826,8 @@ window.addEventListener('hashchange', () => { if (reportDialog.open) reportDialo
 window.addEventListener('pageshow', event => { if (event.persisted && state.repo) refreshPersonal().then(() => renderPage()).catch(error => toast(errorMessage(error), true)); });
 
 async function boot() {
+  mountAnimatedBrandLogo();
+  mountAmbientBackground();
   try {
     state.repo = await createRepository(CONFIG);
     await state.repo.init();

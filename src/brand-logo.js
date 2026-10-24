@@ -1,5 +1,5 @@
 /**
- * Czekpoint — Animované logo č. 100 (styl Seznam.cz)
+ * Czekpoint — Animované logo č. 100 (styl Seznam.cz) a živé pozadí
  * Vektorová samolepka v čistém SVG + CSS + JS se 7 klidnými animacemi.
  */
 
@@ -13,11 +13,11 @@ export const LOGO_ANIM_STATES = Object.freeze([
   { id: 'breathe', cls: 'state-breathe', label: '7. Klidný nádech odznaku' },
 ]);
 
-export const DEFAULT_CYCLE_MS = 7000;
-export const DEFAULT_DURATION_MS = 4100;
+export const DEFAULT_CYCLE_MS = 6500;
+export const DEFAULT_DURATION_MS = 3600;
 
 /**
- * Vygeneruje čisté SVG nového loga č. 100.
+ * Vygeneruje čisté SVG vítězného loga č. 100.
  * @param {Object} options
  * @returns {string} SVG markup
  */
@@ -94,21 +94,21 @@ export function renderBrandLogoSvg(options = {}) {
     <rect x="308" y="96" width="14" height="196" rx="4" fill="#6e4726" stroke="#193e32" stroke-width="3.5"/>
     <circle cx="315" cy="94" r="6" fill="#8c5c32" stroke="#193e32" stroke-width="3"/>
 
-    <!-- Horní šipka (doprava) -->
+    <!-- Horní šipka (doprava) — červená -->
     <g class="anim-sign-1">
       <polygon points="282,108 352,108 366,121 352,134 282,134" fill="#d7995b" stroke="#193e32" stroke-width="3.5" stroke-linejoin="round"/>
       <rect x="292" y="116" width="18" height="10" fill="#ffffff"/>
       <rect x="292" y="119" width="18" height="4" fill="#d63629"/>
     </g>
 
-    <!-- Střední šipka (doleva) -->
+    <!-- Střední šipka (doleva) — žlutá -->
     <g class="anim-sign-2">
       <polygon points="344,140 274,140 260,153 274,166 344,166" fill="#c58344" stroke="#193e32" stroke-width="3.5" stroke-linejoin="round"/>
       <rect x="316" y="148" width="18" height="10" fill="#ffffff"/>
       <rect x="316" y="151" width="18" height="4" fill="#f0b429"/>
     </g>
 
-    <!-- Dolní šipka (doprava) -->
+    <!-- Dolní šipka (doprava) — modrá -->
     <g class="anim-sign-3">
       <polygon points="282,172 350,172 364,185 350,198 282,198" fill="#b47134" stroke="#193e32" stroke-width="3.5" stroke-linejoin="round"/>
       <rect x="292" y="180" width="18" height="10" fill="#ffffff"/>
@@ -186,7 +186,7 @@ export function renderBrandLogoHtml(options = {}) {
  * @param {SVGElement|HTMLElement} target
  * @param {string|Object} stateInput
  * @param {Object} options
- * @returns {boolean} true pokud se animace spustila
+ * @returns {number|boolean} timeoutId nebo false
  */
 export function triggerBrandLogoAnimation(target, stateInput, options = {}) {
   if (!target) return false;
@@ -202,9 +202,8 @@ export function triggerBrandLogoAnimation(target, stateInput, options = {}) {
 
   if (!stateObj?.cls) return false;
 
-  // Odstranění předchozích stavů
   LOGO_ANIM_STATES.forEach(s => svg.classList.remove(s.cls));
-  void svg.offsetWidth; // Vynucení reflow pro spolehlivý restart animace
+  void svg.offsetWidth; // Vynucení reflow pro restart animace
   svg.classList.add(stateObj.cls);
 
   if (typeof options.onStart === 'function') {
@@ -222,8 +221,8 @@ export function triggerBrandLogoAnimation(target, stateInput, options = {}) {
 }
 
 /**
- * Zapojí klidný animační cyklus a obsluhu interakcí (kliknutí / klávesnice / hover).
- * Každých ~7 sekund jemně přehraje jednu ze 7 animací s návratem do výchozího bodu.
+ * Zapojí klidný animační cyklus a obsluhu interakcí (kliknutí / hover / klávesnice).
+ * Každých 6,5 sekund přehraje jednu ze 7 animací s hladkým návratem do výchozího bodu.
  * @param {HTMLElement|string} targetElementOrSelector
  * @param {Object} options
  * @returns {Object} { dispose, trigger, next, isBusy, getIndex }
@@ -324,7 +323,6 @@ export function mountBrandLogo(targetElementOrSelector, options = {}) {
     return false;
   }
 
-  // Automatická klidná smyčka každých ~7 sekund
   function startAutoCycle() {
     if (cycleInterval || prefersReducedMotion()) return;
     cycleInterval = setInterval(() => {
@@ -343,14 +341,13 @@ export function mountBrandLogo(targetElementOrSelector, options = {}) {
 
   startAutoCycle();
 
-  // Posluchače událostí pro interaktivitu
-  const onClick = () => {
+  const onClick = (e) => {
+    // Pokud je logo odkaz, neblokujeme navigaci při kliknutí, ale spustíme animaci
     next();
   };
 
   const onKeyDown = (event) => {
     if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
       next();
     }
   };
@@ -415,5 +412,108 @@ export function mountBrandLogo(targetElementOrSelector, options = {}) {
     next,
     isBusy: () => busy,
     getIndex: () => currentIndex,
+  };
+}
+
+/**
+ * Pevné nasazení animovaného loga č. 100 přímo do hlavičky webu (.site-header .brand).
+ * Nahradí statický obrázek kompletním inline SVG a spustí 6,5s klidný animační cyklus.
+ * @param {string|HTMLElement} targetSelector
+ * @param {Object} options
+ * @returns {Object} logo controller { dispose, trigger, next, isBusy, getIndex }
+ */
+export function mountAnimatedBrandLogo(targetSelector = '.site-header .brand', options = {}) {
+  const brandEl = typeof targetSelector === 'string'
+    ? document.querySelector(targetSelector)
+    : targetSelector;
+
+  if (!brandEl) return null;
+
+  // Najdeme stávající slot nebo obrázek
+  let slot = brandEl.querySelector('.header-logo-slot');
+  if (!slot) {
+    slot = document.createElement('span');
+    slot.className = 'header-logo-slot';
+    const oldImg = brandEl.querySelector('img');
+    if (oldImg) {
+      brandEl.replaceChild(slot, oldImg);
+    } else {
+      brandEl.prepend(slot);
+    }
+  }
+
+  // Vložíme inline SVG loga č. 100
+  slot.innerHTML = renderBrandLogoSvg({
+    id: 'header-brand-logo-svg',
+    className: 'czekpoint-logo-svg header-logo-svg',
+    clipId: 'header-brand-banner-clip',
+    ariaLabel: 'Czekpoint — logo',
+  });
+
+  return mountBrandLogo(slot, {
+    intervalMs: options.intervalMs || DEFAULT_CYCLE_MS,
+    durationMs: options.durationMs || DEFAULT_DURATION_MS,
+    triggerOnHover: options.triggerOnHover !== false,
+  });
+}
+
+/**
+ * Vloží do stránky plovoucí vrstvu živého ambientního pozadí (#ambient-bg).
+ * Obsahuje jemné topografické vrstevnice, siluety smrků a rozcestníku a plující lesní jiskřičky.
+ * @returns {Object} { dispose }
+ */
+export function mountAmbientBackground() {
+  if (typeof document === 'undefined') return { dispose: () => {} };
+  let bg = document.querySelector('#ambient-bg');
+  if (bg) return { dispose: () => bg.remove() };
+
+  bg = document.createElement('div');
+  bg.id = 'ambient-bg';
+  bg.setAttribute('aria-hidden', 'true');
+  bg.innerHTML = `
+    <!-- Topografické vrstevnice a kompasové kružnice -->
+    <svg class="ambient-contours" viewBox="0 0 1000 1000" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M-50,200 Q200,120 450,220 T950,180 T1100,250" fill="none" stroke="#2e6f3e" stroke-width="1.2"/>
+      <path d="M-50,350 Q300,280 600,380 T1100,320" fill="none" stroke="#2e6f3e" stroke-width="1.2"/>
+      <path d="M-50,550 Q250,620 550,520 T1100,580" fill="none" stroke="#2e6f3e" stroke-width="1.2"/>
+      <path d="M-50,750 Q400,680 750,780 T1100,720" fill="none" stroke="#2e6f3e" stroke-width="1.2"/>
+      <circle cx="150" cy="200" r="140" fill="none" stroke="#2e6f3e" stroke-width="0.8" stroke-dasharray="6,8"/>
+      <circle cx="850" cy="750" r="180" fill="none" stroke="#2e6f3e" stroke-width="0.8" stroke-dasharray="8,10"/>
+      <line x1="850" y1="550" x2="850" y2="950" stroke="#2e6f3e" stroke-width="0.6"/>
+      <line x1="650" y1="750" x2="1050" y2="750" stroke="#2e6f3e" stroke-width="0.6"/>
+    </svg>
+
+    <!-- Poloprůhledná silueta smrků v levém dolním rohu -->
+    <svg class="ambient-silhouette ambient-silhouette-left" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="40,30 15,90 28,90 10,140 26,140 5,190 75,190 54,140 70,140 52,90 65,90" fill="#1b4d2b"/>
+      <polygon points="90,10 58,80 74,80 50,135 68,135 45,195 135,195 112,135 130,135 106,80 122,80" fill="#235c32"/>
+      <polygon points="140,50 115,100 126,100 108,145 122,145 102,192 178,192 158,145 172,145 154,100 165,100" fill="#2e6f3e"/>
+    </svg>
+
+    <!-- Poloprůhledná silueta rozcestníku v pravém dolním rohu -->
+    <svg class="ambient-silhouette ambient-silhouette-right" viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg">
+      <rect x="74" y="20" width="12" height="180" rx="3" fill="#6e4726"/>
+      <circle cx="80" cy="18" r="5" fill="#8c5c32"/>
+      <polygon points="48,32 112,32 126,45 112,58 48,58" fill="#c58344"/>
+      <polygon points="112,66 48,66 34,79 48,92 112,92" fill="#d7995b"/>
+      <polygon points="48,100 110,100 124,113 110,126 48,126" fill="#b47134"/>
+    </svg>
+
+    <!-- 5 pomalu stoupajících a pohasínajících lesních jiskřiček -->
+    <div class="ambient-spores">
+      <div class="floating-spore" style="left:12%;top:75%;width:6px;height:6px;animation-delay:0s;animation-duration:14s"></div>
+      <div class="floating-spore" style="left:38%;top:85%;width:5px;height:5px;animation-delay:3s;animation-duration:16s"></div>
+      <div class="floating-spore" style="left:65%;top:80%;width:7px;height:7px;animation-delay:6s;animation-duration:13s"></div>
+      <div class="floating-spore" style="left:82%;top:70%;width:5.5px;height:5.5px;animation-delay:1.5s;animation-duration:15s"></div>
+      <div class="floating-spore" style="left:48%;top:92%;width:4px;height:4px;animation-delay:8s;animation-duration:18s"></div>
+    </div>
+  `;
+
+  document.body.prepend(bg);
+
+  return {
+    dispose: () => {
+      bg.remove();
+    },
   };
 }

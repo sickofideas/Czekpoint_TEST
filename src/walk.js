@@ -16,6 +16,7 @@ import {
 import {
   loadState,
   saveState,
+  emptyState,
   exportStateJson,
   previewImportState,
   importStateJson,
@@ -72,6 +73,7 @@ import {
   triggerHaptic,
   applyStaggerAnimation,
 } from './fx.js';
+import { initGpsSimulator, ROZMITAL_CENTER } from './gps-simulator.js';
 
 export function mountWalk(root, routes, config, actions = {}) {
   const L = window.L;
@@ -90,6 +92,7 @@ export function mountWalk(root, routes, config, actions = {}) {
   let radiusCircle = null;
   let focusPolyline = null;
   let beaconMarker = null;
+  let fakeGpsSim = null;
 
   let anchor = null, lastFix = null, watch = null;
   let active = false, disposed = false, demo = false, demoIndex = 0;
@@ -153,7 +156,7 @@ export function mountWalk(root, routes, config, actions = {}) {
         <h1 tabindex="-1">Tvoje mapa dobrodružství.</h1>
         <p>Osobní atlas, chytrý plánovač výprav, virtuální hůl se štítky a poutníci v revíru.</p>
       </div>
-      <span class="walk-tag">PILOT · v0.7</span>
+      <span class="walk-tag">PILOT · v0.8</span>
     </section>
 
     <!-- 1-Click Intent Guidance (3 Big Cards) -->
@@ -276,8 +279,8 @@ export function mountWalk(root, routes, config, actions = {}) {
         <div class="quest-hud-content" id="quest-hud-content">
           <div class="qhud-next-target" id="qhud-next-target">
             <div class="qhud-target-label">🎯 Další cíl</div>
-            <div class="qhud-target-name" id="qhud-next-name">--</div>
-            <div class="qhud-target-eta" id="qhud-next-eta">-- m · ~-- min</div>
+            <div class="qhud-next-name" id="qhud-next-name">--</div>
+            <div class="qhud-next-eta" id="qhud-next-eta">-- m · ~-- min</div>
           </div>
           <div class="qhud-stops-list" id="qhud-stops-list"></div>
           <div class="qhud-eta-summary" id="qhud-eta-summary">
@@ -295,6 +298,7 @@ export function mountWalk(root, routes, config, actions = {}) {
         <button class="button small" id="walk-fog-toggle" aria-pressed="true" title="Přepnout krytí mlhy">Mlha: KCD2 Pergamen</button>
         <button class="button small" id="walk-plain-map" aria-pressed="false" title="Zobrazit běžný mapový podklad">Běžná mapa</button>
         <button class="button small" id="walk-zen-toggle" aria-pressed="false" title="Čistá mapa bez okolních panelů">⛶ Čistá mapa</button>
+        <button class="button small fake-gps-toggle-btn" id="walk-fake-gps-toggle" title="Testovací Fake GPS Simulátor chůze">🧪 Test GPS (Simulátor chůze)</button>
       </div>
     </div>
     <div class="trail-note" id="trail-info">Stopa za poslední hodinu: 0 bodů (automaticky mizí po 60 min, pouze v paměti relace)</div>
@@ -451,7 +455,7 @@ export function mountWalk(root, routes, config, actions = {}) {
     <div id="session-summary-container"></div>
 
     <details class="walk-help">
-      <summary>Pravidla průzkumu, 3 režimy mapy a záloha dat v0.7</summary>
+      <summary>Pravidla průzkumu, 3 režimy mapy a záloha dat v0.8</summary>
       <p><strong>3 režimy mapy:</strong> Průzkumná mlha (výchozí, alpha 0.65) zachovává orientaci a rozlišuje navštívená místa. Plná mlha (alpha 1.0) zakrývá terén neprozkoumaných oblastí. Běžná mapa okamžitě ukáže celý mapový podklad bez vlivu na body.</p>
       <p><strong>3 herní režimy:</strong> Kompas (čistý směr k dalšímu cíli), Trasa (zvýrazněná naplánovaná linka) a Radar (akustické/haptické varování na místa do 150 m).</p>
       <p><strong>Virtuální turistická hůl:</strong> Každá dokončená výprava vytvoří unikátní plechový štítek, který si můžeš přibít na hůl.</p>
@@ -1636,9 +1640,55 @@ export function mountWalk(root, routes, config, actions = {}) {
         status('Startovní bod nastaven kliknutím do mapy.');
       }
     });
+
+    const simStartPos = lastFix || plannedRoute?.origin || (progress.cells.length ? cellCenter(progress.cells.at(-1)) : ROZMITAL_CENTER);
+    fakeGpsSim = initGpsSimulator({
+      map,
+      container: $('walk-map-wrap'),
+      initialPosition: simStartPos,
+      onFix: (fix, heading) => {
+        if (disposed) return;
+        if (!active && !starting) {
+          active = true;
+          $('walk-start').disabled = true;
+          $('walk-stop').disabled = false;
+          $('walk-end').disabled = false;
+        }
+        handleGpsFix(fix);
+        if (heading != null && Number.isFinite(heading)) {
+          updateCompassRotation(heading);
+        }
+      },
+      onHeadingChange: (heading) => {
+        if (heading != null && Number.isFinite(heading)) {
+          updateCompassRotation(heading);
+        }
+      },
+      onResetAnchor: () => {
+        anchor = null;
+      },
+      onStopRealGps: () => {
+        stopWatchdog();
+        if (watch !== null) {
+          navigator.geolocation?.clearWatch?.(watch);
+          watch = null;
+        }
+      },
+      getPlannedWaypoints: () => {
+        return getPlannedPlaces();
+      },
+      getCollectiblePlaces: () => {
+        return getAllAvailablePlaces().filter(p => p.collectible !== false);
+      },
+    });
   } else {
     $('walk-map').textContent = 'Mapová knihovna chybí.';
   }
+
+  $('walk-fake-gps-toggle')?.addEventListener('click', () => {
+    fakeGpsSim?.toggle();
+    playTick(stateObj.soundEnabled);
+  });
 
   // Hook basic controls
   $('walk-start').addEventListener('click', start);
@@ -2278,6 +2328,7 @@ export function mountWalk(root, routes, config, actions = {}) {
     window.removeEventListener('pagehide', pagehide);
     window.removeEventListener('storage', storageChanged);
     if (frame) cancelAnimationFrame(frame);
+    fakeGpsSim?.destroy();
     map?.remove();
   };
 }
