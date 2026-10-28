@@ -1,210 +1,1257 @@
-.walk-heading{display:flex;gap:20px;justify-content:space-between;align-items:center;margin-bottom:24px}.walk-heading h1{font:400 clamp(32px,4vw,50px)/1.12 Georgia,serif;letter-spacing:-1.5px;margin:0 0 12px}.walk-heading p{color:var(--muted);font-size:14px}.walk-tag{border:1px solid #a7b898;border-radius:30px;padding:8px 14px;font-size:10px;letter-spacing:1px;white-space:nowrap}.walk-stats{display:grid;grid-template-columns:repeat(4,1fr);background:#193e32;color:#f7f9ed;border-radius:20px;padding:22px;margin-bottom:20px;gap:15px}.walk-stats>div{display:flex;flex-direction:column;gap:3px;padding-left:18px;border-left:1px solid #577361}.walk-stats>div:first-child{border:0;padding-left:0}.walk-stats strong{font-size:32px;color:#d9ef97}.walk-stats span{font-size:12px}.walk-map-wrap{position:relative;border:1px solid #b8c6af;border-radius:24px;overflow:hidden;isolation:isolate;background:#dce4d1}#walk-map{height:520px;width:100%;z-index:0;font-family:inherit}.walk-map-toolbar{position:absolute;bottom:max(16px,env(safe-area-inset-bottom,16px));left:12px;right:12px;z-index:800;display:flex;flex-wrap:wrap;gap:6px}.walk-map-toolbar button{box-shadow:0 2px 9px #0002;background:#fff;min-height:40px}.walk-fog{position:absolute;pointer-events:none}.walk-controls{display:flex;flex-wrap:wrap;gap:9px;margin:16px 0}.walk-status-panel{background:#eaf0e2;padding:18px;border-radius:16px;display:flex;flex-direction:column;gap:8px;font-size:13px;margin-bottom:24px}.walk-status-panel>span{color:var(--muted)}.walk-status-panel input{accent-color:#193e32}.walk-columns{display:grid;grid-template-columns:1.1fr 1fr;gap:20px}.walk-columns h2{font-size:22px}.walk-columns p{font-size:13px;line-height:1.65}.trophy-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:18px 0}.trophy{border:1px dashed #cbd2c5;border-radius:14px;min-height:120px;padding:13px 6px;display:flex;flex-direction:column;gap:5px;text-align:center;color:#737c70}.trophy>span{font-size:24px}.trophy>strong{font-size:12px}.trophy>small{font-size:10px;line-height:1.4}.trophy.earned{background:#eef5ce;border:1px solid #afbf68;color:#345032}.trophy.earned>span{color:#6d8f26}.mystery-pin{display:grid!important;place-items:center;background:#f3e5aa;border:2px solid #fff;border-radius:50%;box-shadow:0 2px 8px #0005;color:#193e32;font-weight:800;font-size:18px}.nearby-place{display:flex;flex-direction:column;gap:4px;border-bottom:1px solid var(--line);padding:13px 0;font-size:13px}.nearby-place span,.nearby-place small{font-size:11px;color:var(--muted)}.nearby-place a{text-decoration:underline;font-size:12px}.walk-help{margin-top:20px;border:1px solid var(--line);border-radius:14px;padding:18px;font-size:13px;line-height:1.7}.walk-help summary{font-weight:700;cursor:pointer}.walk-help p{margin:12px 0}.leaflet-control-attribution{max-width:100%;font-size:10px!important}.leaflet-control-attribution a{color:#145148!important}#nearby-status{font-size:12px;margin-top:12px}#walk-demo-banner{margin-bottom:12px;background:#f5e7b7;border-color:#d0b75a}
-@media(max-width:760px){.walk-heading{display:block}.walk-tag{display:inline-block;margin-top:12px}.walk-stats{gap:10px;padding:16px}.walk-stats strong{font-size:25px}.walk-stats span{font-size:10px}.walk-stats>div{padding-left:8px}.walk-columns{grid-template-columns:1fr}#walk-map{height:460px}.site-header{gap:12px}.main-nav{gap:12px}.main-nav>a{font-size:12px}.brand{font-size:21px}.walk-controls .button{flex-grow:1}.walk-heading .eyebrow{font-size:10px}}
-@media(max-width:460px){.site-header{flex-wrap:wrap}.site-header .brand{font-size:23px}.main-nav{width:100%;margin-left:0;justify-content:space-between}.main-nav>a:last-child{display:block}.main-nav>a{font-size:11px}.walk-heading h1{font-size:35px}.walk-stats{grid-template-columns:repeat(2,1fr);row-gap:18px}.walk-stats>div:nth-child(3){border:0;padding-left:0}#walk-map{height:420px}.walk-map-toolbar{bottom:30px;left:8px}.walk-map-toolbar button{font-size:11px;padding:7px 9px}.trophy-grid{gap:6px}.walk-columns .panel{padding:18px}}
-.mystery-collection{display:flex;flex-wrap:wrap;gap:7px;margin:16px 0}.fragment{padding:8px 10px;border-radius:9px;background:#eef0e8;font-size:11px;color:#76816d}.fragment.found{background:#f4e8b8;color:#68501d;border:1px solid #d8c570}
-.walk-compass-bar{background:#193e32;color:#f7f9ed;padding:11px 16px;border-radius:14px;margin-bottom:12px;font-size:13px;display:flex;align-items:center;gap:10px;box-shadow:0 3px 12px #0001}.walk-compass-bar strong{color:#d8e99e}
-.rank-card{background:rgba(255,255,255,0.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:16px;padding:14px 18px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
-.rank-info{display:flex;flex-direction:column;gap:2px}.rank-title{font-weight:700;color:#193e32;font-size:14px}.rank-fog{font-size:12px;color:var(--muted)}
-.daily-challenge-card{background:#fefefa;border:1px solid #c7d8be;border-radius:14px;padding:13px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
-.daily-title{font-weight:650;color:#193e32;font-size:13px}
-.sectors-overview{margin:18px 0;display:flex;flex-direction:column;gap:10px}
-.sector-list{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-@media(max-width:760px){.sector-list{grid-template-columns:1fr}}
-.sector-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:5px;font-size:12px}
-.sector-card.unlocked{border-color:#8da949;background:#f7faee}
-.sector-seal{font-size:11px;font-weight:700;color:#4a6828}
-.mystery-pin{position:relative;display:grid!important;place-items:center;border-radius:50%;font-size:15px;font-weight:700;cursor:pointer;transition:transform .15s}
-.mystery-pin:hover{transform:scale(1.15)}
-.mystery-pin.tier-gold{background:#fff5cc!important;border:2px solid #e5a912!important;box-shadow:0 0 10px #f9c74f99,0 2px 6px #0004!important}
-.mystery-pin.tier-silver{background:#f0f3f5!important;border:2px solid #a0b2bc!important;box-shadow:0 2px 6px #0004!important}
-.mystery-pin.tier-bronze{background:#faeedb!important;border:2px solid #c77b38!important;box-shadow:0 2px 6px #0004!important}
-.mystery-pin.tier-none{background:#24463a!important;border:2px solid #94ad9d!important;color:#d8e99e!important;box-shadow:0 2px 6px #0006!important}
-.pioneer-badge{position:absolute;top:-6px;right:-8px;background:#ff5722;color:#fff;font-size:9px;font-weight:800;padding:1px 4px;border-radius:8px;border:1px solid #fff;animation:pulse 1.5s infinite}
-@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
-.session-modal{position:fixed;inset:0;background:rgba(16,43,39,.75);display:grid;place-items:center;z-index:1000;padding:20px}
-.session-modal-card{background:#fff;border-radius:20px;max-width:440px;width:100%;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.3);display:flex;flex-direction:column;gap:14px}
-.session-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.session-stat-box{background:var(--soft);border-radius:12px;padding:12px;text-align:center}
-.session-stat-box strong{display:block;font-size:22px;color:var(--ink)}
-.session-stat-box span{font-size:11px;color:var(--muted)}
-.trail-note{font-size:11px;color:var(--muted);margin-top:6px}
-.popup-actions{display:flex;flex-direction:column;gap:6px;margin-top:8px}
-.popup-actions .button{font-size:11px;padding:6px 10px;min-height:30px}
-.avatar-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:10px;margin:12px 0}
-.avatar-card{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;text-align:center;transition:all .15s}
-.avatar-card:hover{border-color:#8da949;transform:translateY(-2px)}
-.avatar-card.selected{border-color:#3f6848;background:#f4faec;box-shadow:0 3px 12px rgba(63,104,72,0.2)}
-.avatar-card img{width:44px;height:44px;border-radius:12px}
-.avatar-card span{font-size:11px;font-weight:600;color:#193e32}
-.avatar-card .avatar-check{font-size:9px;color:#4a6828;font-weight:700}
-.postcard-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin:16px 0}
-.postcard-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 4px 16px rgba(0,0,0,0.04)}
-.postcard-card img{width:100%;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,0.08);aspect-ratio:4/5;object-fit:cover}
-.postcard-card-stats{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
-.postcard-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
-.bottom-sheet{background:rgba(255,255,255,0.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1.5px solid var(--line);border-radius:20px;box-shadow:0 6px 24px rgba(0,0,0,0.06);margin:18px 0;overflow:hidden}
-.bottom-sheet.collapsed .sheet-body{display:none}
-.bottom-sheet-bar{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f9fbf6;border-bottom:1px solid var(--line)}
-.sheet-tabs{display:flex;gap:4px;overflow-x:auto}
-.sheet-tab{border:0;background:transparent;font-size:12px;font-weight:600;padding:8px 11px;border-radius:10px;cursor:pointer;color:var(--muted);white-space:nowrap}
-.sheet-tab.active{background:#eaf0e2;color:#193e32;font-weight:700}
-.sheet-body{padding:16px}
-.sheet-tab-panel{display:flex;flex-direction:column;gap:12px}
-.planner-controls-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media(max-width:760px){.planner-controls-grid{grid-template-columns:1fr}}
-.planner-box{background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:12px}
-.planner-origin-buttons{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
-.radius-selector{display:flex;gap:6px;margin:6px 0}
-.planner-categories-chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
-.cat-chip{border:1px solid #cbd2c5;background:#fff;border-radius:20px;padding:6px 11px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;color:#2f3a2d}
-.cat-chip.selected{background:#eaf0e2;border-color:#8da949;color:#193e32;font-weight:700}
-.planner-basket-list{display:flex;flex-direction:column;gap:6px;margin-top:8px}
-.basket-item{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:12px}
-.basket-index{font-weight:700;color:#4a6828;margin-right:6px}
-.basket-title{flex:1}
-.basket-remove-btn{padding:2px 7px;min-height:22px;font-size:11px}
-.route-xray-card{background:#fdfdf9;border:1.5px solid #dce4d1;border-radius:14px;padding:12px;margin-top:10px}
-.xray-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;flex-wrap:wrap;gap:6px}
-.xray-stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-@media(max-width:600px){.xray-stats-grid{grid-template-columns:1fr}}
-.xray-stat{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px;text-align:center}
-.xray-stat strong{display:block;font-size:15px;color:#193e32}
-.xray-stat span{font-size:10px;color:var(--muted)}
-.small-link-btn{border:0;background:transparent;text-decoration:underline;color:#345032;cursor:pointer;font-size:10px;padding:0}
-.xray-warnings{margin-top:8px;display:flex;flex-direction:column;gap:4px}
-.xray-warning-item{background:#fff3cd;border:1px solid #ffeeba;color:#856404;padding:6px 10px;border-radius:8px;font-size:11px}
-.planner-share-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
-.companion-selector-box,.exploration-mode-box{background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
-.companion-button-row,.exploration-button-row{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
-.walk-radar-banner{background:#fff3cd;border:1.5px solid #e0be62;border-radius:14px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:8px;animation:radarPulse 2s infinite}
-@keyframes radarPulse{0%,100%{box-shadow:0 0 0 0 rgba(224,190,98,0.4)}50%{box-shadow:0 0 0 8px rgba(224,190,98,0)}}
-.beacon-pulse-icon{display:grid!important;place-items:center;pointer-events:none}
-.beacon-pulse{width:22px;height:22px;border-radius:50%;border:3px solid #ffd700;background:rgba(255,215,0,0.35);animation:beaconGlow 1.5s infinite}
-@keyframes beaconGlow{0%{transform:scale(0.8);opacity:1}100%{transform:scale(2.2);opacity:0}}
-.beacon-glow{box-shadow:0 0 12px #d8e99e!important;border-color:#d8e99e!important}
-.walk-map-wrap.zen-mode{position:fixed;inset:0;z-index:9999;border-radius:0;border:0;height:100dvh;width:100vw}
-.walk-map-wrap.zen-mode #walk-map{height:100dvh!important;width:100vw!important}
-.walk-map-wrap.zen-mode #quest-hud-panel{top:72px!important;right:14px!important}
-.zen-close-btn{position:absolute;top:14px;right:14px;z-index:1005;min-height:48px;background:#193e32;color:#fff;border:2px solid #fff;border-radius:28px;padding:10px 20px;font-weight:700;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,0.35);cursor:pointer;display:inline-flex;align-items:center;gap:8px}
-.zen-close-btn:hover{background:#255646}
-.walking-stick-section{display:flex;flex-direction:column;gap:14px;margin-top:10px}
-.stick-tier-banner{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;gap:10px}
-.stick-tier-title{color:#193e32;margin:2px 0 4px;font-size:16px}
-.stick-badge-count-pill{background:#193e32;color:#d8e99e;border-radius:16px;padding:6px 14px;text-align:center;display:flex;flex-direction:column}
-.stick-badge-count-pill strong{font-size:18px}
-.stick-badge-count-pill span{font-size:9px}
-.unpinned-badges-box{background:#fdfaf3;border:1.5px dashed #d8c280;border-radius:14px;padding:14px}
-.unpinned-header{display:flex;flex-direction:column;gap:2px}
-.unpinned-badges-grid{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px}
-.unpinned-badge-card{display:flex;flex-direction:column;align-items:center;gap:6px;background:#fff;padding:10px;border-radius:12px;border:1px solid #e0d4b8}
-.stick-showcase{display:flex;justify-content:center;padding:24px 0;background:#f9fbf6;border-radius:18px;border:1px solid var(--line);overflow-x:auto}
-.stick-shaft{width:140px;min-height:360px;border-radius:24px;position:relative;box-shadow:0 10px 30px rgba(0,0,0,0.18),inset 0 2px 8px rgba(255,255,255,0.2);display:flex;flex-direction:column;align-items:center;padding:26px 8px}
-.stick-head{width:154px;height:30px;border-radius:16px;position:absolute;top:-13px;box-shadow:0 4px 12px rgba(0,0,0,0.3)}
-.stick-tip{width:40px;height:24px;border-radius:0 0 12px 12px;position:absolute;bottom:-11px;box-shadow:0 4px 10px rgba(0,0,0,0.4)}
-.stick-badges-column{display:flex;flex-direction:column;gap:8px;align-items:center;width:100%}
-.stick-empty-hint{color:rgba(255,255,255,0.7);font-size:11px;text-align:center;padding:40px 10px}
-.pinned-badge-wrap{transition:transform .2s ease}
-.pinned-badge-wrap:hover{transform:scale(1.1)!important;z-index:10}
-.hammering{animation:hammerNail .3s ease-in-out}
-@keyframes hammerNail{0%,100%{transform:scale(1) rotate(0deg)}50%{transform:scale(1.2) rotate(-15deg)}}
-.pilgrims-box{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px}
-.pilgrims-optin-prompt{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.pilgrim-icon-lead{font-size:32px}
-.pilgrims-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;flex-wrap:wrap;gap:8px}
-.pilgrims-title-line{display:flex;align-items:center;gap:6px;margin:2px 0}
-.local-sample-pill{background:#eaf0e2;color:#345032;font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px}
-.clinks-badge-pill{background:#193e32;color:#d8e99e;border-radius:20px;padding:6px 12px;font-size:12px;font-weight:700}
-.pilgrims-list{display:flex;flex-direction:column;gap:8px}
-.pilgrim-card{display:flex;align-items:center;gap:12px;background:var(--soft);border-radius:12px;padding:10px 14px;border:1px solid var(--line)}
-.pilgrim-avatar{border-radius:10px;background:#fff;padding:2px}
-.pilgrim-info{display:flex;flex-direction:column;gap:2px;flex:1}
-.pilgrim-stick-stat{font-size:11px;color:#4a6828;font-weight:600}
-.clinking{animation:stickClink .3s ease-in-out}
-@keyframes stickClink{0%,100%{transform:rotate(0deg)}40%{transform:rotate(-25deg)}80%{transform:rotate(15deg)}}
+/* Czekpoint v0.9 — Hlavní obrazovka kolem mapy, Mapa objevování, značky a turistické trasy */
 
-/* 50+ Ergonomics, Compact Top HUD & Intent cards (v0.9) */
-.compact-top-hud{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;background:#193e32;color:#f7f9ed;border-radius:16px;padding:10px 16px;margin-bottom:12px;box-shadow:0 3px 12px rgba(0,0,0,0.12);font-size:13px}
-.compact-top-summary{font-weight:600;letter-spacing:0.2px}
-.compact-top-summary strong{color:#d8e99e}
-.compact-intent-toggle{min-height:38px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,0.2)}
-@media(max-width:600px){.compact-top-hud{padding:8px 12px;font-size:12px}.compact-intent-toggle{width:100%;justify-content:center}}
-.intent-cards-wrapper{overflow:hidden;transition:max-height .35s ease,opacity .25s ease,margin .25s ease;max-height:1200px;opacity:1}
-.intent-cards-wrapper.collapsed{max-height:0;opacity:0;margin:0;pointer-events:none}
-.intent-cards-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
-@media(max-width:820px){.intent-cards-grid{grid-template-columns:1fr}}
-.intent-card{background:#fff;border:1.5px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;justify-content:space-between;gap:10px;box-shadow:0 3px 12px rgba(0,0,0,0.03);transition:border-color .2s,transform .2s}
-.intent-card:hover{border-color:#8da949;transform:translateY(-2px)}
-.intent-card.primary{border-color:#8da949;background:#fbfdf8}
-.intent-card-header{display:flex;align-items:center;gap:10px}
-.intent-card-icon{font-size:26px}
-.intent-card-title{font-size:15px;font-weight:700;color:#193e32;margin:0}
-.intent-card-desc{font-size:12px;color:var(--muted);margin:0;line-height:1.5}
-.intent-card-actions{display:flex;flex-direction:column;gap:8px;margin-top:auto}
-.intent-length-pills{display:flex;gap:6px;flex-wrap:wrap}
-.intent-length-pill{border:1px solid #cbd2c5;background:#fff;border-radius:14px;padding:5px 11px;font-size:11px;font-weight:600;cursor:pointer;color:#2f3a2d}
-.intent-length-pill.active{background:#193e32;color:#fff;border-color:#193e32;font-weight:700}
-.intent-companion-select{width:100%;border:1px solid #cfd8c7;border-radius:10px;padding:8px 10px;font-size:12px;background:#fff;color:#193e32;font-weight:600}
-
-/* Primary Walk Control Bar under map */
-.primary-walk-bar{background:#fff;border:1.5px solid var(--line);border-radius:20px;padding:16px;margin:16px 0;box-shadow:0 4px 16px rgba(0,0,0,0.04);display:flex;flex-direction:column;gap:12px}
-.primary-walk-buttons{display:flex;flex-wrap:wrap;gap:10px;width:100%}
-.main-start-btn{min-height:54px!important;font-size:16px!important;font-weight:700!important;flex:1 1 220px}
-.main-start-btn.route-ready{background:#f5b82e!important;color:#2c1d11!important;border-color:#c4921b!important;box-shadow:0 4px 18px rgba(245,184,46,0.45)!important}
-.primary-walk-buttons .button:not(.main-start-btn){min-height:48px;font-size:13px;font-weight:650}
-.visually-hidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
-
-/* 42px Mystery Map Pins */
-.mystery-pin{width:42px!important;height:42px!important;font-size:18px!important;margin-left:-21px!important;margin-top:-21px!important}
-
-/* Alive Avatars */
-.avatar-card img,.pilgrim-avatar,.passport-header-avatar{animation:avatarFloat 3.2s ease-in-out infinite}
-.avatar-card:nth-child(2n) img,.pilgrim-card:nth-child(2n) .pilgrim-avatar{animation-delay:0.4s}
-.avatar-card:nth-child(3n) img,.pilgrim-card:nth-child(3n) .pilgrim-avatar{animation-delay:0.8s}
-.avatar-card:nth-child(4n) img,.pilgrim-card:nth-child(4n) .pilgrim-avatar{animation-delay:1.2s}
-@keyframes avatarFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-2px) scale(1.03)}}
-.avatar-pop{animation:avatarPop .32s ease-out!important}
-@keyframes avatarPop{0%{transform:scale(1)}50%{transform:scale(1.16) rotate(-4deg);box-shadow:0 0 0 4px #8da949}100%{transform:scale(1)}}
-
-/* Smooth Staggered Tiles Animation */
-@keyframes tileFadeSlideIn{from{opacity:0;transform:translateY(10px) scale(0.985)}to{opacity:1;transform:translateY(0) scale(1)}}
-.tile-animate-in{animation:tileFadeSlideIn .3s cubic-bezier(0.16,1,0.3,1) both;animation-delay:calc(var(--stagger-i, 0) * 35ms)}
-
-/* Passport Top Tabs */
-.passport-section-tabs{display:flex;gap:8px;margin-bottom:20px;overflow-x:auto;padding-bottom:4px}
-.passport-section-tab{border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:12px 18px;font-size:14px;font-weight:700;color:#2f3a2d;cursor:pointer;display:inline-flex;align-items:center;gap:8px;min-height:48px;transition:all .15s}
-.passport-section-tab:hover{border-color:#8da949;background:#f9fbf6}
-.passport-section-tab.active{background:#193e32;color:#fff;border-color:#193e32;box-shadow:0 3px 12px rgba(25,62,50,0.18)}
-
-@media(prefers-reduced-motion:reduce){
-  .avatar-card img,.pilgrim-avatar,.passport-header-avatar,.avatar-pop,.tile-animate-in{animation:none!important;transition:none!important}
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
 }
 
-/* KCD2 Kingdom Come 2 Pergamen Fog (v0.9: rendered directly into 2D canvas context, no blur) */
-.walk-fog.kcd2-parchment-filter {
-  filter: none;
+/* 1. Hlavní horní ovládací lišta u mapy (Bod 16 & 20: vysoký kontrast, tmavý ovládací pruh, jedna výrazná barva pro hlavní akci) */
+.map-command-bar {
+  background: #142f26;
+  color: #f7f9f2;
+  border: 1.5px solid #2c5545;
+  border-radius: 20px;
+  padding: 14px 18px;
+  margin-bottom: 12px;
+  box-shadow: 0 10px 28px rgba(15, 38, 30, 0.22);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-/* Active Rotating Compass Medallion */
-.active-compass-widget {
+.mcb-primary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.mcb-walk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  flex: 1 1 320px;
+}
+
+.accent-action-btn {
+  background: #f5b82e !important;
+  color: #1c1308 !important;
+  border: 2px solid #ffd46b !important;
+  font-weight: 800 !important;
+  font-size: 15px !important;
+  min-height: 48px !important;
+  padding: 10px 20px !important;
+  border-radius: 14px !important;
+  box-shadow: 0 4px 16px rgba(245, 184, 46, 0.38) !important;
+}
+.accent-action-btn:hover:not(:disabled) {
+  background: #ffc43d !important;
+  transform: translateY(-1px);
+}
+.accent-action-btn:disabled {
+  background: #3a5c4e !important;
+  color: #d8e99e !important;
+  border-color: #527a68 !important;
+  box-shadow: none !important;
+  opacity: 0.92 !important;
+}
+
+.dark-ctrl-btn {
+  background: #21493b !important;
+  color: #f7f9f2 !important;
+  border: 1.5px solid #457462 !important;
+  min-height: 46px !important;
+  font-weight: 700 !important;
+}
+.dark-ctrl-btn:hover:not(:disabled) {
+  background: #2b5c4b !important;
+}
+
+.danger-ctrl-btn {
+  background: #4a201d !important;
+  color: #ffcdc8 !important;
+  border: 1.5px solid #8c3f38 !important;
+  min-height: 46px !important;
+  font-weight: 700 !important;
+}
+.danger-ctrl-btn:hover:not(:disabled) {
+  background: #632a26 !important;
+}
+
+.mcb-secondary-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.edit-walk-trigger-btn {
+  background: #ffffff !important;
+  color: #142f26 !important;
+  border: 2px solid #d8e99e !important;
+  font-weight: 750 !important;
+  min-height: 46px !important;
+  padding: 8px 16px !important;
+  border-radius: 13px !important;
+}
+.edit-walk-trigger-btn:hover {
+  background: #eef5df !important;
+}
+
+.mcb-passport-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #1f4538;
+  color: #f2f7ec;
+  border: 1px solid #3f6d5b;
+  padding: 9px 14px;
+  border-radius: 12px;
+  font-size: 12.5px;
+  font-weight: 650;
+  min-height: 44px;
+}
+.mcb-passport-pill strong {
+  color: #d8e99e;
+}
+.mcb-passport-pill:hover {
+  background: #295747;
+}
+
+.mcb-telemetry-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 12px;
+}
+
+.telemetry-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  background: #1f4538;
+  color: #e9f2e4;
+  border: 1px solid #3a6856;
+}
+.telemetry-pill.state-ready {
+  background: #224a3c;
+  color: #d8e99e;
+}
+.telemetry-pill.state-running {
+  background: #2d6a3e;
+  color: #ffffff;
+  border-color: #8ee07e;
+}
+.telemetry-pill.state-paused {
+  background: #5c4318;
+  color: #ffe09e;
+  border-color: #d49b35;
+}
+.telemetry-pill.gps-pill.is-accurate {
+  background: #1f5438;
+  color: #d7f7c8;
+  border-color: #6bc47d;
+}
+.telemetry-pill.gps-pill.is-inaccurate {
+  background: #6b241d;
+  color: #ffd6d1;
+  border-color: #ef6c5b;
+}
+.telemetry-pill.fog-pill {
+  background: #28443a;
+  color: #f5ebd6;
+  border-color: #8f7a54;
+}
+
+.telemetry-session-text {
+  margin-left: auto;
+  color: #cfe0c8;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mcb-status-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.22);
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 12.5px;
+}
+.mcb-status-line strong {
+  color: #ffffff;
+  font-weight: 650;
+}
+.mcb-toggles {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+  color: #d4e2ce;
+}
+.mcb-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+.mcb-check input {
+  accent-color: #f5b82e;
+}
+.mcb-link-btn {
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f0f6ec;
+  border-radius: 8px;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 650;
+}
+.mcb-link-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* Varovné pruhy pro nepřesnou GPS (>40 m) a izolovaný režim simulátoru */
+.walk-accuracy-banner {
+  background: #fff3cd;
+  color: #5c3c06;
+  border: 2px solid #e0a82e;
+  border-radius: 14px;
+  padding: 11px 15px;
+  margin-bottom: 12px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.walk-Accuracy-banner strong {
+  color: #422900;
+}
+
+.walk-sandbox-banner {
+  background: #eef6ff;
+  color: #13395b;
+  border: 1.5px solid #7ab3e8;
+  border-radius: 14px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  font-size: 12px;
+}
+
+/* 2. Mapa zabírající většinu obrazovky (Bod 20) */
+.walk-map-wrap {
+  position: relative;
+  border: 2px solid #9fb396;
+  border-radius: 22px;
+  overflow: hidden;
+  isolation: isolate;
+  background: #dce4d1;
+  box-shadow: 0 8px 28px rgba(20, 47, 38, 0.12);
+}
+
+#walk-map {
+  height: clamp(460px, 68dvh, 660px);
+  width: 100%;
+  z-index: 0;
+  font-family: inherit;
+}
+
+.walk-fog {
+  position: absolute;
+  pointer-events: none;
+}
+
+.walk-map-toolbar {
+  position: absolute;
+  bottom: max(14px, env(safe-area-inset-bottom, 14px));
+  left: 12px;
+  right: 12px;
+  z-index: 800;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.map-tool-btn {
+  background: #163329 !important;
+  color: #f7f9f2 !important;
+  border: 1.5px solid #497563 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28) !important;
+  min-height: 40px !important;
+  font-weight: 700 !important;
+}
+.map-tool-btn:hover {
+  background: #214a3b !important;
+}
+.map-tool-btn.active {
+  background: #275c43 !important;
+  border-color: #d8e99e !important;
+  color: #ffffff !important;
+}
+
+.map-sub-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 6px 4px 12px;
+}
+.trail-note {
+  font-size: 11px;
+  color: var(--muted);
+}
+.osm-trails-attribution a {
+  text-decoration: underline;
+  color: #193e32;
+}
+
+/* 3. Ukotvení a zmenšení mapových značek (26×26 px uvnitř 40×40 px dotykové plochy — Bod 18)
+   DŮLEŽITÉ: .czekpoint-marker-anchor nikdy nepoužívá vlastní transform ani margin override,
+   aby pozicování (translate3d) zůstalo 100% v režii Leafletu! */
+.czekpoint-marker-anchor {
+  display: grid !important;
+  place-items: center !important;
+  background: transparent !important;
+  border: 0 !important;
+  cursor: pointer;
+}
+
+.czekpoint-marker-badge {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #17382c;
+  color: #e5f2bc;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.38);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+  pointer-events: auto;
+}
+
+.czekpoint-marker-anchor:hover .czekpoint-marker-badge,
+.czekpoint-marker-anchor:focus-visible .czekpoint-marker-badge {
+  transform: scale(1.14);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+}
+
+.czekpoint-marker-badge.tier-planned {
+  background: #fff3c4;
+  color: #2c1d0b;
+  border-color: #d49212;
+  box-shadow: 0 2px 8px rgba(212, 146, 18, 0.45);
+}
+
+.czekpoint-marker-badge.tier-next-target {
+  background: #f5b82e;
+  color: #1b1105;
+  border-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(245, 184, 46, 0.45), 0 3px 10px rgba(0, 0, 0, 0.45);
+}
+
+.czekpoint-marker-badge.tier-visited {
+  background: #2f6f3e;
+  color: #ffffff;
+  border-color: #d8e99e;
+  box-shadow: 0 2px 7px rgba(25, 62, 50, 0.4);
+}
+
+.czekpoint-marker-order {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: #142f26;
+  color: #ffffff;
+  border: 1.5px solid #ffffff;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 11px;
+  text-align: center;
+}
+
+/* 4. Jemné animace všech kategorií ikon (Bod 23: animuje se pouze vnitřní grafika .czekpoint-marker-glyph) */
+.czekpoint-marker-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  transform-origin: center center;
+}
+
+.marker-glyph-svg {
+  display: block;
+  overflow: visible;
+}
+
+/* Zobrazení nové značky */
+.czekpoint-marker-badge.is-appearing .czekpoint-marker-glyph {
+  animation: glyphAppearPop 0.65s cubic-bezier(0.22, 1, 0.36, 1) 1;
+}
+
+/* Potvrzení zastávky */
+.czekpoint-marker-badge.is-just-confirmed .czekpoint-marker-glyph {
+  animation: glyphConfirmStamp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 1;
+}
+
+/* Voda — jemné zčeření hladiny při výběru, aktivním cíli nebo zobrazení */
+.czekpoint-marker-anchor:hover .czekpoint-marker-glyph.kind-water .glyph-wave-1,
+.czekpoint-marker-badge.is-next-target .czekpoint-marker-glyph.kind-water .glyph-wave-1,
+.czekpoint-marker-badge.is-appearing .czekpoint-marker-glyph.kind-water .glyph-wave-1 {
+  animation: glyphWaterWave 1.8s ease-in-out 2;
+}
+.czekpoint-marker-anchor:hover .czekpoint-marker-glyph.kind-water .glyph-wave-2,
+.czekpoint-marker-badge.is-next-target .czekpoint-marker-glyph.kind-water .glyph-wave-2,
+.czekpoint-marker-badge.is-appearing .czekpoint-marker-glyph.kind-water .glyph-wave-2 {
+  animation: glyphWaterWave 1.8s ease-in-out 0.25s 2;
+}
+
+/* Les / příroda — jemné zhoupnutí koruny stromu */
+.czekpoint-marker-anchor:hover .czekpoint-marker-glyph.kind-forest .glyph-tree-crown,
+.czekpoint-marker-badge.is-next-target .czekpoint-marker-glyph.kind-forest .glyph-tree-crown,
+.czekpoint-marker-badge.is-appearing .czekpoint-marker-glyph.kind-forest .glyph-tree-crown {
+  transform-origin: 12px 17px;
+  animation: glyphTreeSway 2s ease-in-out 2;
+}
+
+/* Začátek trasy / praporek — jemné zavlnění vlajky */
+.czekpoint-marker-anchor:hover .czekpoint-marker-glyph.kind-route-start .glyph-flag-cloth,
+.czekpoint-marker-badge.is-next-target .czekpoint-marker-glyph.kind-route-start .glyph-flag-cloth,
+.czekpoint-marker-badge.is-appearing .czekpoint-marker-glyph.kind-route-start .glyph-flag-cloth {
+  transform-origin: 6px 8px;
+  animation: glyphFlagWave 1.6s ease-in-out 2;
+}
+
+/* Historie a vyhlídky — jemný záblesk / jiskra */
+.czekpoint-marker-anchor:hover .czekpoint-marker-glyph.kind-culture .glyph-sun-glint,
+.czekpoint-marker-anchor:hover .czekpoint-marker-glyph.kind-view .glyph-sun-glint,
+.czekpoint-marker-badge.is-next-target .czekpoint-marker-glyph.kind-culture .glyph-sun-glint,
+.czekpoint-marker-badge.is-next-target .czekpoint-marker-glyph.kind-view .glyph-sun-glint,
+.czekpoint-marker-badge.is-appearing .czekpoint-marker-glyph.kind-culture .glyph-sun-glint,
+.czekpoint-marker-badge.is-appearing .czekpoint-marker-glyph.kind-view .glyph-sun-glint {
+  transform-origin: center;
+  animation: glyphGlintPulse 1.8s ease-in-out 2;
+}
+
+@keyframes glyphAppearPop {
+  0% { transform: scale(0.5); opacity: 0.3; }
+  70% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes glyphConfirmStamp {
+  0% { transform: scale(0.7) rotate(-10deg); }
+  50% { transform: scale(1.25) rotate(6deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+@keyframes glyphWaterWave {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  50% { transform: translateX(1.4px) translateY(-1px); }
+}
+@keyframes glyphTreeSway {
+  0%, 100% { transform: rotate(0deg); }
+  35% { transform: rotate(5deg); }
+  70% { transform: rotate(-3.5deg); }
+}
+@keyframes glyphFlagWave {
+  0%, 100% { transform: skewY(0deg) scaleX(1); }
+  45% { transform: skewY(-5deg) scaleX(0.93); }
+  80% { transform: skewY(3deg) scaleX(1.02); }
+}
+@keyframes glyphGlintPulse {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.45); opacity: 1; }
+}
+
+/* 5. Značené turistické trasy z OpenStreetMap (Bod 24) */
+.czekpoint-trail-blaze-anchor {
+  display: grid !important;
+  place-items: center !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+.czekpoint-trail-blaze {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+}
+.hiking-trails-box {
+  background: #f8faf4;
+  border: 1px solid #c9d6be;
+}
+.hiking-trails-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.hiking-trail-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: #ffffff;
+  border: 1.5px solid #cbd6c2;
+  border-radius: 12px;
+  padding: 6px 11px;
+  font-size: 12px;
+  color: #193e32;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+.hiking-trail-chip:hover {
+  border-color: #2f6f3e;
+  background: #f1f7ea;
+}
+.hiking-trail-chip-name {
+  font-weight: 700;
+}
+.hiking-trail-chip-meta {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* Směrové šipky na plánované trase */
+.route-dir-marker {
+  display: grid !important;
+  place-items: center !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+.route-dir-arrow {
+  display: inline-block;
+  color: #2c1d11;
+  font-size: 12px;
+  font-weight: 900;
+  text-shadow: 0 0 4px #f5b82e;
+}
+
+/* 6. Sbalitelný spodní panel: Plán a zastávky (Bod 19 & 20) */
+.bottom-sheet {
+  background: #ffffff;
+  border: 1.5px solid #c3d1b9;
+  border-radius: 20px;
+  box-shadow: 0 6px 24px rgba(20, 47, 38, 0.08);
+  margin: 14px 0;
+  overflow: hidden;
+}
+.bottom-sheet.collapsed .sheet-body {
+  display: none;
+}
+.bottom-sheet-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 16px;
+  background: #edf3e6;
+  border-bottom: 1px solid #cedbc4;
+}
+.sheet-header-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sheet-header-summary strong {
+  color: #142f26;
+  font-size: 15px;
+}
+.sheet-header-sub {
+  font-size: 11.5px;
+  color: #465d4b;
+}
+.sheet-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sheet-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.stops-box-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.planner-controls-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 760px) {
+  .planner-controls-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.planner-box {
+  background: #f5f8f1;
+  border: 1px solid #d4dfd0;
+  border-radius: 14px;
+  padding: 13px;
+}
+
+.planner-origin-buttons,
+.radius-selector,
+.companion-button-row,
+.exploration-button-row,
+.edit-intent-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0;
+}
+
+.planner-categories-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0;
+}
+
+.cat-chip {
+  border: 1.5px solid #c2cfc0;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #24382b;
+}
+.cat-chip.selected {
+  background: #163329;
+  border-color: #163329;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* Položky zastávek s tlačítky Nahoru, Dolů, Nahradit, Odebrat */
+.planner-basket-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.basket-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  background: #ffffff;
+  border: 1.5px solid #cfd9c8;
+  border-radius: 12px;
+  padding: 9px 12px;
+  font-size: 13px;
+}
+.basket-item.is-next-target {
+  border-color: #d49212;
+  background: #fffdf5;
+}
+.basket-item.is-visited {
+  border-color: #6ca450;
+  background: #f4faef;
+}
+
+.basket-item-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 200px;
+}
+.basket-index {
+  font-weight: 800;
+  color: #163329;
+  min-width: 20px;
+}
+.basket-title-wrap {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.basket-title {
+  color: #142f26;
+}
+
+.stop-state-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.stop-state-badge.confirmed {
+  background: #dff2d2;
+  color: #205218;
+  border: 1px solid #88c46e;
+}
+.stop-state-badge.next-target {
+  background: #fff0c2;
+  color: #6b4300;
+  border: 1px solid #e0a82e;
+}
+.stop-state-badge.pending {
+  background: #eef2eb;
+  color: #556659;
+}
+
+.basket-item-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.stop-ctrl-btn {
+  padding: 4px 8px !important;
+  min-height: 30px !important;
+  font-size: 11px !important;
+  border: 1px solid #ccd6c6 !important;
+  background: #f9fbf7 !important;
+}
+.stop-ctrl-btn:hover:not(:disabled) {
+  background: #e9f0e3 !important;
+}
+
+/* Výběr náhradní zastávky (Nahradit) */
+.stop-replace-picker {
+  margin-top: 10px;
+  background: #fffdf6;
+  border: 1.5px solid #d9a73c;
+  border-radius: 12px;
+  padding: 12px;
+}
+.replace-picker-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 12.5px;
+}
+.replace-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 6px;
+}
+.replace-candidate-btn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid #cbd6c2;
+  border-radius: 9px;
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 650;
+  color: #163329;
+  text-align: left;
+}
+.replace-candidate-btn:hover {
+  background: #eef5df;
+  border-color: #6a994e;
+}
+.replace-candidate-btn small {
+  color: #3f6d34;
+  font-weight: 700;
+}
+
+/* 7. Modální dialog „Upravit procházku“ (Potvrdit změny / Zrušit — Bod 20) */
+.edit-walk-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(14, 34, 27, 0.72);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+.edit-walk-modal-card {
+  background: #ffffff;
+  color: #142f26;
+  border: 2px solid #2b5444;
+  border-radius: 22px;
+  max-width: 780px;
+  width: 100%;
+  max-height: calc(100dvh - 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.38);
+}
+.edit-walk-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  border-bottom: 1px solid #d8e2d2;
+  padding-bottom: 10px;
+}
+.edit-walk-modal-body {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-right: 4px;
+}
+.edit-walk-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid #d8e2d2;
+  padding-top: 12px;
+}
+.draft-available-places {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.draft-add-place-chip {
+  border: 1px solid #b8c9b0;
+  background: #ffffff;
+  color: #163329;
+  border-radius: 999px;
+  padding: 5px 11px;
+  font-size: 11.5px;
+  font-weight: 650;
+}
+.draft-add-place-chip:hover {
+  background: #e6f2d5;
+  border-color: #5c8c3e;
+}
+
+/* Rentgen trasy */
+.route-xray-card {
+  background: #fdfdf9;
+  border: 1.5px solid #cfd9c7;
+  border-radius: 14px;
+  padding: 12px;
+}
+.xray-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.xray-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+@media (max-width: 600px) {
+  .xray-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.xray-stat {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px;
+  text-align: center;
+}
+.xray-stat strong {
+  display: block;
+  font-size: 15px;
+  color: #142f26;
+}
+.xray-stat span {
+  font-size: 10.5px;
+  color: var(--muted);
+}
+.small-link-btn {
+  border: 0;
+  background: transparent;
+  text-decoration: underline;
+  color: #235036;
+  cursor: pointer;
+  font-size: 10.5px;
+  padding: 0;
+}
+.xray-warnings {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.xray-warning-item {
+  background: #fff3cd;
+  border: 1px solid #ebd082;
+  color: #6b4e09;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 11.5px;
+}
+
+.planner-share-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.nearby-place {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-bottom: 1px solid var(--line);
+  padding: 11px 0;
+  font-size: 13px;
+}
+.nearby-place span,
+.nearby-place small {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.nearby-place a {
+  text-decoration: underline;
+  font-size: 12px;
+}
+
+/* Radar banner */
+.walk-radar-banner {
+  background: #fff3cd;
+  border: 1.5px solid #e0be62;
+  border-radius: 14px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Čistá mapa přes celou obrazovku (Zen mode) */
+.walk-map-wrap.zen-mode {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  border-radius: 0;
+  border: 0;
+  height: 100dvh;
+  width: 100vw;
+}
+.walk-map-wrap.zen-mode #walk-map {
+  height: 100dvh !important;
+  width: 100vw !important;
+}
+.walk-map-wrap.zen-mode #quest-hud-panel {
+  top: 72px !important;
+  right: 14px !important;
+}
+.zen-close-btn {
   position: absolute;
   top: 14px;
-  left: 14px;
-  width: 72px;
-  height: 72px;
+  right: 14px;
+  z-index: 1005;
+  min-height: 46px;
+  background: #142f26;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  border-radius: 28px;
+  padding: 9px 18px;
+  font-weight: 700;
+  font-size: 13.5px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.zen-follow-fab {
+  position: absolute;
+  bottom: 24px;
+  right: 18px;
+  z-index: 1005;
+  min-height: 44px;
+  background: #ffffff;
+  color: #142f26;
+  border: 2px solid #3c6e47;
+  border-radius: 28px;
+  padding: 8px 16px;
+  font-weight: 700;
+  font-size: 13.5px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+.zen-follow-fab.is-following {
+  background: #255c3a;
+  color: #ffffff;
+  border-color: #79a868;
+}
+.zen-follow-fab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+/* Můj pas — Turistická hůl, avataři, pohlednice a trofeje */
+.trophy-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+  margin: 18px 0;
+}
+.trophy {
+  border: 1px dashed #cbd2c5;
+  border-radius: 14px;
+  min-height: 110px;
+  padding: 12px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-align: center;
+  color: #6b7668;
+}
+.trophy > span { font-size: 24px; }
+.trophy > strong { font-size: 12px; }
+.trophy > small { font-size: 10px; line-height: 1.4; }
+.trophy.earned {
+  background: #eef5ce;
+  border: 1px solid #afbf68;
+  color: #2b4529;
+}
+
+.session-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(16, 43, 39, 0.75);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  z-index: 9600;
+  padding: 20px;
+  cursor: pointer;
+}
+.session-modal-card {
+  background: #ffffff;
+  border-radius: 20px;
+  max-width: 440px;
+  width: 100%;
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  padding: 22px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  cursor: default;
+}
+.session-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.session-stat-box {
+  background: var(--soft);
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+}
+.session-stat-box strong {
+  display: block;
+  font-size: 22px;
+  color: var(--ink);
+}
+.session-stat-box span {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.popup-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+.popup-actions .button {
+  font-size: 11px;
+  padding: 6px 10px;
+  min-height: 30px;
+}
+
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+.avatar-card {
+  background: #ffffff;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  padding: 10px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+.avatar-card:hover {
+  border-color: #8da949;
+  transform: translateY(-2px);
+}
+.avatar-card.selected {
+  border-color: #3f6848;
+  background: #f4faec;
+  box-shadow: 0 3px 12px rgba(63, 104, 72, 0.2);
+}
+.avatar-card img {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+}
+.avatar-card span {
+  font-size: 11px;
+  font-weight: 600;
+  color: #193e32;
+}
+.avatar-card .avatar-check {
+  font-size: 9px;
+  color: #4a6828;
+  font-weight: 700;
+}
+
+.postcard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin: 16px 0;
+}
+.postcard-card {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.postcard-card img {
+  width: 100%;
+  border-radius: 10px;
+  aspect-ratio: 4/5;
+  object-fit: cover;
+}
+.postcard-card-stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted);
+}
+.postcard-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.walking-stick-section { display: flex; flex-direction: column; gap: 14px; margin-top: 10px; }
+.stick-tier-banner { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.stick-tier-title { color: #193e32; margin: 2px 0 4px; font-size: 16px; }
+.stick-badge-count-pill { background: #193e32; color: #d8e99e; border-radius: 16px; padding: 6px 14px; text-align: center; display: flex; flex-direction: column; }
+.stick-badge-count-pill strong { font-size: 18px; }
+.stick-badge-count-pill span { font-size: 9px; }
+.unpinned-badges-box { background: #fdfaf3; border: 1.5px dashed #d8c280; border-radius: 14px; padding: 14px; }
+.unpinned-header { display: flex; flex-direction: column; gap: 2px; }
+.unpinned-badges-grid { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
+.unpinned-badge-card { display: flex; flex-direction: column; align-items: center; gap: 6px; background: #fff; padding: 10px; border-radius: 12px; border: 1px solid #e0d4b8; }
+.stick-showcase { display: flex; justify-content: center; padding: 24px 0; background: #f9fbf6; border-radius: 18px; border: 1px solid var(--line); overflow-x: auto; }
+.stick-shaft { width: 140px; min-height: 360px; border-radius: 24px; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.18), inset 0 2px 8px rgba(255,255,255,0.2); display: flex; flex-direction: column; align-items: center; padding: 26px 8px; }
+.stick-head { width: 154px; height: 30px; border-radius: 16px; position: absolute; top: -13px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+.stick-tip { width: 40px; height: 24px; border-radius: 0 0 12px 12px; position: absolute; bottom: -11px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
+.stick-badges-column { display: flex; flex-direction: column; gap: 8px; align-items: center; width: 100%; }
+.stick-empty-hint { color: rgba(255,255,255,0.7); font-size: 11px; text-align: center; padding: 40px 10px; }
+.pinned-badge-wrap { transition: transform 0.2s ease; }
+.pinned-badge-wrap:hover { transform: scale(1.1) !important; z-index: 10; }
+.hammering { animation: hammerNail 0.3s ease-in-out; }
+@keyframes hammerNail { 0%, 100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.2) rotate(-15deg); } }
+
+.pilgrims-box { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
+.pilgrims-optin-prompt { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.pilgrim-icon-lead { font-size: 32px; }
+.pilgrims-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+.pilgrims-title-line { display: flex; align-items: center; gap: 6px; margin: 2px 0; }
+.local-sample-pill { background: #eaf0e2; color: #345032; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 12px; }
+.clinks-badge-pill { background: #193e32; color: #d8e99e; border-radius: 20px; padding: 6px 12px; font-size: 12px; font-weight: 700; }
+.pilgrims-list { display: flex; flex-direction: column; gap: 8px; }
+.pilgrim-card { display: flex; align-items: center; gap: 12px; background: var(--soft); border-radius: 12px; padding: 10px 14px; border: 1px solid var(--line); }
+.pilgrim-avatar { border-radius: 10px; background: #fff; padding: 2px; }
+.pilgrim-info { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.pilgrim-stick-stat { font-size: 11px; color: #4a6828; font-weight: 600; }
+.clinking { animation: stickClink 0.3s ease-in-out; }
+@keyframes stickClink { 0%, 100% { transform: rotate(0deg); } 40% { transform: rotate(-25deg); } 80% { transform: rotate(15deg); } }
+
+.passport-section-tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 4px; }
+.passport-section-tab { border: 1.5px solid var(--line); background: #fff; border-radius: 14px; padding: 12px 18px; font-size: 14px; font-weight: 700; color: #2f3a2d; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; min-height: 48px; transition: all 0.15s; }
+.passport-section-tab:hover { border-color: #8da949; background: #f9fbf6; }
+.passport-section-tab.active { background: #193e32; color: #fff; border-color: #193e32; box-shadow: 0 3px 12px rgba(25,62,50,0.18); }
+
+/* Aktivní kompas */
+.active-compass-widget {
+  position: absolute;
+  top: 12px;
+  left: 56px;
+  width: 64px;
+  height: 64px;
   z-index: 820;
   border-radius: 50%;
-  box-shadow: 0 4px 18px rgba(0,0,0,0.35);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
   cursor: pointer;
   user-select: none;
-  background: #2d1d0e;
-}
-@media(max-width: 600px) {
-  .active-compass-widget {
-    width: 64px;
-    height: 64px;
-    top: 10px;
-    left: 10px;
-  }
+  background: #1e2d24;
 }
 .compass-dial {
   position: absolute;
@@ -222,8 +1269,8 @@
   top: 50%;
   left: 50%;
   width: 6px;
-  height: 48px;
-  margin-top: -24px;
+  height: 44px;
+  margin-top: -22px;
   margin-left: -3px;
   pointer-events: none;
 }
@@ -232,14 +1279,14 @@
   height: 0;
   border-left: 3px solid transparent;
   border-right: 3px solid transparent;
-  border-bottom: 24px solid #c0281b;
+  border-bottom: 22px solid #c0281b;
 }
 .needle-south {
   width: 0;
   height: 0;
   border-left: 3px solid transparent;
   border-right: 3px solid transparent;
-  border-top: 24px solid #d5dad2;
+  border-top: 22px solid #d5dad2;
 }
 .compass-target-arrow {
   position: absolute;
@@ -253,32 +1300,26 @@
   left: 50%;
   transform: translateX(-50%);
   color: #f5b82e;
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1;
-  text-shadow: 0 0 6px rgba(245, 184, 46, 0.9), 0 2px 4px rgba(0,0,0,0.6);
-  animation: targetGemGlow 1.8s infinite;
-}
-@keyframes targetGemGlow {
-  0%, 100% { transform: translateX(-50%) scale(1); filter: brightness(1); }
-  50% { transform: translateX(-50%) scale(1.22); filter: brightness(1.25); }
+  text-shadow: 0 0 6px rgba(245, 184, 46, 0.9), 0 2px 4px rgba(0, 0, 0, 0.6);
 }
 .compass-dist-badge {
   position: absolute;
   bottom: -18px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(25, 62, 50, 0.95);
+  background: #142f26;
   color: #f7f9ed;
   font-size: 10px;
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 8px;
   white-space: nowrap;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-  border: 1px solid rgba(216, 233, 158, 0.4);
+  border: 1px solid #d8e99e;
 }
 
-/* Quest HUD Panel (v0.9: compact pill by default on mobile, expandable stop list) */
+/* Plovoucí přehled zastávek (Quest HUD) */
 .quest-hud-panel {
   position: absolute;
   top: 14px;
@@ -286,16 +1327,13 @@
   z-index: 820;
   max-width: 270px;
   width: calc(100% - 95px);
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1.5px solid #c8d4bf;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1.5px solid #2b5444;
   border-radius: 16px;
-  box-shadow: 0 6px 24px rgba(25, 62, 50, 0.16);
+  box-shadow: 0 6px 24px rgba(20, 47, 38, 0.22);
   font-size: 12px;
-  color: #193e32;
+  color: #142f26;
   overflow: hidden;
-  transition: all 0.2s ease;
 }
 .qhud-compact {
   padding: 8px 10px;
@@ -305,7 +1343,7 @@
 .qhud-compact .qhud-target-name {
   font-size: 12.5px;
   font-weight: 750;
-  color: #193e32;
+  color: #142f26;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -313,37 +1351,12 @@
 .qhud-compact .qhud-target-eta {
   font-size: 11px;
   font-weight: 650;
-  color: #3b6630;
+  color: #2f5c28;
   margin-top: 2px;
-}
-.qhud-compact strong {
-  color: #193e32;
-}
-@media(max-width: 760px) {
-  .quest-hud-panel {
-    top: 10px;
-    right: 10px;
-    max-width: 230px;
-    font-size: 11px;
-  }
-  .qhud-compact {
-    padding: 6px 8px;
-  }
-  .qhud-compact .qhud-target-name {
-    font-size: 11.5px;
-  }
-  .qhud-compact .qhud-target-eta {
-    font-size: 10px;
-  }
-}
-@media(max-width: 460px) {
-  .quest-hud-panel {
-    max-width: 200px;
-  }
 }
 .quest-hud-header {
   width: 100%;
-  background: #193e32;
+  background: #142f26;
   color: #f7f9ed;
   border: 0;
   padding: 8px 12px;
@@ -353,68 +1366,27 @@
   font-weight: 700;
   font-size: 12px;
   cursor: pointer;
-  text-align: left;
-}
-.quest-hud-header:hover {
-  background: #235443;
-}
-.quest-hud-toggle-icon {
-  font-size: 14px;
-  color: #d8e99e;
-  transition: transform 0.25s;
 }
 .quest-hud-panel.collapsed .quest-hud-content {
   display: none;
-}
-.quest-hud-panel.collapsed .quest-hud-toggle-icon {
-  transform: rotate(-90deg);
 }
 .quest-hud-content {
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 380px;
+  max-height: 340px;
   overflow-y: auto;
-}
-.qhud-next-target {
-  background: #fdfaf2;
-  border: 1.5px solid #e2c98d;
-  border-radius: 10px;
-  padding: 7px 9px;
-}
-.qhud-target-label {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: #8c601e;
-  letter-spacing: 0.5px;
-}
-.qhud-target-name {
-  font-size: 13px;
-  font-weight: 750;
-  color: #193e32;
-  margin: 2px 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.qhud-target-eta {
-  font-size: 11px;
-  font-weight: 650;
-  color: #3b6630;
 }
 .qhud-stops-list {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  border-top: 1px solid #eef2e6;
-  border-bottom: 1px solid #eef2e6;
-  padding: 6px 0;
-  max-height: 150px;
-  overflow-y: auto;
 }
 .qhud-stop-row {
+  border-radius: 6px;
+}
+.qhud-stop-focus-btn {
   width: 100%;
   border: 0;
   background: transparent;
@@ -424,14 +1396,12 @@
   justify-content: space-between;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
-  line-height: 1.3;
+  font-size: 11.5px;
   color: inherit;
   cursor: pointer;
   text-align: left;
-  transition: background 0.15s;
 }
-.qhud-stop-row:hover {
+.qhud-stop-focus-btn:hover {
   background: #edf3e4;
 }
 .qhud-stop-title {
@@ -445,18 +1415,15 @@
   font-weight: 700;
   white-space: nowrap;
 }
-.qhud-stop-status.visited {
-  color: #4a6828;
-}
-.qhud-stop-status.unvisited {
-  color: #7b8874;
-}
+.qhud-stop-status.visited { color: #25631b; }
+.qhud-stop-status.active-target { color: #9c6200; }
+.qhud-stop-status.unvisited { color: #647362; }
 .qhud-eta-summary {
   display: flex;
   flex-direction: column;
   gap: 3px;
   font-size: 11px;
-  background: #f5f8f0;
+  background: #f2f6ed;
   border-radius: 8px;
   padding: 6px 8px;
 }
@@ -464,43 +1431,31 @@
   display: flex;
   justify-content: space-between;
 }
-.qhud-arrival-highlight {
-  border-top: 1px dashed #cad4c2;
-  padding-top: 4px;
-  margin-top: 2px;
-  color: #1b4528;
-  font-weight: 700;
-}
 
-/* Fake GPS Simulator Panel (v0.8) */
+/* 8. Testovací Fake GPS Simulátor (Bod 16 & 17) */
 .fake-gps-toggle-btn {
-  background: #193e32 !important;
+  background: #142f26 !important;
   color: #d8e99e !important;
   border: 1.5px solid #d8e99e !important;
   font-weight: 750 !important;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
-}
-.fake-gps-toggle-btn:hover {
-  background: #235847 !important;
 }
 .fake-gps-panel {
   position: absolute;
   top: 12px;
   right: 12px;
   z-index: 900;
-  width: min(340px, calc(100vw - 24px));
-  background: rgba(21, 52, 42, 0.94);
+  width: min(360px, calc(100vw - 24px));
+  background: rgba(18, 45, 36, 0.96);
   backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   border: 1.5px solid #d8e99e;
   border-radius: 18px;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.48);
   color: #f7f9ed;
   font-size: 12px;
   padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   user-select: none;
 }
 .fake-gps-header {
@@ -517,155 +1472,2903 @@
 }
 .fake-gps-badge {
   background: #d8e99e;
-  color: #193e32;
+  color: #142f26;
   font-size: 10px;
   font-weight: 800;
   padding: 2px 6px;
   border-radius: 6px;
 }
-.fake-gps-actions {
+.fake-gps-isolation-note {
+  background: rgba(216, 233, 158, 0.14);
+  border: 1px solid rgba(216, 233, 158, 0.4);
+  color: #e9f5c9;
+  border-radius: 10px;
+  padding: 6px 8px;
+  font-size: 10.5px;
+  line-height: 1.35;
+}
+.fake-gps-sep-info {
+  margin-top: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 6px 8px;
   display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 10.5px;
+  color: #dfead8;
+}
+.fake-gps-actions { display: flex; gap: 5px; }
+.fake-gps-body { display: flex; flex-direction: column; gap: 8px; }
+.fake-gps-section { background: rgba(0, 0, 0, 0.24); border-radius: 12px; padding: 8px 10px; }
+.fake-gps-section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.7px; color: #b5c8ae; font-weight: 750; margin-bottom: 5px; }
+.dpad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.dpad-btn { background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.22); color: #fff; border-radius: 8px; padding: 7px 4px; font-size: 11px; font-weight: 700; cursor: pointer; }
+.dpad-btn:hover { background: rgba(255, 255, 255, 0.24); }
+.dpad-stop { background: rgba(214, 54, 41, 0.38); border-color: rgba(214, 54, 41, 0.65); color: #ffaea8; }
+.fake-gps-btn { border: 1px solid rgba(255, 255, 255, 0.25); background: rgba(255, 255, 255, 0.1); color: #fff; padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: 650; cursor: pointer; }
+.fake-gps-btn:hover { background: rgba(255, 255, 255, 0.2); }
+.fake-gps-btn.active { background: #d8e99e; color: #142f26; border-color: #d8e99e; font-weight: 800; }
+.fake-gps-btn.small { padding: 4px 8px; font-size: 10px; }
+.fake-gps-btn.mini { padding: 4px 6px; font-size: 10px; }
+.fake-gps-btn.full { width: 100%; }
+.fake-gps-btn.lime { background: #d8e99e; color: #142f26; border-color: #d8e99e; }
+.fake-gps-btn.gold { background: #f5b82e; color: #1c1308; border-color: #f5b82e; font-weight: 800; }
+.fake-gps-btn.danger { color: #ff9b94; }
+.fake-gps-row { display: flex; gap: 6px; }
+.fake-gps-row .fake-gps-btn { flex: 1; }
+.speed-presets-row, .accuracy-presets-row { display: flex; flex-wrap: wrap; gap: 4px; }
+.slider-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.slider-row input[type="range"] { flex: 1; accent-color: #d8e99e; }
+.slider-row span { font-size: 11px; font-weight: 650; white-space: nowrap; }
+.fake-gps-status-bar { border-top: 1px solid rgba(255, 255, 255, 0.15); padding-top: 7px; display: flex; flex-direction: column; gap: 3px; font-size: 10.5px; color: #d1ded0; }
+.fake-gps-status-bar .status-stamp.waiting { color: #f5b82e; font-weight: 750; }
+
+@media (max-width: 760px) {
+  #walk-map { height: clamp(360px, 56dvh, 500px); }
+  .telemetry-session-text { margin-left: 0; width: 100%; }
+  .map-command-bar { padding: 10px 12px; gap: 7px; border-radius: 16px; }
+  .mcb-primary-row { gap: 8px; }
+  .mcb-walk-actions { flex: 1 1 auto; gap: 6px; }
+  .mcb-secondary-actions { width: 100%; justify-content: space-between; gap: 6px; }
+  .mcb-telemetry-row { gap: 5px; padding-top: 6px; font-size: 11.5px; }
+  .mcb-status-line { padding: 6px 10px; gap: 6px; font-size: 12px; }
+}
+@media (max-width: 480px) {
+  .fake-gps-panel { top: 8px; right: 8px; left: 8px; width: auto; }
+  .walk-hud-top { padding: 10px 12px; gap: 8px; }
+  .walk-action-strip { padding: 8px 10px; gap: 6px; }
+  .walk-action-strip .button { flex: 1 1 auto; min-height: 48px; }
+}
+
+/* Odlišení vypočtené pěší trasy od přímé spojnice (Bod 6) */
+.route-geom-badge {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.route-geom-badge.routed {
+  background: #e9f5e6;
+  color: #1f5425;
+  border: 1px solid #b7d9af;
+}
+.route-geom-badge.fallback {
+  background: #fff3e0;
+  color: #8a4b0f;
+  border: 1px solid #f0c987;
+}
+
+/* Testovací lišta simulátoru pod mapou (Bod 13) */
+.walk-test-strip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-top: 4px;
+  background: rgba(20, 47, 38, 0.04);
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+}
+
+/* Zvětšení dotykových ploch ovládacích prvků v mapě a plánovači (Bod 12) */
+.walk-action-strip .button.primary,
+.walk-action-strip .button.lime,
+#walk-start {
+  min-height: 48px;
+  font-size: 15px;
+  padding: 10px 18px;
+}
+.planner-stop-actions .btn-mini,
+.qhud-stop-focus-btn,
+.quest-hud-header,
+.trail-focus-btn,
+.map-fullscreen-exit-btn {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .czekpoint-marker-glyph,
+  .glyph-wave-1,
+  .glyph-wave-2,
+  .glyph-tree-crown,
+  .glyph-flag-cloth,
+  .glyph-sun-glint {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Bod 25: Tlačítko Zpět na mou polohu při ručním posunu mapy */
+.return-to-gps-btn {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 620;
+  background: var(--forest, #142f26);
+  color: #fff;
+  border: 2px solid var(--lime, #a8e05f);
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  box-shadow: 0 6px 20px rgba(20, 47, 38, 0.35);
+  cursor: pointer;
+  min-height: 44px;
+  white-space: nowrap;
+}
+.return-to-gps-btn:hover {
+  background: #1b3f33;
+}
+
+/* Bod 28: Hlavní přehled chůze a rozbalovací turistické údaje uvnitř mapové lišty */
+.tourist-main-hud {
+  margin-top: 6px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.tmh-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  flex: 1 1 240px;
+}
+.tmh-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 6px;
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 8px;
+  min-width: 0;
+}
+.tmh-label {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.78);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tmh-value {
+  font-size: 0.92rem;
+  color: #ffffff;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tmh-expand-btn {
+  min-height: 36px;
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+.tourist-stats-drawer {
+  margin-top: 6px;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+}
+.tsd-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  gap: 6px;
+}
+.tsd-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+}
+.tsd-label {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.78);
+  font-weight: 600;
+}
+.tsd-val {
+  font-size: 0.9rem;
+  color: #ffffff;
+  font-weight: 800;
+}
+.tsd-note {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+/* Bod 29: Krátký přehled počasí na příštích 60 minut */
+.weather-strip {
+  margin-top: 6px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.94);
+}
+.weather-strip-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.weather-strip-sentence {
+  flex: 1 1 200px;
+  line-height: 1.35;
+}
+.weather-detail-panel {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.18);
+  font-size: 0.76rem;
+  color: rgba(255, 255, 255, 0.88);
+}
+.weather-detail-panel a {
+  color: var(--lime, #c5e86c);
+  text-decoration: underline;
+}
+
+/* Bod 30: Stopy bot podél skutečně ušlé trasy */
+.czekpoint-footprint-anchor {
+  background: transparent !important;
+  border: 0 !important;
+  pointer-events: none;
+}
+.czekpoint-footprint-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  will-change: transform;
+}
+
+@media (max-width: 640px) {
+  .map-command-bar {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+  .mcb-walk-actions button[disabled] {
+    display: none;
+  }
+  .mcb-primary-row {
+    gap: 6px;
+  }
+  .tourist-main-hud {
+    margin-top: 4px;
+    padding: 6px 8px;
+    gap: 6px;
+  }
+  .tmh-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+  }
+  .tmh-value {
+    font-size: 0.82rem;
+  }
+  .tmh-expand-btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 32px;
+    padding: 4px 8px;
+  }
+  .weather-strip {
+    margin-top: 4px;
+    padding: 5px 8px;
+    font-size: 0.76rem;
+  }
+  .mcb-telemetry-row {
+    margin-top: 4px;
+    gap: 4px;
+  }
+  .mcb-status-line {
+    margin-top: 4px;
+    font-size: 0.78rem;
+  }
+}
+
+/* ============================================================================
+   ZADÁNÍ #08 (Verze v1.0): Průvodce výpravou, Živý Avatar, Stopy pohorek a Navigace
+   ============================================================================ */
+
+/* 1. Jednoduchý Průvodce před výpravou (.trip-wizard-sheet) */
+.trip-wizard-sheet {
+  margin: 0 0 12px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #faf4e4 0%, #f1e6cc 100%);
+  border: 2px solid rgba(92, 67, 36, 0.28);
+  box-shadow: 0 8px 24px rgba(32, 24, 14, 0.14);
+  color: #241a0e;
+  overflow: hidden;
+}
+
+.trip-wizard-sheet.collapsed .trip-wizard-body {
+  display: none !important;
+}
+
+.trip-wizard-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 16px;
+  background: rgba(60, 44, 24, 0.07);
+  border-bottom: 1px solid rgba(92, 67, 36, 0.16);
+}
+
+.trip-wizard-sheet.collapsed .trip-wizard-head {
+  border-bottom: none;
+}
+
+.trip-wizard-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.trip-wizard-eyebrow {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #5b4324;
+}
+
+.trip-wizard-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #1f160c;
+}
+
+.trip-wizard-body {
+  padding: 12px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.wizard-step-card {
+  background: rgba(255, 252, 244, 0.86);
+  border: 1px solid rgba(92, 67, 36, 0.2);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wizard-step-badge {
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #2d5934;
+}
+
+.wizard-scenario-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 8px;
+}
+
+.wizard-scenario-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 2px solid rgba(92, 67, 36, 0.22);
+  background: #fffdf8;
+  color: #241a0e;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+}
+
+.wizard-scenario-btn:hover {
+  border-color: #3c6e47;
+}
+
+.wizard-scenario-btn.active {
+  border-color: #2d5934;
+  background: #eaf4e2;
+  box-shadow: 0 3px 10px rgba(45, 89, 52, 0.14);
+}
+
+.wiz-scen-icon {
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.wizard-scenario-btn span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wizard-scenario-btn strong {
+  font-size: 0.88rem;
+}
+
+.wizard-scenario-btn small {
+  font-size: 0.75rem;
+  color: #5c4b37;
+}
+
+.wizard-home-panel {
+  margin-top: 4px;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(235, 224, 198, 0.48);
+  border: 1px dashed rgba(92, 67, 36, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wizard-search-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.wizard-search-input {
+  flex: 1 1 200px;
+  min-height: 36px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(92, 67, 36, 0.35);
+  background: #fff;
+  color: #1f160c;
+  font-size: 0.86rem;
+}
+
+.wizard-preset-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.wiz-preset-chip {
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(92, 67, 36, 0.28);
+  background: #fffdf7;
+  color: #2c1e0f;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.wiz-preset-chip:hover {
+  background: #eaf4e2;
+  border-color: #2d5934;
+}
+
+.wizard-home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.wizard-saved-trips {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wizard-origin-status {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #4a3a26;
+}
+
+.wizard-field-group {
+  display: flex;
+  flex-direction: column;
   gap: 5px;
 }
-.fake-gps-body {
+
+.wizard-field-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #473621;
+}
+
+.wizard-cat-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.wiz-cat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(92, 67, 36, 0.26);
+  background: #fffdf8;
+  color: #2b1e10;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.wiz-cat-chip.selected {
+  background: #2d5934;
+  color: #fff;
+  border-color: #1e3f24;
+}
+
+.wizard-dist-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.wizard-diff-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 6px;
+}
+
+.wizard-diff-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  border: 1.5px solid rgba(92, 67, 36, 0.24);
+  background: #fffdf8;
+  color: #241a0e;
+  cursor: pointer;
+  text-align: left;
+}
+
+.wizard-diff-btn strong {
+  font-size: 0.82rem;
+}
+
+.wizard-diff-btn small {
+  font-size: 0.72rem;
+  color: #5c4b37;
+}
+
+.wizard-diff-btn.active {
+  background: #eaf4e2;
+  border-color: #2d5934;
+  box-shadow: 0 2px 8px rgba(45, 89, 52, 0.14);
+}
+
+.wizard-layers-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 2px;
+}
+
+.wizard-layer-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #2c1e10;
+  cursor: pointer;
+}
+
+.wizard-step3-actions {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-.fake-gps-section {
-  background: rgba(0, 0, 0, 0.22);
-  border-radius: 12px;
-  padding: 8px 10px;
-}
-.fake-gps-section-label {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: #a7baa0;
-  font-weight: 750;
-  margin-bottom: 6px;
-}
-.dpad-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-}
-.dpad-btn {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
-  border-radius: 8px;
-  padding: 8px 4px;
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.dpad-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
-}
-.dpad-btn:active {
-  transform: scale(0.95);
-}
-.dpad-stop {
-  background: rgba(214, 54, 41, 0.35);
-  border-color: rgba(214, 54, 41, 0.6);
-  color: #ff9b94;
-}
-.dpad-stop:hover {
-  background: rgba(214, 54, 41, 0.55);
-}
-.fake-gps-btn {
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  padding: 6px 10px;
-  border-radius: 8px;
-  font-size: 11px;
-  font-weight: 650;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.fake-gps-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-.fake-gps-btn.active {
-  background: #d8e99e;
-  color: #193e32;
-  border-color: #d8e99e;
-  font-weight: 800;
-}
-.fake-gps-btn.small {
-  padding: 4px 8px;
-  font-size: 10px;
-}
-.fake-gps-btn.mini {
-  padding: 4px 6px;
-  font-size: 10px;
-}
-.fake-gps-btn.full {
-  width: 100%;
-}
-.fake-gps-btn.lime {
-  background: #d8e99e;
-  color: #193e32;
-  border-color: #d8e99e;
-}
-.fake-gps-btn.gold {
-  background: #f5b82e;
-  color: #2c1d11;
-  border-color: #f5b82e;
-}
-.fake-gps-btn.danger {
-  color: #ff9b94;
-}
-.fake-gps-row {
-  display: flex;
-  gap: 6px;
-}
-.fake-gps-row .fake-gps-btn {
-  flex: 1;
-}
-.speed-presets-row,
-.accuracy-presets-row {
+
+.wizard-route-preview {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #eaf4e2;
+  border: 1.5px solid #2d5934;
 }
-.slider-row {
+
+.wizard-route-preview-stats strong {
+  font-size: 0.88rem;
+  color: #1c3b21;
+}
+
+.wizard-go-btn {
+  font-weight: 800;
+  padding: 10px 16px;
+  font-size: 0.92rem;
+}
+
+/* 2. Živý animovaný Avatar hráče na mapě + zlatá orbitální šipka (.player-avatar-marker) */
+.player-avatar-marker-anchor {
+  background: transparent !important;
+  border: 0 !important;
+  pointer-events: none;
+}
+
+.player-avatar-marker {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: avatarIdleBreathe 2.8s ease-in-out infinite;
+  will-change: transform;
+}
+
+.player-avatar-marker.is-walking {
+  animation: avatarWalkBob 0.55s ease-in-out infinite alternate;
+}
+
+.avatar-medallion-core {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fffdf7 0%, #f1e3c6 100%);
+  border: 2.5px solid #d49b27;
+  box-shadow: 0 4px 12px rgba(20, 14, 6, 0.42), 0 0 0 2px rgba(255, 255, 255, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.avatar-medallion-core svg {
+  width: 34px;
+  height: 34px;
+  display: block;
+}
+
+.avatar-direction-pointer {
+  position: absolute;
+  inset: 0;
+  width: 54px;
+  height: 54px;
+  pointer-events: none;
+  transition: transform 0.22s ease-out;
+  z-index: 3;
+}
+
+.avatar-direction-arrow {
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 16px;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.55));
+}
+
+@keyframes avatarIdleBreathe {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+@keyframes avatarWalkBob {
+  0% {
+    transform: translateY(0) rotate(-3deg);
+  }
+  100% {
+    transform: translateY(-4px) rotate(3deg);
+  }
+}
+
+/* 3. Stopy pohorek (.footprint-marker, 18×18 px) */
+.footprint-marker-anchor {
+  background: transparent !important;
+  border: 0 !important;
+  pointer-events: none;
+}
+
+.footprint-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  will-change: transform, opacity;
+  filter: drop-shadow(0 1px 1px rgba(255, 255, 255, 0.32));
+}
+
+/* 5. Kompaktní odbočovací navigace vedle kompasu (.turn-nav-pill) */
+.turn-nav-pill {
+  position: absolute;
+  top: 12px;
+  left: 128px;
+  max-width: min(430px, calc(100% - 420px));
+  z-index: 650;
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 6px;
+  padding: 7px 11px;
+  border-radius: 12px;
+  background: rgba(28, 21, 13, 0.9);
+  border: 1.5px solid rgba(245, 184, 46, 0.65);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.32);
+  color: #fdf8ec;
+  backdrop-filter: blur(6px);
 }
-.slider-row input[type="range"] {
-  flex: 1;
-  accent-color: #d8e99e;
+
+.turn-nav-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(245, 184, 46, 0.22);
+  color: #ffd25a;
+  font-size: 1.1rem;
+  font-weight: 900;
+  flex-shrink: 0;
 }
-.slider-row span {
-  font-size: 11px;
-  font-weight: 650;
+
+.turn-nav-text {
+  flex: 1 1 auto;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #fff9ec;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.voice-nav-pill-btn {
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.1);
+  color: #f7efe0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.voice-nav-pill-btn.active {
+  background: #c5e86c;
+  color: #18260d;
+  border-color: #c5e86c;
+}
+
+.quest-hud-panel.collapsed .qhud-compact {
+  display: none;
+}
+
+.qhud-compact-pill-title {
+  font-size: 0.78rem;
+  color: #fdf8ec;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.fake-gps-status-bar {
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
-  padding-top: 8px;
+
+.return-home-btn {
+  border-color: rgba(245, 184, 46, 0.65) !important;
+}
+
+@media (max-width: 820px) {
+  .turn-nav-pill {
+    left: 126px;
+    right: 10px;
+    max-width: none;
+    padding: 6px 9px;
+    gap: 6px;
+  }
+  .turn-nav-text {
+    font-size: 0.74rem;
+  }
+  .quest-hud-panel {
+    top: 66px;
+    left: 126px;
+    right: 10px;
+    max-width: none;
+    width: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .trip-wizard-head {
+    padding: 10px 12px;
+  }
+  .trip-wizard-title {
+    font-size: 0.94rem;
+  }
+  .trip-wizard-body {
+    padding: 10px 12px 12px;
+  }
+  .wizard-scenario-row {
+    grid-template-columns: 1fr;
+  }
+  .wizard-diff-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================================
+   ZADÁNÍ #08 & v1.0: 3 herní styly, Hero karta dalšího checkpointu,
+   Persistentní detail místa, Testovací simulátor pod mapou a Nastavení pilulkami
+   ========================================================================== */
+
+/* 3 herní styly */
+.wizard-mode-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+.wizard-mode-btn {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 2px solid #d4c5a9;
+  border-radius: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  color: #2b2118;
+}
+.wizard-mode-btn:hover {
+  background: #ffffff;
+  border-color: #8da949;
+  transform: translateY(-1px);
+}
+.wizard-mode-btn.active {
+  background: #fbf7ee;
+  border-color: #3c6e47;
+  box-shadow: 0 4px 14px rgba(60, 110, 71, 0.2), inset 0 0 0 1px #3c6e47;
+}
+.wizard-mode-btn .wmode-icon {
+  font-size: 1.8rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.wizard-mode-btn .wmode-text {
   display: flex;
   flex-direction: column;
   gap: 3px;
-  font-size: 10.5px;
-  color: #d1ded0;
 }
-.fake-gps-status-bar .status-stamp.waiting {
-  color: #f5b82e;
+.wizard-mode-btn .wmode-text strong {
+  font-size: 0.98rem;
+  color: #1e2d24;
+}
+.wizard-mode-btn .wmode-text small {
+  font-size: 0.8rem;
+  color: #55483a;
+  line-height: 1.35;
+}
+
+/* Výrazná Hero karta dalšího checkpointu přímo nad mapou */
+.next-checkpoint-hero-card {
+  margin-bottom: 8px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #1e2e22 0%, #283e2e 100%);
+  color: #f7f9ed;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+  border: 1.5px solid #5a7d62;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+.hero-card-inner {
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.hero-card-target-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 280px;
+}
+.hero-card-step-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #ffd25a;
+}
+.hero-dir-pill {
+  background: rgba(255, 210, 90, 0.18);
+  border: 1px solid rgba(255, 210, 90, 0.4);
+  color: #ffe68a;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 0.72rem;
+}
+.hero-card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hero-kind-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+.hero-checkpoint-name {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 850;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+.hero-card-stats-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+.hero-stat-chip {
+  font-size: 0.82rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 3px 9px;
+  border-radius: 8px;
+  color: #e5ecd6;
+}
+.hero-stat-chip strong {
+  color: #ffffff;
+}
+.hero-stat-chip.dist strong {
+  color: #ffd25a;
+}
+.hero-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hero-free-walk, .hero-complete {
+  padding: 12px 16px;
+}
+.hero-card-badge {
+  display: inline-block;
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #c9db98;
+  margin-bottom: 2px;
+}
+.hero-card-badge.completed {
+  color: #ffd25a;
+}
+.hero-card-title {
+  display: block;
+  font-size: 1.05rem;
+  color: #ffffff;
+}
+.hero-card-sub {
+  display: block;
+  font-size: 0.82rem;
+  color: #d1dcbe;
+  margin-top: 2px;
+}
+
+/* Persistentní detail místa */
+.place-detail-sheet {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 1000;
+  max-width: 480px;
+  margin: 0 auto;
+  pointer-events: auto;
+}
+.pds-card {
+  background: rgba(24, 38, 29, 0.96);
+  backdrop-filter: blur(14px);
+  border: 1.5px solid #8da949;
+  border-radius: 16px;
+  padding: 14px 16px;
+  color: #f7f9ed;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45);
+  animation: pdsSlideUp 0.22s ease-out;
+}
+@keyframes pdsSlideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.pds-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.pds-kind-badge {
+  display: inline-block;
+  font-size: 0.72rem;
   font-weight: 750;
-  animation: radarPulse 1.5s infinite;
+  color: #c9db98;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
 }
-@media (max-width: 480px) {
-  .fake-gps-panel {
-    top: 8px;
-    right: 8px;
-    left: 8px;
-    width: auto;
+.pds-title {
+  margin: 0;
+  font-size: 1.15rem;
+  color: #ffffff;
+}
+.pds-close-btn {
+  padding: 2px 8px !important;
+  font-size: 1rem !important;
+  color: #c9db98 !important;
+}
+.pds-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+  font-size: 0.84rem;
+  color: #d7e2c6;
+}
+.pds-stamp-badge {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-weight: 700;
+}
+.pds-stamp-badge.visited {
+  background: #2a5a36;
+  color: #bbf7d0;
+}
+.pds-stamp-badge.lifetime {
+  background: #684a20;
+  color: #fed7aa;
+}
+.pds-stamp-badge.pending {
+  background: rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+}
+.pds-desc {
+  margin: 6px 0 10px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: #c2cfb4;
+}
+.pds-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+/* Testovací simulátor pod mapou (nepřekrývá mapu) */
+.simulator-test-zone {
+  margin: 12px 0 16px;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, #18261c 0%, #223727 100%);
+  border: 2px dashed #648a6a;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+.simulator-test-zone .fake-gps-panel {
+  position: static !important;
+  top: auto !important;
+  right: auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+/* Nastavení pilulkovými přepínači [ ✓ Zapnuto ] [ Vypnuto ] */
+.settings-pills-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.settings-pill-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid #dcd1be;
+  border-radius: 12px;
+  flex-wrap: wrap;
+}
+.settings-pill-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 240px;
+}
+.settings-pill-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+.settings-pill-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.settings-pill-texts strong {
+  font-size: 0.92rem;
+  color: #1e2d24;
+}
+.settings-pill-texts small {
+  font-size: 0.78rem;
+  color: #5d5142;
+}
+.settings-pill-buttons {
+  display: inline-flex;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1.5px solid #2d4533;
+  flex-shrink: 0;
+}
+.settings-pill-btn {
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-weight: 750;
+  border: none;
+  cursor: pointer;
+  background: #f4efe4;
+  color: #4a3e30;
+  transition: all 0.15s ease;
+}
+.settings-pill-btn.btn-on.selected {
+  background: #2f6b3b;
+  color: #ffffff;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+.settings-pill-btn.btn-off.selected {
+  background: #8b3a30;
+  color: #ffffff;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+/* ==========================================================================
+   ZADÁNÍ #09 (v1.1) — 10vteřinové zautomatizované mapové rozhraní (Fáze 1–4)
+   ========================================================================== */
+
+/* Fáze 1 & 3: Horní lišta s okamžitým výpočtem, přehledem bodů v trase a potvrzením [ ▶ VYRAZIT ] */
+.phase1-top-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  background: linear-gradient(135deg, #1b2d21 0%, #243b2b 100%);
+  border: 2px solid #d4af37;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  color: #f8f5ec;
+}
+.phase1-top-bar.is-walking {
+  border-color: #65a34e;
+  background: linear-gradient(135deg, #16291c 0%, #1f3a27 100%);
+}
+.p1-top-main-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.p1-top-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.02rem;
+  line-height: 1.35;
+  flex: 1 1 240px;
+}
+.p1-top-icon {
+  font-size: 1.35rem;
+  flex-shrink: 0;
+}
+.p1-top-text strong {
+  color: #fde68a;
+  font-weight: 800;
+}
+.p1-mode-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(212, 175, 55, 0.2);
+  border: 1px solid rgba(253, 230, 138, 0.45);
+  color: #fef08a;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+.p1-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+.p1-top-util-btn {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #f8f5ec !important;
+  border: 1.5px solid rgba(212, 175, 55, 0.55) !important;
+  border-radius: 10px !important;
+  padding: 7px 11px !important;
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  cursor: pointer;
+}
+.p1-top-util-btn:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-color: #fde68a !important;
+}
+.phase1-go-btn {
+  padding: 10px 22px !important;
+  font-size: 1.05rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.03em;
+  border-radius: 12px !important;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  color: #141c15 !important;
+  border: 2px solid #fef08a !important;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.45);
+  cursor: pointer;
+}
+.phase1-go-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+}
+
+/* Vizuální itinerář trasy v horní liště (body trasy + šipky + × odebrání) */
+.top-route-itinerary-wrap {
+  border-top: 1px solid rgba(212, 175, 55, 0.28);
+  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.top-route-itinerary-header,
+.top-itinerary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.itinerary-eyebrow,
+.top-itinerary-label {
+  font-size: 0.78rem;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  color: #e2e8f0;
+}
+.p1-collapse-toggle-btn,
+.top-itinerary-toggle-btn {
+  padding: 4px 10px !important;
+  font-size: 0.76rem !important;
+  font-weight: 750 !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #fde68a !important;
+  border: 1px solid rgba(253, 230, 138, 0.45) !important;
+  cursor: pointer;
+}
+.top-itinerary-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+}
+.top-route-itinerary-strip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.itinerary-arrow {
+  color: #fde68a;
+  font-size: 0.9rem;
+  font-weight: 800;
+  opacity: 0.9;
+}
+.itinerary-start-pill,
+.itinerary-end-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.79rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #f8f5ec;
+}
+.itinerary-start-pill {
+  cursor: pointer;
+  border-color: rgba(74, 222, 128, 0.55);
+  background: rgba(22, 101, 52, 0.45);
+}
+.itinerary-start-pill:hover {
+  background: rgba(22, 101, 52, 0.68);
+}
+.itinerary-end-pill.loop {
+  border-color: rgba(56, 189, 248, 0.5);
+  background: rgba(12, 74, 110, 0.45);
+  color: #e0f2fe;
+}
+.itinerary-stop-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1.5px solid rgba(212, 175, 55, 0.55);
+  overflow: hidden;
+  transition: all 0.14s ease;
+}
+.itinerary-stop-pill.is-next {
+  background: rgba(202, 138, 4, 0.32);
+  border-color: #fde047;
+  box-shadow: 0 0 0 2px rgba(253, 224, 71, 0.2);
+}
+.itinerary-stop-pill.is-visited {
+  background: rgba(34, 197, 94, 0.22);
+  border-color: #4ade80;
+}
+.itinerary-stop-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px 4px 10px;
+  background: transparent;
+  border: none;
+  color: #f8f5ec;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.itinerary-stop-main:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.itinerary-stop-num {
+  color: #fde68a;
+  font-weight: 800;
+}
+.itinerary-stop-dist {
+  color: #cbd5c0;
+  font-weight: 600;
+  font-size: 0.73rem;
+}
+.itinerary-stop-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.22);
+  border: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fca5a5;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+.itinerary-stop-remove:hover {
+  background: rgba(220, 38, 38, 0.55);
+  color: #ffffff;
+}
+.itinerary-empty {
+  font-size: 0.83rem;
+  color: #cbd5c0;
+  font-style: italic;
+}
+
+/* Rohová lišta mapy */
+.walk-map-toolbar-compact {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.map-corner-icon-btn {
+  min-width: 40px !important;
+  height: 38px !important;
+  padding: 0 11px !important;
+  font-size: 0.85rem !important;
+  font-weight: 750 !important;
+  border-radius: 12px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(24, 38, 28, 0.92) !important;
+  color: #f8f5ec !important;
+  border: 1.5px solid rgba(212, 175, 55, 0.65) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+.map-corner-icon-btn.active {
+  background: rgba(45, 90, 56, 0.95) !important;
+  border-color: #fde68a !important;
+}
+
+/* Fáze 1: Přehledný panel voleb trasy a 3 herních režimů nad mapou (nezakrývá mapu) */
+.phase1-bottom-bar,
+.phase1-planner-card {
+  position: relative;
+  z-index: 10;
+  margin-bottom: 8px;
+  background: rgba(24, 36, 27, 0.96);
+  border: 1.5px solid rgba(212, 175, 55, 0.65);
+  border-radius: 14px;
+  padding: 9px 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #f6f2e8;
+}
+.p1-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.p1-row-label {
+  font-size: 0.74rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #fde68a;
+  min-width: 112px;
+}
+.p1-btn-group {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  flex: 1 1 auto;
+}
+.p1-choice-btn {
+  padding: 5px 10px;
+  border-radius: 9px;
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: #eef2e6;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.14s ease;
+}
+.p1-choice-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+.p1-choice-btn.active {
+  background: linear-gradient(135deg, #ca8a04 0%, #a16207 100%);
+  color: #ffffff;
+  border-color: #fde047;
+  box-shadow: 0 2px 10px rgba(202, 138, 4, 0.4);
+}
+.p1-divider {
+  color: rgba(255, 255, 255, 0.28);
+  align-self: center;
+  padding: 0 2px;
+}
+
+/* Fáze 3: Bublina po kliknutí na ikonu v mapě */
+.phase3-bubble-card {
+  max-width: 400px;
+}
+.phase3-bubble-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+.phase3-action-btn {
+  width: 100%;
+  justify-content: center;
+  padding: 11px 14px !important;
+  font-size: 0.94rem !important;
+  font-weight: 750 !important;
+  border-radius: 12px !important;
+  text-align: center;
+}
+
+/* Fáze 4: Jediné spodní tlačítko během chůze [ 🏁 Dokončit / Zkrátit ] */
+.phase4-finish-bar {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 14px;
+  z-index: 630;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: min(94%, 420px);
+  pointer-events: none;
+}
+.phase4-finish-bar > * {
+  pointer-events: auto;
+}
+.phase4-main-trigger-btn {
+  width: 100%;
+  padding: 12px 20px !important;
+  font-size: 1rem !important;
+  font-weight: 800 !important;
+  border-radius: 14px !important;
+  background: linear-gradient(135deg, #1e3224 0%, #2a4532 100%) !important;
+  color: #fef08a !important;
+  border: 2px solid #d4af37 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+}
+.phase4-options-sheet {
+  width: 100%;
+  background: rgba(22, 34, 25, 0.97);
+  border: 2px solid #d4af37;
+  border-radius: 16px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+}
+.phase4-option-btn {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.07);
+  color: #f8f5ec;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.phase4-option-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: #fde047;
+}
+.phase4-option-btn.shorten {
+  border-left: 4px solid #38bdf8;
+}
+.phase4-option-btn.finish-now {
+  border-left: 4px solid #4ade80;
+}
+.p4-opt-icon {
+  font-size: 1.45rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.p4-opt-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.p4-opt-text strong {
+  font-size: 0.95rem;
+  color: #fef08a;
+}
+.p4-opt-text small {
+  font-size: 0.8rem;
+  color: #d1d9c8;
+  line-height: 1.35;
+}
+.phase1-bottom-bar[hidden],
+.phase4-finish-bar[hidden],
+.phase4-options-sheet[hidden],
+.phase1-go-btn[hidden],
+.p1-top-util-btn[hidden],
+.p1-collapse-toggle-btn[hidden],
+.scan-map-area-btn[hidden] {
+  display: none !important;
+}
+
+/* Tlačítko pro načtení zajímavých míst z aktuálního výřezu mapy (kdekoliv v ČR) */
+.scan-map-area-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 680;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 2px solid #d8b25c;
+  background: rgba(24, 38, 28, 0.92);
+  color: #fef08a;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  max-width: calc(100% - 110px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.scan-map-area-btn:hover {
+  background: #253d2c;
+  border-color: #fde047;
+  transform: translateY(-1px);
+}
+.scan-map-area-btn.is-panned-away {
+  background: linear-gradient(135deg, #b58938 0%, #e0b456 100%);
+  color: #1c1306;
+  border-color: #fef08a;
+  box-shadow: 0 8px 24px rgba(216, 178, 92, 0.55);
+}
+.scan-map-area-btn.is-loading,
+.p1-scan-map-btn.is-loading {
+  opacity: 0.75;
+  cursor: wait;
+}
+
+.p1-scan-map-btn {
+  border-color: #fde047 !important;
+  background: linear-gradient(135deg, rgba(216, 178, 92, 0.26), rgba(181, 137, 56, 0.42)) !important;
+  color: #fef08a !important;
+  font-weight: 800 !important;
+}
+.p1-scan-map-btn:hover {
+  background: linear-gradient(135deg, #d8b25c, #b58938) !important;
+  color: #1c1306 !important;
+}
+
+.p1-search-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.p1-search-input {
+  min-width: 220px;
+  padding: 6px 11px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(216, 178, 92, 0.45);
+  background: rgba(15, 25, 18, 0.85);
+  color: #f8f5ec;
+  font-size: 0.82rem;
+}
+.p1-search-input::placeholder {
+  color: #9eb095;
+}
+.p1-search-input:focus {
+  outline: none;
+  border-color: #fde047;
+  box-shadow: 0 0 0 2px rgba(253, 224, 71, 0.25);
+}
+
+@media (max-width: 640px) {
+  .phase1-top-bar {
+    padding: 10px 12px;
   }
+  .p1-top-summary {
+    font-size: 0.92rem;
+  }
+  .phase1-go-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .p1-row-label {
+    min-width: 100%;
+  }
+  .scan-map-area-btn {
+    font-size: 0.76rem;
+    padding: 6px 12px;
+  }
+  .p1-search-input {
+    min-width: 160px;
+    flex: 1;
+  }
+}
+
+/* Ověřené reálné fotky bodů zájmu (Wikimedia Commons CC/PD) s fallbackem na bitmap/ilustraci */
+.czekpoint-marker-badge.has-real-photo {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  max-width: 32px;
+  max-height: 32px;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: #17382c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  flex-shrink: 0;
+  aspect-ratio: 1 / 1;
+}
+.czekpoint-marker-photo-wrap {
+  width: 100%;
+  height: 100%;
+  min-width: 100%;
+  min-height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #1c2c20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  aspect-ratio: 1 / 1;
+  position: relative;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
+}
+.czekpoint-marker-photo-img {
+  width: 100%;
+  height: 100%;
+  min-width: 100%;
+  min-height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  border-radius: 50%;
+  flex-shrink: 0;
+  aspect-ratio: 1 / 1;
+}
+.czekpoint-marker-badge.has-real-photo .czekpoint-marker-order {
+  top: -4px;
+  right: -4px;
+  z-index: 10;
+}
+
+.pds-media-box {
+  position: relative;
+  width: 100%;
+  height: 148px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  background: #152218;
+  border: 1.5px solid rgba(216, 178, 92, 0.38);
+}
+.pds-photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+.pds-photo-img.is-fallback-bitmap {
+  object-fit: contain;
+  padding: 16px;
+}
+.pds-photo-source-badge {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+.pds-photo-source-badge.is-verified {
+  background: rgba(20, 42, 26, 0.88);
+  color: #bbf7d0;
+  border: 1px solid #4ade80;
+}
+.pds-photo-source-badge.is-bitmap {
+  background: rgba(30, 38, 32, 0.84);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.hero-card-thumb-wrap {
+  width: 68px;
+  height: 68px;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid #d8b25c;
+  background: #16241a;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.32);
+}
+.hero-card-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ZADÁNÍ FLASH #09 (Bod 1): Pevná spodní akční lišta přímo u mapy (.map-action-bar)
+   Z-index 850 zaručuje, že se NIKDY neschová pod žádný panel a je vždy okamžitě dostupná */
+.map-action-bar {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 850;
+  width: min(95%, 580px);
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.map-action-bar > * {
+  pointer-events: auto;
+}
+.mab-inactive-group,
+.mab-active-group {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.mab-btn {
+  border-radius: 14px !important;
+  font-weight: 800 !important;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.48) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+}
+.mab-btn:active {
+  transform: scale(0.97) !important;
+}
+.mab-start-btn {
+  background: linear-gradient(135deg, #15803d 0%, #16a34a 100%) !important;
+  color: #f0fdf4 !important;
+  border: 2px solid #86efac !important;
+  font-size: 1.05rem !important;
+  padding: 13px 24px !important;
+  min-height: 50px !important;
+  flex: 1.4;
+  min-width: 200px;
+}
+.mab-start-btn:hover {
+  background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(34, 197, 94, 0.45) !important;
+}
+.mab-planner-btn {
+  background: #18261ceb !important;
+  color: #fef08a !important;
+  border: 1.5px solid #d4af37 !important;
+  font-size: 0.92rem !important;
+  padding: 12px 18px !important;
+  min-height: 50px !important;
+}
+.mab-planner-btn:hover {
+  background: #253d2c !important;
+  border-color: #fef08a !important;
+}
+.mab-finish-btn {
+  background: linear-gradient(135deg, #b91c1c 0%, #c2410c 100%) !important;
+  color: #ffffff !important;
+  border: 2px solid #fecaca !important;
+  font-size: 1.05rem !important;
+  padding: 13px 24px !important;
+  min-height: 50px !important;
+  flex: 1.4;
+  min-width: 210px;
+  box-shadow: 0 8px 26px rgba(185, 28, 28, 0.55) !important;
+}
+.mab-finish-btn:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(239, 68, 68, 0.65) !important;
+}
+.mab-shorten-btn {
+  background: #18261ceb !important;
+  color: #7dd3fc !important;
+  border: 1.5px solid #38bdf8 !important;
+  font-size: 0.88rem !important;
+  padding: 11px 16px !important;
+  min-height: 50px !important;
+}
+.mab-shorten-btn:hover {
+  background: #164e63 !important;
+  border-color: #bae6fd !important;
+}
+.mab-pause-btn {
+  background: #18261ceb !important;
+  color: #fef08a !important;
+  border: 1.5px solid #d4af37 !important;
+  font-size: 0.88rem !important;
+  padding: 11px 14px !important;
+  min-height: 50px !important;
+}
+.mab-pause-btn:hover {
+  background: #253d2c !important;
+}
+
+/* Vylepšení a spolehlivost tlačítek přiblížení / oddálení na mapě */
+.leaflet-control-zoom {
+  border: 1.5px solid #d4af37 !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45) !important;
+  background: #18261ceb !important;
+  margin-top: 12px !important;
+  margin-left: 12px !important;
+}
+.leaflet-control-zoom a {
+  background: #18261ceb !important;
+  color: #fef08a !important;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.4) !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  width: 34px !important;
+  height: 34px !important;
+  line-height: 34px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-decoration: none !important;
+}
+.leaflet-control-zoom a:hover {
+  background: #253d2c !important;
+  color: #ffffff !important;
+}
+
+/* ==========================================================================
+   ZADÁNÍ #10 (v1.2): Zjednodušení UX pro 50+, Lupa v mapě, Pravý sloupec tlačítek,
+   Fotky míst (88x72 px), Výškový profil, Cílové okno a Kapesní režim (#000000)
+   ========================================================================== */
+
+/* Posun zoom tlačítek a kompasu pod horní vyhledávací lištu v mapě */
+.leaflet-top.leaflet-left .leaflet-control-zoom {
+  margin-top: 74px !important;
+  margin-left: 12px !important;
+}
+
+.compass-widget {
+  top: 156px !important;
+  left: 12px !important;
+}
+
+#compass-rose-svg,
+.compass-rose-svg {
+  transition: transform 0.25s ease-out !important;
+  will-change: transform;
+}
+
+/* 2.1 Velká přehledná tlačítka herního režimu a filtrů (min-height: 52px, font-size: 16px, font-weight: 700) */
+.p1-gamemode-row {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.p1-gamemode-btn,
+.p1-cat-btn {
+  min-height: 52px !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  padding: 12px 16px !important;
+  border-radius: 14px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+  transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.12s ease, box-shadow 0.16s ease !important;
+}
+
+.p1-gamemode-btn:not(.active),
+.p1-cat-btn:not(.active) {
+  background: #f8f4ea !important;
+  color: #2b2118 !important;
+  border: 2px solid #cbbba0 !important;
+  box-shadow: none !important;
+}
+
+.p1-gamemode-btn.active,
+.p1-cat-btn.active {
+  background: #1f5f3b !important;
+  color: #ffffff !important;
+  border: 2px solid #86efac !important;
+  box-shadow: 0 6px 16px rgba(21, 128, 61, 0.32) !important;
+}
+
+.p1-gamemode-btn.active strong,
+.p1-gamemode-btn.active small,
+.p1-gamemode-btn.active span {
+  color: #ffffff !important;
+}
+
+/* 2.2 Horní vyhledávací pole s lupou přímo v mapě */
+.map-search-overlay {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 800;
+  pointer-events: auto;
+  max-width: 680px;
+}
+
+.map-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 252, 245, 0.97);
+  border: 2px solid #3c6e47;
+  border-radius: 14px;
+  padding: 6px 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  min-height: 48px;
+}
+
+.map-search-icon {
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.map-search-input {
+  flex: 1;
+  border: none !important;
+  background: transparent !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: #1c2820 !important;
+  outline: none !important;
+  min-width: 0;
+  padding: 4px 2px !important;
+}
+
+.map-search-input::placeholder {
+  color: #5c5346;
+  font-weight: 500;
+}
+
+.map-search-clear {
+  border: none;
+  background: #e6decb;
+  color: #2b2118;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.map-search-results {
+  margin-top: 6px;
+  background: #fffdf8;
+  border: 2px solid #3c6e47;
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 6px;
+}
+
+.map-search-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #e9e1d2;
+  border-radius: 10px;
+}
+
+.map-search-item:last-child {
+  border-bottom: none;
+}
+
+.map-search-item:hover {
+  background: #f5efe2;
+}
+
+.map-search-item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.map-search-item-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #1c2820;
+}
+
+.map-search-item-sub {
+  font-size: 0.82rem;
+  color: #5a5043;
+}
+
+.map-search-item-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.map-search-action-btn {
+  padding: 8px 12px !important;
+  min-height: 40px !important;
+  font-size: 0.88rem !important;
+  font-weight: 700 !important;
+  border-radius: 10px !important;
+  cursor: pointer;
+}
+
+.map-search-action-btn.start-here {
+  background: #15803d !important;
+  color: #ffffff !important;
+  border: 1.5px solid #86efac !important;
+}
+
+.map-search-action-btn.add-stop {
+  background: #fef9c3 !important;
+  color: #1e293b !important;
+  border: 1.5px solid #ca8a04 !important;
+}
+
+/* 2.2 Svislý sloupec ovládacích tlačítek u pravého okraje mapy */
+.map-right-toolbar {
+  position: absolute !important;
+  right: 12px !important;
+  top: 74px !important;
+  left: auto !important;
+  bottom: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  z-index: 800 !important;
+  pointer-events: auto;
+}
+
+.map-right-btn {
+  min-width: 46px;
+  min-height: 46px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(24, 38, 28, 0.94);
+  color: #fef08a;
+  border: 1.5px solid #d4af37;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.38);
+  font-size: 0.9rem;
+  font-weight: 750;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: transform 0.14s ease, background-color 0.14s ease;
+}
+
+.map-base-btn { flex-direction: column; gap: 0; font-size: 1.05rem; line-height: 1.1; }
+.map-base-btn span { font-size: 0.64rem; }
+.map-base-btn[aria-pressed="true"] { background: #c5e1a8; color: #133a2a; }
+
+#walk-zoom-in,
+#walk-zoom-out {
+  min-width: 46px;
+  min-height: 46px;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.route-corner-dot {
+  display: block;
+  width: 8px;
+  height: 8px;
+  background: #f59e0b;
+  border: 1.5px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+.map-right-btn:hover {
+  background: #253d2c;
+  transform: translateY(-1px);
+}
+
+.map-right-btn.active {
+  background: #15803d;
+  color: #ffffff;
+  border-color: #86efac;
+}
+
+.offline-download-banner {
+  position: absolute;
+  top: 68px;
+  left: 56px;
+  right: 72px;
+  z-index: 820;
+  background: rgba(20, 42, 29, 0.96);
+  color: #ecfdf5;
+  border: 1.5px solid #6ee7b7;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  text-align: center;
+}
+
+/* 4. Fotky míst (88 x 72 px se zaoblenými rohy) a velká vzdálenost */
+.place-card-thumb,
+.pds-thumb {
+  width: 88px !important;
+  height: 72px !important;
+  border-radius: 10px !important;
+  object-fit: cover !important;
+  flex-shrink: 0 !important;
+  border: 1.5px solid rgba(141, 169, 73, 0.45);
+  background: #e9e2d0;
+}
+
+.place-distance-big {
+  font-size: 1.15rem !important;
+  font-weight: 850 !important;
+  color: #15803d !important;
+  background: #dcfce7;
+  border: 1.5px solid #86efac;
+  padding: 3px 10px;
+  border-radius: 10px;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+/* 5. Výškový profil trasy (.elevation-profile-card) */
+.elevation-profile-card {
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: linear-gradient(180deg, #fdfbf6 0%, #f4efe2 100%);
+  border: 1.5px solid #cbbba0;
+  border-radius: 14px;
+  color: #2b2118;
+}
+
+.epc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.epc-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #1e2d24;
+}
+
+.epc-stats {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 0.86rem;
+}
+
+.epc-stat.gain {
+  color: #15803d;
+  background: #dcfce7;
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+
+.epc-stat.loss {
+  color: #b45309;
+  background: #fef3c7;
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+
+.epc-stat.range {
+  color: #475569;
+  background: #e2e8f0;
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+
+.epc-svg-wrap {
+  width: 100%;
+  overflow: hidden;
+}
+
+.epc-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* 1.2 Krok 4: Příchod do cíle — velké přehledné dialogové okno */
+.arrival-goal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
+  background: rgba(12, 22, 16, 0.82);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.arrival-goal-dialog {
+  background: #fffdf8;
+  color: #1c2820;
+  border: 3px solid #15803d;
+  border-radius: 20px;
+  max-width: 480px;
+  width: 100%;
+  padding: 24px 20px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+  text-align: center;
+}
+
+.arrival-goal-title {
+  margin: 0 0 10px;
+  font-size: 1.45rem;
+  font-weight: 850;
+  color: #14532d;
+}
+
+.arrival-goal-sub {
+  margin: 0 0 20px;
+  font-size: 1.02rem;
+  color: #3f382e;
+  line-height: 1.45;
+}
+
+.arrival-goal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.arrival-goal-btn {
+  min-height: 56px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  border-radius: 14px;
+  padding: 14px 18px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.arrival-goal-btn.return-start {
+  background: #fef9c3;
+  color: #1e293b;
+  border-color: #ca8a04;
+}
+
+.arrival-goal-btn.finish-postcard {
+  background: linear-gradient(135deg, #15803d 0%, #16a34a 100%);
+  color: #ffffff;
+  border-color: #86efac;
+  box-shadow: 0 8px 22px rgba(21, 128, 61, 0.35);
+}
+
+/* 8.2 Kapesní režim (#000000 černá obrazovka šetřící 90 % baterie) */
+.pocket-mode-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: #000000;
+  color: #8fa882;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  text-align: center;
+  user-select: none;
+}
+
+.pocket-mode-box {
+  max-width: 360px;
+  width: 100%;
+  border: 1px solid #263829;
+  border-radius: 20px;
+  padding: 28px 20px;
+  background: #050806;
+}
+
+.pocket-mode-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #bbf7d0;
+  margin: 0 0 8px;
+}
+
+.pocket-mode-stats {
+  font-size: 1.4rem;
+  font-weight: 850;
+  color: #fef08a;
+  margin: 14px 0;
+}
+
+.pocket-mode-hint {
+  font-size: 0.92rem;
+  color: #6c806e;
+  margin-bottom: 20px;
+  line-height: 1.4;
+}
+
+.pocket-mode-unlock-btn {
+  min-height: 54px;
+  width: 100%;
+  border-radius: 14px;
+  background: #14261a;
+  color: #dcfce7;
+  border: 1.5px solid #3c6e47;
+  font-size: 1.02rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   DÁVKA 1 (Verze v1.4-part1):
+   1. Plovoucí indikátor načítání a výpočtu v mapě (#map-busy-indicator, .map-spinner)
+   2. Sjednocená tlačítka, nabídka ⋯ Další a nepropustná Pauza
+   3. Oprava celé obrazovky (.walk-map-wrap.zen-mode) a mobilního zobrazení (360 / 390 px)
+   ========================================================================== */
+
+.map-busy-indicator {
+  position: absolute;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1200;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: rgba(20, 34, 25, 0.96);
+  color: #fef08a;
+  border: 2px solid #d4af37;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.48);
+  font-size: 0.88rem;
+  font-weight: 800;
+  line-height: 1.25;
+  max-width: calc(100% - 28px);
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+}
+
+.map-busy-indicator[hidden] {
+  display: none !important;
+}
+
+.map-spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(254, 240, 138, 0.28);
+  border-top-color: #fef08a;
+  animation: mapSpinnerRotate 0.75s linear infinite;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+@keyframes mapSpinnerRotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.map-busy-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Kontrastní purpurové šipky směru trasy (#9333ea s lemem #2e1065) */
+.route-dir-arrow {
+  color: #ffffff !important;
+  text-shadow: 0 0 4px #2e1065, 0 0 8px #9333ea !important;
+}
+
+/* Sjednocená tlačítka v pravém sloupci mapy (>= 44x44 px) */
+.map-right-btn,
+#walk-zoom-in,
+#walk-zoom-out,
+#walk-search-toggle,
+#walk-zen-toggle {
+  min-width: 46px !important;
+  min-height: 46px !important;
+  width: 46px;
+  height: 46px;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 20px !important;
+}
+
+.map-right-btn[hidden] {
+  display: none !important;
+}
+
+/* Nabídka ⋯ Další v akční liště mapy */
+.mab-more-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.mab-more-btn {
+  background: #18261ceb !important;
+  color: #f8f5ec !important;
+  border: 1.5px solid rgba(212, 175, 55, 0.75) !important;
+  font-size: 0.9rem !important;
+  padding: 11px 14px !important;
+  min-height: 50px !important;
+  min-width: 48px !important;
+}
+
+.mab-more-menu {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  right: 0;
+  z-index: 1250;
+  min-width: 230px;
+  background: rgba(20, 33, 24, 0.98);
+  border: 2px solid #d4af37;
+  border-radius: 16px;
+  padding: 8px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.58);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mab-more-menu[hidden] {
+  display: none !important;
+}
+
+.mab-more-item {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.07);
+  color: #f8f5ec;
+  font-size: 0.88rem;
+  font-weight: 750;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.mab-more-item:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: #fef08a;
+}
+
+/* Oprava celé obrazovky (.walk-map-wrap.zen-mode) a mobilního zobrazení (360 / 390 px) */
+.walk-map-wrap.zen-mode {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  max-width: 100vw !important;
+  max-height: 100dvh !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  border: 0 !important;
+  z-index: 9999 !important;
+}
+
+.walk-map-wrap.zen-mode #walk-map {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.walk-map-wrap.zen-mode .zen-close-btn,
+.walk-map-wrap.zen-mode .zen-follow-fab,
+.zen-close-btn[hidden],
+.zen-follow-fab[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 420px) {
+  .map-search-overlay {
+    left: 8px;
+    right: 8px;
+    top: 8px;
+  }
+  .map-right-toolbar {
+    right: 8px !important;
+    top: 66px !important;
+    gap: 6px !important;
+  }
+  .map-action-bar {
+    width: calc(100% - 16px);
+    bottom: 10px;
+  }
+  .mab-active-group {
+    gap: 6px;
+    flex-wrap: nowrap;
+  }
+  .mab-pause-btn,
+  .mab-finish-btn,
+  .mab-more-btn {
+    min-width: 0 !important;
+    padding: 10px 11px !important;
+    font-size: 0.85rem !important;
+  }
+  .mab-pause-btn {
+    flex: 1.15;
+  }
+  .mab-finish-btn {
+    flex: 1.15;
+  }
+  .return-to-gps-btn {
+    bottom: 70px;
+    font-size: 0.84rem;
+    padding: 8px 14px;
+  }
+}
+
+/* DÁVKA 2 (Verze v1.4-part2): Osobní atlas malých objevů, výzvy všímavosti a stav trasy */
+.mab-memory-btn {
+  background: linear-gradient(135deg, #fef08a 0%, #f59e0b 100%) !important;
+  color: #1f1606 !important;
+  border: 2px solid #fffbeb !important;
+  font-weight: 800 !important;
+  min-height: 44px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+  white-space: nowrap;
+}
+
+.mab-memory-btn:hover {
+  filter: brightness(1.05);
+}
+
+.mindfulness-prompt-card {
+  background: linear-gradient(135deg, #f3f9ec 0%, #e7f3dc 100%);
+  border: 1.5px solid #84a969;
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mindfulness-prompt-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mindfulness-prompt-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.mindfulness-prompt-text {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #1c3823;
+  line-height: 1.4;
+}
+
+.mindfulness-prompt-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.memory-symbols-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+.memory-symbol-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 2px solid rgba(84, 65, 38, 0.24);
+  background: #fffdf8;
+  color: #23180c;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+  min-height: 46px;
+}
+
+.memory-symbol-btn.selected {
+  background: #fef9c3;
+  border-color: #ca8a04;
+  box-shadow: 0 2px 10px rgba(202, 138, 4, 0.22);
+}
+
+.memory-symbol-icon {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.memory-note-textarea {
+  width: 100%;
+  border-radius: 10px;
+  border: 1.5px solid rgba(84, 65, 38, 0.32);
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  background: #fffdf9;
+  color: #1f170d;
+  resize: vertical;
+}
+
+.personal-memories-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.personal-memory-item {
+  background: #fffdf7;
+  border: 1.5px solid #e2d5b5;
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.personal-memory-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.personal-memory-title {
+  font-size: 0.96rem;
+  color: #24190c;
+}
+
+.personal-memory-badge {
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #78350f;
+  border: 1px solid #f59e0b;
+}
+
+.personal-memory-note {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #362919;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.personal-memory-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.czekpoint-marker-badge.tier-user-memory {
+  background: linear-gradient(135deg, #fef08a 0%, #f59e0b 100%);
+  border: 2.5px solid #78350f;
+  box-shadow: 0 4px 12px rgba(120, 53, 15, 0.38);
+}
+
+.xray-route-status-banner {
+  margin: 6px 0 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 0.86rem;
+  line-height: 1.35;
+}
+
+.xray-route-status-banner.is-routed {
+  background: #ecfdf5;
+  border: 1.5px solid #10b981;
+  color: #064e3b;
+}
+
+.xray-route-status-banner.is-fallback {
+  background: #fffbeb;
+  border: 1.5px dashed #d97706;
+  color: #78350f;
+}
+
+/* Zřetelný název zvoleného podkladu i na úzkém displeji. */
+#walk-map-base { min-width: 66px !important; width: 66px !important; height: 50px !important; color: #fff7c7 !important; background: #253d2c !important; }
+#walk-map-base[aria-pressed="true"] { color: #173824 !important; background: #d4edba !important; }
+#walk-map-base-label { font-size: 10px !important; font-weight: 700; }
+@media (max-width: 520px) {
+  .map-right-toolbar { top: 112px !important; }
 }

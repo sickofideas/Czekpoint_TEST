@@ -5,11 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#193e32">
   <meta name="description" content="Vyber si výlet podle skutečné podoby cesty. Czekpoint je osobní atlas procházek, objevování okolí a ověřených GPS razítek.">
+  <meta property="og:title" content="Czekpoint — Začni cestu s přehledem">
+  <meta property="og:description" content="Vyber si výlet podle skutečné podoby cesty. Czekpoint je osobní atlas procházek, objevování okolí a ověřených GPS razítek.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
   <title>Czekpoint — Začni cestu s přehledem</title>
   <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="stylesheet" href="./assets/styles.css">
   <link rel="stylesheet" href="./assets/vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="./assets/vendor/maplibre/maplibre-gl.css">
   <link rel="stylesheet" href="./assets/walk.css">
   <script defer src="./assets/vendor/leaflet/leaflet.js"></script>
 </head>
@@ -18,16 +23,15 @@
   <header class="site-header">
     <a class="brand" href="#/" aria-label="Czekpoint, úvod"><span class="header-logo-slot"><img src="./assets/icon.svg" width="64" height="64" alt=""></span><span>czekpoint<span class="brand-dot">.</span></span></a>
     <nav class="main-nav" aria-label="Hlavní navigace">
-      <a href="#/" data-nav="walk">Mapa &amp; výprava</a>
-      <a href="#/katalog" data-nav="catalog">Katalog míst</a>
-      <a href="#/pas" data-nav="passport">Můj pas <span id="passport-count" class="nav-count">0</span></a>
-      <a href="#/o-projektu" data-nav="about">O projektu</a>
+      <a href="#/" data-nav="walk">🗺️ Mapa a trasa</a>
+      <a href="#/katalog" data-nav="catalog">📚 Katalog míst</a>
+      <a href="#/pas" data-nav="passport">🎒 Můj pas <span id="passport-count" class="nav-count">0</span></a>
     </nav>
     <span class="header-region"><span class="status-dot"></span> Rožmitál a okolí</span>
   </header>
   <div id="mode-banner" class="mode-banner" hidden></div>
   <main id="main" class="page-shell" tabindex="-1"><div class="loading-state" role="status"><span class="spinner"></span> Připravujeme výlety…</div></main>
-  <footer class="site-footer"><a class="brand small" href="#/"><img src="./assets/icon.svg" width="22" height="22" alt=""><span>czekpoint<span class="brand-dot">.</span></span></a><span>Malé výpravy. Lepší přehled.</span><a href="#/o-projektu">O datech a soukromí</a><span class="version">Pilot · v0.9</span></footer>
+  <footer class="site-footer"><a class="brand small" href="#/"><img src="./assets/icon.svg" width="22" height="22" alt=""><span>czekpoint<span class="brand-dot">.</span></span></a><span>Malé výpravy. Lepší přehled.</span><a href="#/o-projektu">O datech a soukromí</a><span class="version">Pilot · v1.4-part2</span></footer>
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
   <dialog id="report-dialog" class="report-dialog" aria-labelledby="report-title"></dialog>
   <dialog id="confirm-dialog" class="confirm-dialog" aria-labelledby="confirm-title"></dialog>

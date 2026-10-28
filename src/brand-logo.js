@@ -1,5 +1,5 @@
 /**
- * Czekpoint — Animované logo č. 100 (styl Seznam.cz) a živé pozadí
+ * Czekpoint — Animované logo č. 100 a živé pozadí
  * Vektorová samolepka v čistém SVG + CSS + JS se 7 klidnými animacemi.
  */
 
@@ -15,6 +15,7 @@ export const LOGO_ANIM_STATES = Object.freeze([
 
 export const DEFAULT_CYCLE_MS = 6500;
 export const DEFAULT_DURATION_MS = 3600;
+export const DEFAULT_INITIAL_DELAY_MS = 600;
 
 /**
  * Vygeneruje čisté SVG vítězného loga č. 100.
@@ -174,7 +175,7 @@ export function renderBrandLogoHtml(options = {}) {
     id = 'hero-brand-logo',
     svgId = 'czekpoint-logo',
     className = 'logo-stage',
-    title = 'Klikni pro jemnou animaci (styl Seznam.cz)',
+    title = 'Živé logo Czekpoint — klikni pro další animaci',
     ariaLabel = 'Czekpoint — osobní atlas procházek',
   } = options;
 
@@ -233,9 +234,9 @@ function createNoopController() {
 }
 
 /**
- * Zapojí klidný animační cyklus a obsluhu interakcí (kliknutí / hover / klávesnice).
- * Každých 6,5 sekund přehraje jednu ze 7 animací s hladkým návratem do výchozího bodu.
- * Vrácený kontrolér lze volat jak jako funkci `controller()`, tak přes `controller.dispose()`.
+ * Zapojí automatický animační cyklus (včetně prvního spuštění krátce po načtení)
+ * a obsluhu interakcí (kliknutí / hover / klávesnice).
+ * Pozastaví se, když je logo mimo výřez obrazovky nebo je karta na pozadí.
  * @param {HTMLElement|string} targetElementOrSelector
  * @param {Object} options
  * @returns {Function} logo controller { dispose, trigger, next, isBusy, getIndex }
@@ -249,7 +250,7 @@ export function mountBrandLogo(targetElementOrSelector, options = {}) {
     return createNoopController();
   }
 
-  // Pokud již byl kontejner dříve inicializován, bezpečně uklidíme staré posluchače
+  // Pokud již byl kontejner dříve inicializován, bezpečně uklidíme staré posluchače a časovače
   if (container._brandLogoDisposer) {
     try {
       if (typeof container._brandLogoDisposer === 'function') {
@@ -270,14 +271,18 @@ export function mountBrandLogo(targetElementOrSelector, options = {}) {
 
   const intervalMs = options.intervalMs || DEFAULT_CYCLE_MS;
   const durationMs = options.durationMs || DEFAULT_DURATION_MS;
+  const initialDelayMs = options.initialDelayMs !== undefined ? options.initialDelayMs : DEFAULT_INITIAL_DELAY_MS;
   const triggerOnHover = options.triggerOnHover !== false;
   const onStateChange = options.onStateChange || null;
 
   let currentIndex = 0;
   let busy = false;
   let activeTimer = null;
+  let initialTimer = null;
   let cycleInterval = null;
   let isDisposed = false;
+  let isInViewport = true;
+  let intersectionObserver = null;
 
   const reducedMotionQuery = typeof window !== 'undefined' && window.matchMedia
     ? window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -285,6 +290,12 @@ export function mountBrandLogo(targetElementOrSelector, options = {}) {
 
   function prefersReducedMotion() {
     return Boolean(reducedMotionQuery?.matches);
+  }
+
+  function canAutoPlay() {
+    if (isDisposed || prefersReducedMotion()) return false;
+    if (typeof document !== 'undefined' && document.hidden) return false;
+    return isInViewport;
   }
 
   function playState(stateObj, force = false) {
@@ -336,9 +347,9 @@ export function mountBrandLogo(targetElementOrSelector, options = {}) {
   }
 
   function startAutoCycle() {
-    if (cycleInterval || prefersReducedMotion()) return;
+    if (cycleInterval || !canAutoPlay()) return;
     cycleInterval = setInterval(() => {
-      if (!isDisposed && !busy && typeof document !== 'undefined' && !document.hidden) {
+      if (canAutoPlay() && !busy) {
         next();
       }
     }, intervalMs);
@@ -351,10 +362,35 @@ export function mountBrandLogo(targetElementOrSelector, options = {}) {
     }
   }
 
+  // První animace se spustí automaticky krátce po načtení stránky
+  if (initialDelayMs >= 0 && !prefersReducedMotion()) {
+    initialTimer = setTimeout(() => {
+      initialTimer = null;
+      if (canAutoPlay() && !busy) {
+        next();
+      }
+    }, initialDelayMs);
+  }
+
   startAutoCycle();
 
-  const onClick = (e) => {
-    // Pokud je logo odkaz, neblokujeme navigaci při kliknutí, ale spustíme animaci
+  if (typeof IntersectionObserver !== 'undefined') {
+    intersectionObserver = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.target === container) {
+          isInViewport = entry.isIntersecting;
+          if (!isInViewport) {
+            stopAutoCycle();
+          } else {
+            startAutoCycle();
+          }
+        }
+      }
+    }, { threshold: 0.05 });
+    intersectionObserver.observe(container);
+  }
+
+  const onClick = () => {
     next(true);
   };
 
@@ -381,6 +417,7 @@ export function mountBrandLogo(targetElementOrSelector, options = {}) {
   const onReducedMotionChange = (e) => {
     if (e.matches) {
       stopAutoCycle();
+      clearTimeout(initialTimer);
       clearTimeout(activeTimer);
       LOGO_ANIM_STATES.forEach(s => svg.classList.remove(s.cls));
       busy = false;
@@ -404,7 +441,12 @@ export function mountBrandLogo(targetElementOrSelector, options = {}) {
   const dispose = () => {
     isDisposed = true;
     stopAutoCycle();
+    clearTimeout(initialTimer);
     clearTimeout(activeTimer);
+    if (intersectionObserver) {
+      intersectionObserver.disconnect();
+      intersectionObserver = null;
+    }
     container.removeEventListener('click', onClick);
     container.removeEventListener('keydown', onKeyDown);
     if (triggerOnHover) {
@@ -435,7 +477,7 @@ export function mountBrandLogo(targetElementOrSelector, options = {}) {
 
 /**
  * Pevné nasazení animovaného loga č. 100 přímo do hlavičky webu (.site-header .brand).
- * Nahradí statický obrázek kompletním inline SVG a spustí 6,5s klidný animační cyklus.
+ * Nahradí statický obrázek kompletním inline SVG a spustí automatický klidný animační cyklus.
  * @param {string|HTMLElement} targetSelector
  * @param {Object} options
  * @returns {Function} logo controller { dispose, trigger, next, isBusy, getIndex }
@@ -447,7 +489,6 @@ export function mountAnimatedBrandLogo(targetSelector = '.site-header .brand', o
 
   if (!brandEl) return createNoopController();
 
-  // Najdeme stávající slot nebo obrázek
   let slot = brandEl.querySelector('.header-logo-slot');
   if (!slot) {
     slot = document.createElement('span');
@@ -471,7 +512,6 @@ export function mountAnimatedBrandLogo(targetSelector = '.site-header .brand', o
     slot._brandLogoController = null;
   }
 
-  // Vložíme inline SVG loga č. 100
   slot.innerHTML = renderBrandLogoSvg({
     id: 'header-brand-logo-svg',
     className: 'czekpoint-logo-svg header-logo-svg',
@@ -484,6 +524,7 @@ export function mountAnimatedBrandLogo(targetSelector = '.site-header .brand', o
   const controller = mountBrandLogo(slot, {
     intervalMs: options.intervalMs || DEFAULT_CYCLE_MS,
     durationMs: options.durationMs || DEFAULT_DURATION_MS,
+    initialDelayMs: options.initialDelayMs !== undefined ? options.initialDelayMs : DEFAULT_INITIAL_DELAY_MS,
     triggerOnHover: options.triggerOnHover !== false,
   });
   slot._brandLogoController = controller;

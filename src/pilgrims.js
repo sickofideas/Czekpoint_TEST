@@ -101,9 +101,10 @@ export function recordSummitEntry(stateObj, placeId) {
 }
 
 /**
- * Renders the HTML section for local pilgrims in bottom sheet or passport.
+ * Renders the HTML section for local pilgrims in passport.
+ * Clearly labeled upfront as generated local sample characters (Bod 10 & 13).
  */
-export function renderPilgrimsSection(stateObj, position, actions = {}) {
+export function renderPilgrimsSection(stateObj, position) {
   const s = stateObj || {};
   const optIn = Boolean(s.pilgrimsOptIn);
   const clinksCount = Number(s.clinksCount) || 0;
@@ -114,11 +115,11 @@ export function renderPilgrimsSection(stateObj, position, actions = {}) {
         <div class="pilgrims-optin-prompt">
           <div class="pilgrim-icon-lead">👥</div>
           <div>
-            <strong>Poutníci v okolí (100% anonymní opt-in)</strong>
-            <p class="small-note">Zapni pro zobrazení poutníků v revíru (zaokrouhleno na ~1 km čtverec, bez ukládání polohy a bez sledování). Můžeš si prohlížet hole a cinknout na pozdrav.</p>
+            <strong>Ukázkoví poutníci v okolí (lokální ukázka)</strong>
+            <p class="small-note">Jde o lokálně generované ukázkové postavy v tvém revíru (~1 km čtverec) pro vyzkoušení prohlížení holí a přátelského cinknutí na pozdrav. Žádná poloha ani osobní údaje se nikam neposílají.</p>
           </div>
-          <button class="button small primary" id="toggle-pilgrims-optin-btn">
-            Zapnout poutníky v okolí
+          <button type="button" class="button small primary" id="toggle-pilgrims-optin-btn">
+            Zobrazit ukázkové poutníky
           </button>
         </div>
       </div>
@@ -131,12 +132,12 @@ export function renderPilgrimsSection(stateObj, position, actions = {}) {
     <div class="pilgrims-box">
       <div class="pilgrims-header">
         <div>
-          <span class="eyebrow">Poutníci v okolí</span>
+          <span class="eyebrow">Ukázkoví poutníci v okolí</span>
           <div class="pilgrims-title-line">
             <strong>Revír Rožmitálsko</strong>
-            <span class="local-sample-pill">Lokální ukázka poutníků v revíru</span>
+            <span class="local-sample-pill">Generované ukázkové postavy (lokální simulace)</span>
           </div>
-          <p class="small-note">Poloha zaokrouhlena na 0,01° (~1 km). Žádný volný text, žádné sledování.</p>
+          <p class="small-note">Postavy jsou vytvořené přímo v prohlížeči podle oblasti (~1 km). Žádná poloha se nikam neodesílá.</p>
         </div>
         <div class="clinks-badge-pill" title="Počet přátelských cinknutí holemi">
           🦯 <strong>${clinksCount}</strong> cinknutí
@@ -148,11 +149,11 @@ export function renderPilgrimsSection(stateObj, position, actions = {}) {
           <div class="pilgrim-card" data-pilgrim-id="${e(p.id)}">
             <img class="pilgrim-avatar" src="${avatarUrl(p.avatarId)}" alt="${e(p.name)}" width="40" height="40">
             <div class="pilgrim-info">
-              <strong>${e(p.name)}</strong>
+              <strong>${e(p.name)} <small class="muted">(ukázka)</small></strong>
               <span class="small-note">${COMPANION_LABELS[p.companionMode] || '🥾'} · ${e(p.rankTitle)} (úroveň ${p.level})</span>
               <span class="pilgrim-stick-stat">🦯 ${p.badgesCount} štítků na holi · 💬 ${p.clinksCount} pozdravů</span>
             </div>
-            <button class="button small clink-btn" data-pilgrim-id="${e(p.id)}" title="Cinknout holí na pozdrav">
+            <button type="button" class="button small clink-btn" data-pilgrim-id="${e(p.id)}" title="Cinknout holí na pozdrav">
               🦯 Cinknout
             </button>
           </div>
@@ -160,8 +161,8 @@ export function renderPilgrimsSection(stateObj, position, actions = {}) {
       </div>
 
       <div style="margin-top:10px;text-align:right">
-        <button class="button small subtle" id="toggle-pilgrims-optin-btn">
-          Vypnout poutníky v okolí
+        <button type="button" class="button small subtle" id="toggle-pilgrims-optin-btn">
+          Skrýt ukázkové poutníky
         </button>
       </div>
     </div>

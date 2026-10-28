@@ -10,6 +10,130 @@ export const COMPANION_MODES = ['solo', 'dog', 'stroller', 'family'];
 export const EXPLORATION_MODES = ['compass', 'focus', 'radar'];
 export const MAX_STICK_BADGES = 200;
 
+export const DEFAULT_APP_SETTINGS = Object.freeze({
+  fogParchment: true,     // 📜 Tajemný pergamen (odkrývání mlhy)
+  kctTrails: true,        // 🥾 Turistické značky KČT a stezky
+  contours: true,         // ⛰️ Vrstevnice a terén
+  footprints: true,       // 👣 Stopy pohorek za mnou
+  orbitalArrow: true,     // 🎯 Zlatá směrová šipka u Avatara
+  voiceNav: true,         // 🗣️ Česká hlasová navigace
+  soundFx: true,          // 🔊 Zvukové efekty a fanfáry
+  keepAwake: true,        // 📱 Držet rozsvícený displej
+  autoSortStops: true,    // 🔄 Chytré řazení zastávek podle pěší trasy
+  showExternalPhotos: true, // 🖼️ Zobrazovat externí fotografie míst (Wikipedie)
+  mindfulnessPrompts: true, // 🍃 Jemné výzvy všímavosti během chůze
+  gameMode: 'gamified',   // 'explorer' (Objevitel) | 'gamified' (Výprava s gamifikací) | 'casual' (Pohodová procházka)
+});
+
+export const PERSONAL_MEMORY_SYMBOLS = Object.freeze([
+  { id: 'tree', icon: '🌳', label: '🌳 Strom', shortTitle: 'Zajímavý strom' },
+  { id: 'view', icon: '🌄', label: '🌄 Výhled', shortTitle: 'Pěkný výhled' },
+  { id: 'calm', icon: '🍃', label: '🍃 Klidné místo', shortTitle: 'Klidné zákoutí' },
+  { id: 'water', icon: '💧', label: '💧 Voda / studánka', shortTitle: 'Voda nebo studánka' },
+  { id: 'nature', icon: '🐾', label: '🐾 Příroda', shortTitle: 'Setkání s přírodou' },
+  { id: 'detail', icon: '🔎', label: '🔎 Zajímavý detail', shortTitle: 'Zajímavý detail' },
+]);
+
+export const MINDFULNESS_PROMPTS = Object.freeze([
+  {
+    id: 'pleasant_stop',
+    icon: '🍃',
+    text: 'Všimni si místa, kde je příjemné se na chvíli zastavit a jen pozorovat okolí.',
+    safetyNote: 'Zastav se pouze na bezpečném a volně přístupném místě mimo vozovku.',
+  },
+  {
+    id: 'distant_horizon',
+    icon: '🌄',
+    text: 'Rozhlédni se do dálky — jaké linie stromů, střech nebo kopců dnes tvoří obzor?',
+    safetyNote: 'Rozhlížej se jen tehdy, když bezpečně stojíš mimo silnici.',
+  },
+  {
+    id: 'quiet_sound',
+    icon: '🌳',
+    text: 'Zaposlouchej se na deset vteřin: slyšíš spíš vítr v korunách, vodu, nebo ptáky?',
+    safetyNote: 'Nepřekračuj soukromé pozemky a nesahej na volně žijící přírodu.',
+  },
+  {
+    id: 'light_and_shadow',
+    icon: '🔎',
+    text: 'Všimni si, jak dnes světlo a stín kreslí tvary na cestě nebo mezi stromy.',
+    safetyNote: 'Při chůzi i přecházení vždy sleduj cestu před sebou, ne obrazovku.',
+  },
+]);
+
+export function sanitizeMemoryNoteText(rawNote) {
+  if (typeof rawNote !== 'string') return '';
+  return rawNote
+    .replace(/<[^>]*>/g, '')
+    .replace(/[\u0000-\u001F\u007F]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 240);
+}
+
+export function sanitizePersonalMemories(memories) {
+  if (!Array.isArray(memories)) return [];
+  const validSymbolMap = new Map(PERSONAL_MEMORY_SYMBOLS.map(s => [s.id, s]));
+  const clean = [];
+  const seenIds = new Set();
+
+  for (const item of memories.slice(0, 300)) {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) continue;
+    const symbolMeta = validSymbolMap.get(item.symbolId) || PERSONAL_MEMORY_SYMBOLS[0];
+    const lat = Number(item.lat);
+    const lng = Number(item.lng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 85 || Math.abs(lng) > 180) continue;
+    const id = typeof item.id === 'string' && /^[-a-zA-Z0-9:_]{1,80}$/.test(item.id)
+      ? item.id
+      : `mem_${Date.now()}_${clean.length}`;
+    if (seenIds.has(id)) continue;
+    seenIds.add(id);
+
+    clean.push({
+      id,
+      symbolId: symbolMeta.id,
+      symbolIcon: symbolMeta.icon,
+      symbolLabel: symbolMeta.label,
+      title: symbolMeta.shortTitle,
+      note: sanitizeMemoryNoteText(item.note || ''),
+      lat: Math.round(lat * 1e6) / 1e6,
+      lng: Math.round(lng * 1e6) / 1e6,
+      createdAt: typeof item.createdAt === 'string' && item.createdAt ? item.createdAt : new Date().toISOString(),
+      recordType: 'user_memory',
+      recordBadge: '✨ Vlastnoruční vzpomínka uživatele',
+      isUserMemory: true,
+    });
+  }
+  return clean;
+}
+
+export function createPersonalMemoryEntry(input = {}) {
+  const validSymbolMap = new Map(PERSONAL_MEMORY_SYMBOLS.map(s => [s.id, s]));
+  const symbolMeta = validSymbolMap.get(input.symbolId) || PERSONAL_MEMORY_SYMBOLS[0];
+  const lat = Number(input.lat);
+  const lng = Number(input.lng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 85 || Math.abs(lng) > 180) {
+    throw new Error('Pro uložení vzpomínky jsou potřeba platné souřadnice místa.');
+  }
+  const safeNote = sanitizeMemoryNoteText(input.note || '');
+  return {
+    id: typeof input.id === 'string' && /^[-a-zA-Z0-9:_]{1,80}$/.test(input.id)
+      ? input.id
+      : `mem_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    symbolId: symbolMeta.id,
+    symbolIcon: symbolMeta.icon,
+    symbolLabel: symbolMeta.label,
+    title: symbolMeta.shortTitle,
+    note: safeNote,
+    lat: Math.round(lat * 1e6) / 1e6,
+    lng: Math.round(lng * 1e6) / 1e6,
+    createdAt: typeof input.createdAt === 'string' && input.createdAt ? input.createdAt : new Date().toISOString(),
+    recordType: 'user_memory',
+    recordBadge: '✨ Vlastnoruční vzpomínka uživatele',
+    isUserMemory: true,
+  };
+}
+
 export const emptyState = () => ({
   schemaVersion: 2,
   revision: 1,
@@ -17,6 +141,9 @@ export const emptyState = () => ({
   cells: [],
   meters: 0,
   discoveries: [],
+  personalMemories: [],
+  walkSegments: [],
+  revealedFeatures: [],
   legacyScore: 0,
   baseline: { cells: 0, meters: 0, discoveries: 0 },
   legacyRewards: {
@@ -36,7 +163,42 @@ export const emptyState = () => ({
   stickBadges: [],
   summitEntries: {},
   plannedRoute: null,
+  confirmedStopIds: [],
+  savedTrips: [],
+  voiceNavEnabled: true,
+  appSettings: { ...DEFAULT_APP_SETTINGS },
 });
+
+export function sanitizeWalkSegments(segments) {
+  if (!Array.isArray(segments)) return [];
+  const clean = [];
+  for (const seg of segments.slice(-600)) {
+    if (!Array.isArray(seg)) continue;
+    const pts = [];
+    for (const pt of seg.slice(-1500)) {
+      if (Array.isArray(pt) && pt.length >= 2) {
+        const lat = Number(pt[0]);
+        const lng = Number(pt[1]);
+        if (Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 85 && Math.abs(lng) <= 180) {
+          pts.push([Math.round(lat * 1e6) / 1e6, Math.round(lng * 1e6) / 1e6]);
+        }
+      } else if (pt && typeof pt === 'object') {
+        const lat = Number(pt.lat);
+        const lng = Number(pt.lng);
+        if (Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 85 && Math.abs(lng) <= 180) {
+          pts.push([Math.round(lat * 1e6) / 1e6, Math.round(lng * 1e6) / 1e6]);
+        }
+      }
+    }
+    if (pts.length > 0) clean.push(pts);
+  }
+  return clean;
+}
+
+export function sanitizeRevealedFeatures(features) {
+  if (!Array.isArray(features)) return [];
+  return [...new Set(features.filter(id => typeof id === 'string' && /^[-a-zA-Z0-9:_/]{1,100}$/.test(id)))].slice(0, 1000);
+}
 
 export const emptyWalkMeta = () => ({
   trail: [],
@@ -67,42 +229,122 @@ export function computeLegacyScore(cells = [], meters = 0, discoveries = [], leg
   return pts;
 }
 
+export const CORRUPTED_BACKUP_KEY = 'czekpoint.state.corrupted.backup';
+
+export function isValidCellId(id) {
+  if (typeof id !== 'string' || !/^[-\d]+:[-\d]+$/.test(id)) return false;
+  const parts = id.split(':').map(Number);
+  return parts.length === 2 && parts.every(v => Number.isInteger(v) && Math.abs(v) <= 156544);
+}
+
+export function isValidDiscoveryId(id) {
+  return typeof id === 'string' && /^[-a-zA-Z0-9:_/]{1,100}$/.test(id);
+}
+
+export function isValidExpeditionEntry(entry) {
+  if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return false;
+  if (typeof entry.id !== 'string' || !entry.id.trim()) return false;
+  if (entry.distanceMeters != null && (!Number.isFinite(entry.distanceMeters) || entry.distanceMeters < 0)) return false;
+  if (entry.newCellsCount != null && (!Number.isFinite(entry.newCellsCount) || entry.newCellsCount < 0)) return false;
+  if (entry.newStampsCount != null && (!Number.isFinite(entry.newStampsCount) || entry.newStampsCount < 0)) return false;
+  if (entry.pointsEarned != null && (!Number.isFinite(entry.pointsEarned) || entry.pointsEarned < 0)) return false;
+  return true;
+}
+
+export function isValidStickBadge(badge) {
+  if (!badge || typeof badge !== 'object' || Array.isArray(badge)) return false;
+  if (typeof badge.id !== 'string' || !badge.id.trim()) return false;
+  if (badge.distanceMeters != null && (!Number.isFinite(badge.distanceMeters) || badge.distanceMeters < 0)) return false;
+  return true;
+}
+
 /**
  * Loads the unified version 2 explorer state.
- * Performs migration from v1 keys on first run if reset marker is not set.
+ * Distinguishes first launch from a corrupted stored profile (Bod 3):
+ * - First launch: STATE_KEY is absent -> returns emptyState() (or migrates v1).
+ * - Corrupted stored profile: STATE_KEY is present, but JSON/schema/items are invalid ->
+ *   preserves original raw value in CORRUPTED_BACKUP_KEY and marks `storageCorrupted: true`
+ *   with `storageError` so automatic saves do not silently overwrite user data.
  */
 export function loadState() {
+  let raw = null;
   try {
-    const raw = localStorage.getItem(STATE_KEY);
-    if (raw) {
+    raw = localStorage.getItem(STATE_KEY);
+  } catch {}
+
+  if (raw !== null && raw !== '') {
+    try {
       const data = JSON.parse(raw);
-      if (data && data.schemaVersion === 2) {
-        return {
-          schemaVersion: 2,
-          revision: Number(data.revision) || 1,
-          profile: validateProfile(data.profile),
-          cells: Array.isArray(data.cells) ? data.cells : [],
-          meters: Number(data.meters) || 0,
-          discoveries: Array.isArray(data.discoveries) ? [...new Set(data.discoveries)] : [],
-          legacyScore: Number(data.legacyScore) || 0,
-          baseline: data.baseline && typeof data.baseline === 'object' ? data.baseline : { cells: 0, meters: 0, discoveries: 0 },
-          legacyRewards: data.legacyRewards && typeof data.legacyRewards === 'object' ? data.legacyRewards : { tiers: {}, pioneerAwards: [], dailyClaimed: [], watchtowers: [] },
-          seals: Array.isArray(data.seals) ? data.seals : [],
-          activeExpedition: data.activeExpedition ?? null,
-          expeditionHistory: Array.isArray(data.expeditionHistory) ? data.expeditionHistory.slice(0, MAX_EXPEDITION_HISTORY) : [],
-          companionMode: COMPANION_MODES.includes(data.companionMode) ? data.companionMode : 'solo',
-          explorationMode: EXPLORATION_MODES.includes(data.explorationMode) ? data.explorationMode : 'focus',
-          soundEnabled: typeof data.soundEnabled === 'boolean' ? data.soundEnabled : true,
-          pilgrimsOptIn: typeof data.pilgrimsOptIn === 'boolean' ? data.pilgrimsOptIn : false,
-          clinksCount: Number.isFinite(data.clinksCount) && data.clinksCount >= 0 ? Math.floor(data.clinksCount) : 0,
-          stickBadges: Array.isArray(data.stickBadges) ? data.stickBadges.slice(0, MAX_STICK_BADGES) : [],
-          summitEntries: data.summitEntries && typeof data.summitEntries === 'object' && !Array.isArray(data.summitEntries) ? data.summitEntries : {},
-          plannedRoute: data.plannedRoute && typeof data.plannedRoute === 'object' ? data.plannedRoute : null,
-        };
+      if (
+        !data ||
+        typeof data !== 'object' ||
+        data.schemaVersion !== 2 ||
+        !Array.isArray(data.cells) ||
+        data.cells.some(c => !isValidCellId(c)) ||
+        !Number.isFinite(Number(data.meters)) ||
+        Number(data.meters) < 0 ||
+        !Array.isArray(data.discoveries) ||
+        data.discoveries.some(d => !isValidDiscoveryId(d))
+      ) {
+        throw new Error('Poškozená struktura uloženého profilu.');
       }
+
+      const safeBaseline = data.baseline && typeof data.baseline === 'object'
+        ? {
+            cells: Math.max(0, Number(data.baseline.cells) || 0),
+            meters: Math.max(0, Number(data.baseline.meters) || 0),
+            discoveries: Math.max(0, Number(data.baseline.discoveries) || 0),
+          }
+        : { cells: 0, meters: 0, discoveries: 0 };
+
+      return {
+        schemaVersion: 2,
+        revision: Math.max(1, Number(data.revision) || 1),
+        profile: validateProfile(data.profile),
+        cells: [...new Set(data.cells)],
+        meters: Math.max(0, Number(data.meters) || 0),
+        discoveries: [...new Set(data.discoveries)],
+        personalMemories: sanitizePersonalMemories(data.personalMemories),
+        walkSegments: sanitizeWalkSegments(data.walkSegments),
+        revealedFeatures: sanitizeRevealedFeatures(data.revealedFeatures),
+        legacyScore: Math.max(0, Number(data.legacyScore) || 0),
+        baseline: safeBaseline,
+        legacyRewards: data.legacyRewards && typeof data.legacyRewards === 'object' ? data.legacyRewards : { tiers: {}, pioneerAwards: [], dailyClaimed: [], watchtowers: [] },
+        seals: Array.isArray(data.seals) ? data.seals : [],
+        activeExpedition: data.activeExpedition ?? null,
+        expeditionHistory: Array.isArray(data.expeditionHistory)
+          ? data.expeditionHistory.filter(isValidExpeditionEntry).slice(0, MAX_EXPEDITION_HISTORY)
+          : [],
+        companionMode: COMPANION_MODES.includes(data.companionMode) ? data.companionMode : 'solo',
+        explorationMode: EXPLORATION_MODES.includes(data.explorationMode) ? data.explorationMode : 'focus',
+        soundEnabled: typeof data.soundEnabled === 'boolean' ? data.soundEnabled : true,
+        pilgrimsOptIn: typeof data.pilgrimsOptIn === 'boolean' ? data.pilgrimsOptIn : false,
+        clinksCount: Number.isFinite(data.clinksCount) && data.clinksCount >= 0 ? Math.floor(data.clinksCount) : 0,
+        stickBadges: Array.isArray(data.stickBadges)
+          ? data.stickBadges.filter(isValidStickBadge).slice(0, MAX_STICK_BADGES)
+          : [],
+        summitEntries: data.summitEntries && typeof data.summitEntries === 'object' && !Array.isArray(data.summitEntries) ? data.summitEntries : {},
+        plannedRoute: data.plannedRoute && typeof data.plannedRoute === 'object' ? data.plannedRoute : null,
+        confirmedStopIds: Array.isArray(data.confirmedStopIds) ? [...new Set(data.confirmedStopIds)] : [],
+        savedTrips: Array.isArray(data.savedTrips) ? data.savedTrips.slice(0, 50) : [],
+        voiceNavEnabled: typeof data.voiceNavEnabled === 'boolean' ? data.voiceNavEnabled : true,
+        appSettings: {
+          ...DEFAULT_APP_SETTINGS,
+          ...(data.appSettings && typeof data.appSettings === 'object' ? data.appSettings : {}),
+        },
+        storageCorrupted: false,
+        storageError: '',
+      };
+    } catch {
+      try {
+        localStorage.setItem(CORRUPTED_BACKUP_KEY, raw);
+      } catch {}
+      return {
+        ...emptyState(),
+        storageCorrupted: true,
+        storageError: 'Uložený profil je poškozený. Původní data zůstala zachována; obnov předchozí zálohu nebo profil vymaž v nastavení.',
+      };
     }
-  } catch {
-    // If state is corrupted, fall back to empty or legacy
   }
 
   // Check if reset was explicitly performed
@@ -147,6 +389,8 @@ export function loadState() {
       cells,
       meters,
       discoveries,
+      walkSegments: [],
+      revealedFeatures: [],
       legacyScore,
       baseline,
       legacyRewards: metaObj,
@@ -161,6 +405,9 @@ export function loadState() {
       stickBadges: [],
       summitEntries: {},
       plannedRoute: null,
+      confirmedStopIds: [],
+      savedTrips: [],
+      voiceNavEnabled: false,
     };
 
     try {
@@ -174,48 +421,104 @@ export function loadState() {
 }
 
 /**
- * Saves state atomically with revision increment and tab concurrency check.
+ * Saves state atomically with revision increment.
+ * Mutates `state.revision` in place in addition to returning `nextState` so callers in the same
+ * tab never drift out of sync (Bod 2).
+ * Protects corrupted storage from silent overwrite unless explicitly restoring or resetting (Bod 3).
  */
-export function saveState(state) {
+export function saveState(state, options = {}) {
   if (!state || typeof state !== 'object') throw new Error('Neplatný stav k uložení.');
+  if (state.storageCorrupted && !options.allowOverwriteCorrupted) {
+    throw new Error(state.storageError || 'Uložený profil je poškozený. Obnov zálohu nebo profil nejprve resetuj.');
+  }
+
   try {
+    let persistedRevision = 0;
     const raw = localStorage.getItem(STATE_KEY);
     if (raw) {
+      let parsedOk = false;
       try {
         const persisted = JSON.parse(raw);
-        if (persisted?.revision && state.revision != null && persisted.revision > state.revision) {
-          throw new Error('Stav byl upraven v jiné záložce prohlížeče. Obnovte stránku.');
+        if (persisted && typeof persisted === 'object' && persisted.schemaVersion === 2) {
+          parsedOk = true;
+          persistedRevision = Number(persisted.revision) || 0;
         }
-      } catch (e) {
-        if (e.message.includes('jiné záložce')) throw e;
+      } catch {}
+
+      if (!parsedOk && !options.allowOverwriteCorrupted) {
+        try { localStorage.setItem(CORRUPTED_BACKUP_KEY, raw); } catch {}
+        throw new Error('Uložený profil v prohlížeči je poškozený. Původní data jsme zachovali; obnov zálohu.');
+      }
+
+      if (
+        options.enforceConcurrency &&
+        persistedRevision > 0 &&
+        state.revision != null &&
+        persistedRevision > state.revision
+      ) {
+        throw new Error('Stav byl upraven v jiné záložce prohlížeče. Obnovte stránku.');
       }
     }
+
+    const nextRevision = Math.max(persistedRevision, Number(state.revision) || 0) + 1;
+    const safeBaseline = state.baseline && typeof state.baseline === 'object'
+      ? {
+          cells: Math.max(0, Number(state.baseline.cells) || 0),
+          meters: Math.max(0, Number(state.baseline.meters) || 0),
+          discoveries: Math.max(0, Number(state.baseline.discoveries) || 0),
+        }
+      : { cells: 0, meters: 0, discoveries: 0 };
 
     const nextState = {
       ...state,
       schemaVersion: 2,
       profile: validateProfile(state.profile),
+      cells: Array.isArray(state.cells) ? [...new Set(state.cells.filter(isValidCellId))] : [],
+      meters: Math.max(0, Number(state.meters) || 0),
+      discoveries: Array.isArray(state.discoveries) ? [...new Set(state.discoveries.filter(isValidDiscoveryId))] : [],
+      personalMemories: sanitizePersonalMemories(state.personalMemories),
+      walkSegments: sanitizeWalkSegments(state.walkSegments),
+      revealedFeatures: sanitizeRevealedFeatures(state.revealedFeatures),
+      legacyScore: Math.max(0, Number(state.legacyScore) || 0),
+      baseline: safeBaseline,
       expeditionHistory: Array.isArray(state.expeditionHistory)
-        ? state.expeditionHistory.slice(0, MAX_EXPEDITION_HISTORY)
+        ? state.expeditionHistory.filter(isValidExpeditionEntry).slice(0, MAX_EXPEDITION_HISTORY)
         : [],
       companionMode: COMPANION_MODES.includes(state.companionMode) ? state.companionMode : 'solo',
       explorationMode: EXPLORATION_MODES.includes(state.explorationMode) ? state.explorationMode : 'focus',
       soundEnabled: typeof state.soundEnabled === 'boolean' ? state.soundEnabled : true,
       pilgrimsOptIn: typeof state.pilgrimsOptIn === 'boolean' ? state.pilgrimsOptIn : false,
       clinksCount: Number.isFinite(state.clinksCount) && state.clinksCount >= 0 ? Math.floor(state.clinksCount) : 0,
-      stickBadges: Array.isArray(state.stickBadges) ? state.stickBadges.slice(0, MAX_STICK_BADGES) : [],
+      stickBadges: Array.isArray(state.stickBadges)
+        ? state.stickBadges.filter(isValidStickBadge).slice(0, MAX_STICK_BADGES)
+        : [],
       summitEntries: state.summitEntries && typeof state.summitEntries === 'object' && !Array.isArray(state.summitEntries) ? state.summitEntries : {},
       plannedRoute: state.plannedRoute && typeof state.plannedRoute === 'object' ? state.plannedRoute : null,
-      revision: (Number(state.revision) || 0) + 1,
+      confirmedStopIds: Array.isArray(state.confirmedStopIds) ? [...new Set(state.confirmedStopIds)] : [],
+      savedTrips: Array.isArray(state.savedTrips) ? state.savedTrips.slice(0, 50) : [],
+      voiceNavEnabled: typeof state.voiceNavEnabled === 'boolean' ? state.voiceNavEnabled : true,
+      appSettings: {
+        ...DEFAULT_APP_SETTINGS,
+        ...(state.appSettings && typeof state.appSettings === 'object' ? state.appSettings : {}),
+      },
+      revision: nextRevision,
     };
+    delete nextState.storageCorrupted;
+    delete nextState.storageError;
+
     localStorage.setItem(STATE_KEY, JSON.stringify(nextState));
     try {
       localStorage.removeItem(RESET_MARKER_KEY);
     } catch {}
+
+    // Synchronizujeme revizi i přímo na předaném objektu, aby opakované uložení nikdy neselhalo
+    state.revision = nextRevision;
+    state.storageCorrupted = false;
+    state.storageError = '';
     return nextState;
   } catch (err) {
-    if (err.message.includes('jiné záložce')) throw err;
-    throw new Error('Průzkum se nepodařilo uložit. Záznam se pozastavil; uvolni místo v prohlížeči.');
+    if (err.message.includes('jiné záložce') || err.message.includes('poškozený')) throw err;
+    throw new Error('Uložení se nezdařilo. Záznam se pozastavil; uvolni místo v prohlížeči.');
   }
 }
 
@@ -239,6 +542,7 @@ export function clearState() {
   localStorage.removeItem(STATE_KEY);
   localStorage.removeItem(WALK_KEY);
   localStorage.removeItem(WALK_META_KEY);
+  localStorage.removeItem(CORRUPTED_BACKUP_KEY);
   try {
     localStorage.setItem(RESET_MARKER_KEY, '1');
   } catch {}
@@ -247,18 +551,21 @@ export function clearState() {
 /**
  * Exports personal exploration state as a formatted JSON string.
  */
-export function exportStateJson() {
-  const state = loadState();
+export function exportStateJson(passedState) {
+  const state = passedState || loadState();
   const exportPayload = {
     exportedAt: new Date().toISOString(),
     appName: 'czekpoint',
-    appVersion: '0.9.0',
+    appVersion: '1.0.0',
     schemaVersion: 2,
     data: {
       profile: state.profile,
       cells: state.cells,
       meters: state.meters,
       discoveries: state.discoveries,
+      personalMemories: sanitizePersonalMemories(state.personalMemories),
+      walkSegments: state.walkSegments || [],
+      revealedFeatures: state.revealedFeatures || [],
       legacyScore: state.legacyScore,
       baseline: state.baseline,
       legacyRewards: state.legacyRewards,
@@ -272,13 +579,17 @@ export function exportStateJson() {
       stickBadges: state.stickBadges || [],
       summitEntries: state.summitEntries || {},
       plannedRoute: state.plannedRoute || null,
+      confirmedStopIds: state.confirmedStopIds || [],
+      savedTrips: state.savedTrips || [],
+      voiceNavEnabled: state.voiceNavEnabled ?? false,
+      appSettings: state.appSettings || { ...DEFAULT_APP_SETTINGS },
     },
   };
   return JSON.stringify(exportPayload, null, 2);
 }
 
 /**
- * Previews an imported JSON backup without modifying storage.
+ * Previews and strictly validates an imported JSON backup without modifying storage (Bod 3).
  */
 export function previewImportState(jsonString) {
   if (typeof jsonString !== 'string') {
@@ -291,12 +602,12 @@ export function previewImportState(jsonString) {
     throw new Error('Soubor není platný JSON formát.');
   }
 
-  if (!parsed || typeof parsed !== 'object') {
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
     throw new Error('Neplatná struktura zálohy.');
   }
 
   // Support direct state or wrapped exportPayload
-  const d = parsed.data && typeof parsed.data === 'object' ? parsed.data : parsed;
+  const d = parsed.data && typeof parsed.data === 'object' && !Array.isArray(parsed.data) ? parsed.data : parsed;
   const schemaVer = parsed.schemaVersion ?? d.schemaVersion;
 
   if (schemaVer !== 2) {
@@ -304,13 +615,57 @@ export function previewImportState(jsonString) {
   }
 
   if (!Array.isArray(d.cells)) throw new Error('Chybí nebo je neplatný seznam prozkoumaných dílků.');
-  if (!Number.isFinite(d.meters) || d.meters < 0) throw new Error('Neplatná ušlá vzdálenost.');
+  if (d.cells.length > 12000 || d.cells.some(c => !isValidCellId(c))) {
+    throw new Error('Záloha obsahuje neplatné souřadnice prozkoumaných dílků.');
+  }
+
+  if (!Number.isFinite(d.meters) || d.meters < 0 || d.meters > 1e9) {
+    throw new Error('Neplatná ušlá vzdálenost v záloze.');
+  }
+
   if (!Array.isArray(d.discoveries)) throw new Error('Neplatný seznam nalezených míst.');
+  if (d.discoveries.length > 5000 || d.discoveries.some(id => !isValidDiscoveryId(id))) {
+    throw new Error('Záloha obsahuje neplatné identifikátory objevených míst.');
+  }
+
+  if (d.legacyScore != null && (!Number.isFinite(d.legacyScore) || d.legacyScore < 0)) {
+    throw new Error('Záloha obsahuje neplatné poškozené skóre.');
+  }
+
+  if (d.baseline != null) {
+    if (
+      typeof d.baseline !== 'object' ||
+      Array.isArray(d.baseline) ||
+      (d.baseline.cells != null && (!Number.isFinite(d.baseline.cells) || d.baseline.cells < 0)) ||
+      (d.baseline.meters != null && (!Number.isFinite(d.baseline.meters) || d.baseline.meters < 0)) ||
+      (d.baseline.discoveries != null && (!Number.isFinite(d.baseline.discoveries) || d.baseline.discoveries < 0))
+    ) {
+      throw new Error('Záloha obsahuje neplatný výchozí stav bodů (baseline).');
+    }
+  }
+
+  if (d.expeditionHistory != null) {
+    if (!Array.isArray(d.expeditionHistory) || d.expeditionHistory.some(item => !isValidExpeditionEntry(item))) {
+      throw new Error('Záloha obsahuje neplatné položky v historii výprav.');
+    }
+  }
+
+  if (d.stickBadges != null) {
+    if (!Array.isArray(d.stickBadges) || d.stickBadges.some(b => !isValidStickBadge(b))) {
+      throw new Error('Záloha obsahuje neplatné štítky na holi.');
+    }
+  }
+
+  if (d.profile != null && typeof d.profile === 'object') {
+    if (d.profile.avatarId != null && !isValidAvatarId(d.profile.avatarId)) {
+      throw new Error('Záloha obsahuje neznámého avatara.');
+    }
+  }
 
   const profile = validateProfile(d.profile);
-  const cellsCount = d.cells.length;
+  const cellsCount = new Set(d.cells).size;
   const metersKm = (d.meters / 1000).toFixed(1).replace('.', ',');
-  const stampsCount = d.discoveries.length;
+  const stampsCount = new Set(d.discoveries).size;
   const historyCount = Array.isArray(d.expeditionHistory) ? d.expeditionHistory.length : 0;
   const badgesCount = Array.isArray(d.stickBadges) ? d.stickBadges.length : 0;
 
@@ -327,30 +682,42 @@ export function previewImportState(jsonString) {
 }
 
 /**
- * Imports state atomically after full validation.
- * Never starts GPS; imported activeExpedition is at most 'paused'.
+ * Imports state atomically after full validation (Bod 3).
+ * Works reliably even after further walking (higher revision in localStorage)
+ * and never starts GPS automatically.
  */
 export function importStateJson(jsonString) {
   const preview = previewImportState(jsonString);
   const d = preview.payload;
 
   let activeExp = null;
-  if (d.activeExpedition && typeof d.activeExpedition === 'object') {
+  if (d.activeExpedition && typeof d.activeExpedition === 'object' && !Array.isArray(d.activeExpedition)) {
     activeExp = {
       ...d.activeExpedition,
       state: 'paused', // Imported expedition is at most paused, NEVER running GPS!
     };
   }
 
+  const safeBaseline = d.baseline && typeof d.baseline === 'object'
+    ? {
+        cells: Math.max(0, Number(d.baseline.cells) || 0),
+        meters: Math.max(0, Number(d.baseline.meters) || 0),
+        discoveries: Math.max(0, Number(d.baseline.discoveries) || 0),
+      }
+    : { cells: 0, meters: 0, discoveries: 0 };
+
   const newState = {
     schemaVersion: 2,
-    revision: 1,
+    revision: Number(d.revision) || 1,
     profile: validateProfile(d.profile),
     cells: [...new Set(d.cells)],
-    meters: Number(d.meters) || 0,
+    meters: Math.max(0, Number(d.meters) || 0),
     discoveries: [...new Set(d.discoveries)],
-    legacyScore: Number(d.legacyScore) || 0,
-    baseline: d.baseline && typeof d.baseline === 'object' ? d.baseline : { cells: 0, meters: 0, discoveries: 0 },
+    personalMemories: sanitizePersonalMemories(d.personalMemories),
+    walkSegments: sanitizeWalkSegments(d.walkSegments),
+    revealedFeatures: sanitizeRevealedFeatures(d.revealedFeatures),
+    legacyScore: Math.max(0, Number(d.legacyScore) || 0),
+    baseline: safeBaseline,
     legacyRewards: d.legacyRewards && typeof d.legacyRewards === 'object' ? d.legacyRewards : { tiers: {}, pioneerAwards: [], dailyClaimed: [], watchtowers: [] },
     seals: Array.isArray(d.seals) ? d.seals : [],
     activeExpedition: activeExp,
@@ -363,16 +730,29 @@ export function importStateJson(jsonString) {
     stickBadges: Array.isArray(d.stickBadges) ? d.stickBadges.slice(0, MAX_STICK_BADGES) : [],
     summitEntries: d.summitEntries && typeof d.summitEntries === 'object' && !Array.isArray(d.summitEntries) ? d.summitEntries : {},
     plannedRoute: d.plannedRoute && typeof d.plannedRoute === 'object' ? d.plannedRoute : null,
+    confirmedStopIds: Array.isArray(d.confirmedStopIds) ? [...new Set(d.confirmedStopIds)] : [],
+    savedTrips: Array.isArray(d.savedTrips) ? d.savedTrips.slice(0, 50) : [],
+    voiceNavEnabled: typeof d.voiceNavEnabled === 'boolean' ? d.voiceNavEnabled : true,
+    appSettings: {
+      ...DEFAULT_APP_SETTINGS,
+      ...(d.appSettings && typeof d.appSettings === 'object' ? d.appSettings : {}),
+    },
   };
 
-  saveState(newState);
-  return newState;
+  return saveState(newState, { allowOverwriteCorrupted: true });
 }
 
 // Backwards-compatible adapters for existing callers and tests
 export function loadWalk() {
   const s = loadState();
-  return { version: 1, cells: s.cells, meters: s.meters, discoveries: s.discoveries };
+  return {
+    version: 1,
+    cells: s.cells,
+    meters: s.meters,
+    discoveries: s.discoveries,
+    walkSegments: s.walkSegments || [],
+    revealedFeatures: s.revealedFeatures || [],
+  };
 }
 
 export function saveWalk(progress) {
@@ -382,8 +762,10 @@ export function saveWalk(progress) {
     cells: progress.cells || [],
     meters: progress.meters || 0,
     discoveries: progress.discoveries || [],
+    walkSegments: progress.walkSegments || current.walkSegments || [],
+    revealedFeatures: progress.revealedFeatures || current.revealedFeatures || [],
   };
-  saveState(next);
+  return saveState(next);
 }
 
 export function clearWalk() {
@@ -410,7 +792,7 @@ export function saveWalkMeta(meta) {
     pioneerAwards: meta?.pioneerAwards || s.legacyRewards?.pioneerAwards || [],
     dailyClaimed: meta?.dailyClaimed || s.legacyRewards?.dailyClaimed || [],
   };
-  saveState(s);
+  return saveState(s);
 }
 
 export function clearWalkMeta() {

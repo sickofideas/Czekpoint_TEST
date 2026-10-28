@@ -1,0 +1,6 @@
+{
+  "name": "Czekpoint — Začni cestu s přehledem",
+  "description": "Vyber si výlet podle skutečné podoby cesty. Czekpoint je osobní atlas procházek, objevování okolí a ověřených GPS razítek.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

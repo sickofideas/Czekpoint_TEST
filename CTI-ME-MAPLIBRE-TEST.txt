@@ -1,0 +1,20 @@
+CZEKPOINT — TESTOVACÍ PŘEPÍNÁNÍ MAP
+
+Toto je oddělená testovací kopie z Czekpoint_Gemini-main (5).zip. Původní ZIP není upraven.
+
+Vpravo na mapě je tlačítko „Původní“ / „Moderní“. Přepíná původní podklad a moderní vektorový podklad OpenFreeMap vykreslený MapLibre GL uvnitř Leaflet mapy. Při přepínání zůstává jedna mapa s původními vrstvami, polohou, trasou a průzkumem. OpenTopoMap se při moderním podkladu dočasně skryje a po návratu se obnoví podle nastavení.
+
+DŮLEŽITÉ: TOTO JE 2D TEST, NE 3D TERÉN. Použitý oficiální adaptér Leaflet–MapLibre nepodporuje naklápění ani otáčení. Pokud chceš skutečný 3D terén s mlhou, je potřeba samostatně doprogramovat a otestovat plnohodnotné 3D zobrazení. Tato verze tedy není výsledná verze pro ostré použití.
+
+Moderní podklad se stahuje z OpenFreeMap: při prohlížení mapy vidí poskytovatel požadavky na mapové oblasti a síťové údaje. Při jeho nedostupnosti se má zachovat původní mapa. Online dostupnost ani offline stažení nejsou zaručené. Před veřejným a komerčním provozem zkontroluj aktuální podmínky poskytovatelů, dat, licencí a ochrany soukromí. Více: https://openfreemap.org/ a https://github.com/maplibre/maplibre-gl-leaflet
+
+SPUŠTĚNÍ NA POČÍTAČI:
+1. Rozbal ZIP a otevři jeho složku.
+2. Pokud máš Python 3, ve složce spusť: python -m http.server 8000 --bind 127.0.0.1
+3. V prohlížeči otevři: http://127.0.0.1:8000/
+4. Text přepínače „Původní“ / „Moderní“ ukazuje, který podklad je aktivní. Chybové hlášení najdeš u mapy.
+5. Server ukončíš v terminálu stiskem Ctrl+C.
+
+Je potřeba připojení k internetu pro mapové podklady. Skutečný GPS záznam, běh v pozadí a fungování na mobilním telefonu nebyly tímto testem ověřeny. Před zkoušením v terénu měj i nezávislou mapu; současný projekt obsahuje i starší, samostatně neověřené funkce.
+
+Pro vlastní ladění bylo 28. 10. 2026 v prohlížeči ověřeno přepnutí tam a zpět, a u simulované procházky zůstalo 15 m, dvě buňky a jedna stopa. Automatické testy: 33 stávajících prošlo. Nejde o kompletní regresní, GPS, offline ani produkční test.

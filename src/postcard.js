@@ -388,7 +388,7 @@ export function renderPostcard(canvas, rawMetadata) {
   ctx.textAlign = 'center';
   ctx.fillText('CZEKPOINT', 0, -22);
   ctx.font = 'bold 18px Georgia, serif';
-  ctx.fillText('PILOT · v0.9', 0, 4);
+  ctx.fillText('PILOT · v1.2', 0, 4);
   ctx.font = '12px sans-serif';
   ctx.fillText('OVĚŘENO GPS', 0, 24);
   ctx.restore();
@@ -409,13 +409,28 @@ export function renderPostcard(canvas, rawMetadata) {
   ctx.fillText(`ID výpravy: ${meta.expeditionId.slice(0, 20)}`, 340, stampY + 46);
 }
 
+import { renderPostcardSvg, renderPostcardSvgDataUrl } from './postcards.js';
+export { renderPostcardSvg, renderPostcardSvgDataUrl };
+
 /**
- * Generates PNG data URL from postcard metadata.
+ * Generates Data URL from postcard metadata (uses photo collage SVG if visitedPlacesWithPhotos is provided).
  */
 export function generatePostcardDataUrl(metadata) {
-  if (typeof document === 'undefined') return '';
+  if (metadata && Array.isArray(metadata.visitedPlacesWithPhotos) && metadata.visitedPlacesWithPhotos.length > 0) {
+    return renderPostcardSvgDataUrl(metadata);
+  }
+  if (typeof document === 'undefined') {
+    return renderPostcardSvgDataUrl(metadata || {});
+  }
   const canvas = document.createElement('canvas');
-  renderPostcard(canvas, metadata);
+  const safeMeta = { ...(metadata || {}) };
+  delete safeMeta.photo;
+  delete safeMeta.photoUrl;
+  delete safeMeta.photoBlob;
+  delete safeMeta.image;
+  delete safeMeta.svg;
+  delete safeMeta.html;
+  renderPostcard(canvas, safeMeta);
   return canvas.toDataURL('image/png');
 }
 
@@ -428,7 +443,14 @@ export function generatePostcardBlob(metadata) {
       return reject(new Error('Canvas is only available in browser environment.'));
     }
     const canvas = document.createElement('canvas');
-    renderPostcard(canvas, metadata);
+    const safeMeta = { ...(metadata || {}) };
+    delete safeMeta.photo;
+    delete safeMeta.photoUrl;
+    delete safeMeta.photoBlob;
+    delete safeMeta.image;
+    delete safeMeta.svg;
+    delete safeMeta.html;
+    renderPostcard(canvas, safeMeta);
     canvas.toBlob(blob => {
       if (blob) resolve(blob);
       else reject(new Error('Pohlednici se nepodařilo vygenerovat.'));
